@@ -16,6 +16,8 @@ import { MarkdownRenderer } from "@/features/chat/components/MarkdownRenderer";
 import { ChatBox } from "@/features/chat/components/ChatBox";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
 
+import { ThreeTarotFan } from "@/features/tarot/components/ThreeTarotFan";
+
 const ZODIAC_LIST: { code: ZodiacSign; name: string; symbol: string }[] = [
   { code: "ARIES", name: "Bạch Dương (Aries)", symbol: "♈" },
   { code: "TAURUS", name: "Kim Ngưu (Taurus)", symbol: "♉" },
@@ -36,6 +38,7 @@ function ReadingContent() {
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: isAuthLoading, updateUserZodiac } = useAuth();
 
+  const [stage, setStage] = useState<"FORM" | "PICKING" | "RESULT">("FORM");
   const [question, setQuestion] = useState("");
   const [deckCode, setDeckCode] = useState<DeckCode>("RIDER_WAITE_CLASSIC");
   const [selectedZodiac, setSelectedZodiac] = useState<ZodiacSign>("UNKNOWN");
@@ -67,7 +70,8 @@ function ReadingContent() {
     }
   }, [user]);
 
-  const handleStartReading = async (e: React.FormEvent) => {
+  // Chuyển từ Form sang Bàn xòe bài 78 lá
+  const handleProceedToPicking = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
       router.push("/login");
@@ -85,6 +89,14 @@ function ReadingContent() {
     }
 
     setErrorMsg("");
+    setStage("PICKING");
+  };
+
+  // Người dùng xác nhận 3 lá bài đã tự tay bốc
+  const handleConfirmSelectedCards = async (
+    picked: { cardId: number; isReversed: boolean }[]
+  ) => {
+    setErrorMsg("");
     setIsReadingLoading(true);
 
     try {
@@ -94,16 +106,20 @@ function ReadingContent() {
         deckCode,
         zodiacSign: selectedZodiac !== "UNKNOWN" ? selectedZodiac : undefined,
         spreadType: "PAST_PRESENT_FUTURE",
+        selectedCardIds: picked.map((p) => p.cardId),
+        isReversedList: picked.map((p) => p.isReversed),
       });
 
       setReadingResult(result);
       setFlippedCount(0);
+      setStage("RESULT");
       if (selectedZodiac !== "UNKNOWN") {
         updateUserZodiac(selectedZodiac);
       }
     } catch (err: any) {
       console.error("Create reading failed:", err);
-      const serverMessage = err.response?.data?.message || "Không thể thực hiện quẻ bói. Vui lòng thử lại.";
+      const serverMessage =
+        err.response?.data?.message || "Không thể thực hiện quẻ bói. Vui lòng thử lại.";
       setErrorMsg(serverMessage);
     } finally {
       setIsReadingLoading(false);
@@ -114,6 +130,7 @@ function ReadingContent() {
     setReadingResult(null);
     setQuestion("");
     setFlippedCount(0);
+    setStage("FORM");
   };
 
   const zodiacOptions: OptionItem[] = [
@@ -142,8 +159,8 @@ function ReadingContent() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* 🔮 PHẦN 1: FORM NHẬP CÂU HỎI TỐI GIẢN (KHÔNG CẦN CHỌN CHỦ ĐỀ) */}
-      {!readingResult && (
+      {/* 🔮 GIAI ĐOẠN 1: FORM NHẬP CÂU HỎI & CUNG HOÀNG ĐẠO */}
+      {stage === "FORM" && (
         <div className="max-w-2xl mx-auto p-7 sm:p-9 rounded-3xl silver-card">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/15 text-xs text-slate-200 mb-3">
@@ -164,7 +181,7 @@ function ReadingContent() {
             </div>
           )}
 
-          <form onSubmit={handleStartReading} className="space-y-6">
+          <form onSubmit={handleProceedToPicking} className="space-y-6">
             {/* CÂU HỎI CỦA NGƯỜI DÙNG */}
             <div>
               <label className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center gap-1.5">
@@ -213,31 +230,32 @@ function ReadingContent() {
               </div>
             )}
 
-            {/* NÚT BỐC BÀI */}
+            {/* NÚT TIẾN HÀNH XÁO & TRẢI BÀI */}
             <button
               type="submit"
-              disabled={isReadingLoading}
-              className="w-full mt-4 py-4 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer shadow-xl hover:scale-[1.01]"
+              className="w-full mt-4 py-4 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-xl hover:scale-[1.01]"
             >
-              {isReadingLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin text-slate-950" />
-                  <span>AI đang phân tích câu hỏi & kết nối năng lượng lá bài...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 text-slate-950" />
-                  <span>Xáo Bài & Rút 3 Lá Bài</span>
-                  <ArrowRight className="w-5 h-5 text-slate-950" />
-                </>
-              )}
+              <Sparkles className="w-5 h-5 text-slate-950" />
+              <span>Tiến Hành Xáo & Trải Bài Ra Bàn</span>
+              <ArrowRight className="w-5 h-5 text-slate-950" />
             </button>
           </form>
         </div>
       )}
 
-      {/* 🎴 PHẦN 2: KHI ĐÃ CÓ KẾT QUẢ -> BÀN TRẢI BÀI 3D + BẢN LUẬN GIẢI + CHAT */}
-      {readingResult && (
+      {/* 🎴 GIAI ĐOẠN 2: BÀN TRẢI 78 LÁ BÀI 3D THREE.JS CHO NGƯỜI DÙNG TỰ TAY BỐC 3 LÁ */}
+      {stage === "PICKING" && (
+        <ThreeTarotFan
+          deckCode={deckCode}
+          userQuestion={question}
+          onConfirmSelection={handleConfirmSelectedCards}
+          onCancel={() => setStage("FORM")}
+          isLoading={isReadingLoading}
+        />
+      )}
+
+      {/* 📜 GIAI ĐOẠN 3: KHI ĐÃ CÓ KẾT QUẢ -> BÀN TRẢI BÀI 3D + BẢN LUẬN GIẢI + CHAT */}
+      {stage === "RESULT" && readingResult && (
         <div className="space-y-12 animate-fade-in">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-xl sm:text-3xl font-bold text-white leading-relaxed">
@@ -248,7 +266,7 @@ function ReadingContent() {
             </p>
           </div>
 
-          {/* BÀN TRẢI BÀI */}
+          {/* BÀN TRẢI BÀI 3D */}
           <div className="py-8 px-4 rounded-3xl silver-card">
             <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10">
               {readingResult.drawnCards.map((card, idx) => (

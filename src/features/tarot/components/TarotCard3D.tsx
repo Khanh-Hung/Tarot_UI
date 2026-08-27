@@ -138,15 +138,15 @@ export const TarotCard3D: React.FC<TarotCard3DProps> = ({
             </div>
 
             {/* Hình ảnh minh họa & Tên lá bài */}
-            <div className="my-auto flex flex-col items-center text-center px-2 py-2">
+            <div className="my-auto flex flex-col items-center text-center px-1 py-1">
               <div
-                className={`w-28 h-36 sm:w-32 sm:h-40 rounded-xl bg-gradient-to-b from-slate-900 to-[#12182B] border border-white/20 flex items-center justify-center p-3 relative overflow-hidden shadow-inner transition-transform duration-500 ${
+                className={`w-28 h-40 sm:w-32 sm:h-44 rounded-xl bg-black/60 border border-white/20 flex items-center justify-center relative overflow-hidden shadow-md transition-transform duration-500 ${
                   card.isReversed ? "rotate-180" : ""
                 }`}
               >
                 {imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imageUrl} alt={nameVi} className="w-full h-full object-cover rounded-lg" />
+                  <img src={imageUrl} alt={nameVi} className="w-full h-full object-contain" />
                 ) : (
                   <>
                     <div className="absolute inset-0 bg-radial from-white/10 via-transparent to-transparent"></div>
