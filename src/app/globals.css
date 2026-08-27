@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+:root {
+  --background: #060910;
+  --foreground: #F8FAFC;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #060910;
+  color: #F8FAFC;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Đảm bảo toàn bộ input luôn có màu chữ sáng trắng rõ nét trong mọi trạng thái */
+input,
+input:hover,
+input:focus,
+input:focus-visible,
+input:active {
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+  color-scheme: dark !important;
+}
+
+/* Đảm bảo chữ gợi ý (Placeholder) nhỏ hơn 1 size, có màu xám mờ tinh tế */
+input::placeholder,
+textarea::placeholder,
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  opacity: 1 !important;
+  font-size: 0.85em !important;
+}
+
+/* Fix triệt để Chrome Autofill không bị đổi màu nền hay màu chữ khi click/focus */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:focus-visible,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0d1222 inset !important;
+  box-shadow: 0 0 0 1000px #0d1222 inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  color: #f8fafc !important;
+  caret-color: #f8fafc !important;
+  border-radius: 0.75rem !important;
+  border-color: #334155 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Custom Sleek Scrollbar 5px siêu mượt cho toàn bộ trang */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+*::-webkit-scrollbar-track-piece {
+  background: transparent !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 160ms ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+/* Ẩn triệt để 100% nút mũi tên và góc vuông cuộn trên Windows/Chrome */
+::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:start:decrement,
+*::-webkit-scrollbar-button:end:increment,
+*::-webkit-scrollbar-button:vertical:decrement,
+*::-webkit-scrollbar-button:vertical:increment,
+*::-webkit-scrollbar-button:horizontal:decrement,
+*::-webkit-scrollbar-button:horizontal:increment {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+*::-webkit-scrollbar-corner,
+*::-webkit-resizer {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* Textarea tự động co giãn theo nội dung */
+textarea {
+  resize: none !important;
+  field-sizing: content;
+}
+
+/* 🌙 Moonlit Silver Gradient Text & Button */
+.silver-gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 45%, #94A3B8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.silver-gradient-btn {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 60%, #CBD5E1 100%);
+  color: #070A12;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
+}
+
+.silver-gradient-btn:hover {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
+  box-shadow: 0 6px 25px rgba(255, 255, 255, 0.22);
+}
+
+.silver-card {
+  background: rgba(13, 18, 30, 0.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.silver-card:hover {
+  border-color: rgba(226, 232, 240, 0.28);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(226, 232, 240, 0.06);
+}
