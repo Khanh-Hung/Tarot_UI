@@ -59,7 +59,7 @@ export default function HistoryDetailPage() {
       {/* Back button */}
       <Link
         href="/history"
-        className="inline-flex items-center gap-1.5 text-xs text-purple-300 hover:text-amber-300 transition"
+        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Quay lại Lịch Sử Quẻ Bói</span>
@@ -67,7 +67,7 @@ export default function HistoryDetailPage() {
 
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-950 border border-purple-500/40 text-xs text-amber-300 mb-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/15 text-xs text-slate-200 mb-3">
           <span>🔮 Chủ đề: {reading.topic}</span>
           <span>•</span>
           <div className="flex items-center gap-1">
@@ -75,17 +75,17 @@ export default function HistoryDetailPage() {
             <span>{new Date(reading.createdAt).toLocaleDateString("vi-VN")}</span>
           </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl  font-bold text-white leading-relaxed">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white leading-relaxed">
           &ldquo;{reading.userQuestion}&rdquo;
         </h1>
       </div>
 
       {/* 🎴 3 LÁ BÀI (ĐÃ LẬT SẴN) */}
-      <div className="py-6 px-4 rounded-3xl bg-gradient-to-b from-purple-950/30 via-slate-950 to-purple-950/20 border border-purple-500/20 shadow-2xl">
+      <div className="py-6 px-4 rounded-3xl silver-card">
         <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10">
           {reading.drawnCards.map((card, idx) => (
             <TarotCard3D
-              key={card.cardId}
+              key={card.id || card.cardId || card.card?.id || idx}
               card={card}
               index={idx}
               isFlippedInitial={true}
@@ -95,14 +95,14 @@ export default function HistoryDetailPage() {
       </div>
 
       {/* 📜 BẢN LUẬN GIẢI AI */}
-      <div className="p-6 sm:p-10 rounded-3xl bg-slate-900/90 border border-purple-500/30 shadow-2xl shadow-purple-950/80">
+      <div className="p-6 sm:p-10 rounded-3xl silver-card">
         <MarkdownRenderer content={reading.initialReading} />
       </div>
 
       {/* 💬 KHUNG CHAT TIẾP NỐI */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-amber-200  text-lg font-bold">
-          <MessageSquare className="w-5 h-5 text-amber-400" />
+        <div className="flex items-center gap-2 silver-gradient-text text-lg font-bold">
+          <MessageSquare className="w-5 h-5 text-slate-300" />
           <span>Lịch Sử Trò Chuyện & Tiếp Tục Tâm Sự</span>
         </div>
         <ChatBox

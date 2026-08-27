@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useMemo } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, HelpCircle, Compass, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, Moon, BookOpen, Wand2 } from "lucide-react";
+import { Sparkles, HelpCircle, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, Moon, BookOpen } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   CreateReadingResponse,
   DeckCode,
   DeckDto,
-  Topic,
   ZodiacSign,
 } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
@@ -16,7 +15,6 @@ import { TarotCard3D } from "@/features/tarot/components/TarotCard3D";
 import { MarkdownRenderer } from "@/features/chat/components/MarkdownRenderer";
 import { ChatBox } from "@/features/chat/components/ChatBox";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
-import { detectTopicFromQuestion } from "@/features/tarot/utils/topicDetector";
 
 const ZODIAC_LIST: { code: ZodiacSign; name: string; symbol: string }[] = [
   { code: "ARIES", name: "Bạch Dương (Aries)", symbol: "♈" },
@@ -33,22 +31,12 @@ const ZODIAC_LIST: { code: ZodiacSign; name: string; symbol: string }[] = [
   { code: "PISCES", name: "Song Ngư (Pisces)", symbol: "♓" },
 ];
 
-const TOPIC_LIST: { code: Topic; name: string; icon: string }[] = [
-  { code: "LOVE_RELATIONSHIP", name: "Tình Yêu & Mối Quan Hệ", icon: "💖" },
-  { code: "CAREER_MONEY", name: "Sự Nghiệp & Tài Chính", icon: "💼" },
-  { code: "SPIRITUAL_HEALING", name: "Chữa Lành & Tâm Thức", icon: "🌿" },
-  { code: "DAILY_GUIDANCE", name: "Thông Điệp Ngày Mới", icon: "☀️" },
-  { code: "GENERAL_QUESTION", name: "Câu Hỏi Khác", icon: "🔮" },
-];
-
 function ReadingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: isAuthLoading, updateUserZodiac } = useAuth();
 
   const [question, setQuestion] = useState("");
-  const [isAutoTopic, setIsAutoTopic] = useState(true);
-  const [manualTopic, setManualTopic] = useState<Topic>("LOVE_RELATIONSHIP");
   const [deckCode, setDeckCode] = useState<DeckCode>("RIDER_WAITE_CLASSIC");
   const [selectedZodiac, setSelectedZodiac] = useState<ZodiacSign>("UNKNOWN");
   const [decks, setDecks] = useState<DeckDto[]>([]);
@@ -57,13 +45,6 @@ function ReadingContent() {
   const [errorMsg, setErrorMsg] = useState("");
   const [readingResult, setReadingResult] = useState<CreateReadingResponse | null>(null);
   const [, setFlippedCount] = useState(0);
-
-  // 🧠 Tự động nhận diện chủ đề theo thời gian thực từ câu hỏi của người dùng
-  const detectedTopic = useMemo(() => {
-    return detectTopicFromQuestion(question);
-  }, [question]);
-
-  const activeTopic: Topic = isAutoTopic ? detectedTopic.topic : manualTopic;
 
   useEffect(() => {
     const deckParam = searchParams.get("deckCode") as DeckCode;
@@ -110,10 +91,9 @@ function ReadingContent() {
       const result = await tarotService.createReading({
         userId: user!.userId,
         userQuestion: question,
-        topic: activeTopic,
         deckCode,
         zodiacSign: selectedZodiac !== "UNKNOWN" ? selectedZodiac : undefined,
-        spreadType: "THREE_CARDS_TIMELINE",
+        spreadType: "PAST_PRESENT_FUTURE",
       });
 
       setReadingResult(result);
@@ -133,7 +113,6 @@ function ReadingContent() {
   const handleReset = () => {
     setReadingResult(null);
     setQuestion("");
-    setIsAutoTopic(true);
     setFlippedCount(0);
   };
 
@@ -163,7 +142,7 @@ function ReadingContent() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* 🔮 PHẦN 1: NẾU CHƯA BỐC BÀI -> HIỆN FORM NHẬP CÂU HỎI */}
+      {/* 🔮 PHẦN 1: FORM NHẬP CÂU HỎI TỐI GIẢN (KHÔNG CẦN CHỌN CHỦ ĐỀ) */}
       {!readingResult && (
         <div className="max-w-2xl mx-auto p-7 sm:p-9 rounded-3xl silver-card">
           <div className="text-center mb-8">
@@ -188,91 +167,18 @@ function ReadingContent() {
           <form onSubmit={handleStartReading} className="space-y-6">
             {/* CÂU HỎI CỦA NGƯỜI DÙNG */}
             <div>
-              <label className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <HelpCircle className="w-4 h-4 text-slate-300" />
-                  <span>Câu hỏi hoặc điều bạn đang trăn trở *</span>
-                </span>
-                {question.trim().length > 3 && isAutoTopic && (
-                  <span className="text-[11px] font-medium text-slate-300 flex items-center gap-1 bg-white/[0.06] px-2.5 py-0.5 rounded-full border border-white/10 animate-fade-in">
-                    <Wand2 className="w-3 h-3 text-slate-300" />
-                    <span>AI nhận diện: {detectedTopic.icon} {detectedTopic.label}</span>
-                  </span>
-                )}
+              <label className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4 text-slate-300" />
+                <span>Câu hỏi hoặc điều bạn đang trăn trở *</span>
               </label>
               <textarea
                 required
-                rows={3}
+                rows={4}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Ví dụ: Công việc sắp tới của tôi sẽ có cơ hội thăng tiến nào không? Hay: Mối quan hệ hiện tại giữa tôi và người ấy đang có rào cản gì?"
-                className="w-full bg-black/40 border border-white/10 rounded-2xl p-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-white/30 transition"
+                className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-white/30 transition"
               />
-            </div>
-
-            {/* CHỦ ĐỀ QUẺ BÓI (TỰ ĐỘNG + CHỌN THỦ CÔNG) */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                  <Compass className="w-4 h-4 text-slate-300" />
-                  <span>Chủ đề quẻ bói</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsAutoTopic(!isAutoTopic)}
-                  className="text-[11px] font-medium text-slate-400 hover:text-white transition flex items-center gap-1 cursor-pointer"
-                >
-                  <Wand2 className="w-3 h-3 text-slate-400" />
-                  <span>{isAutoTopic ? "Tự động (AI)" : "Chỉnh thủ công"}</span>
-                </button>
-              </div>
-
-              {isAutoTopic ? (
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-base">
-                      {detectedTopic.icon}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-                        <span>{detectedTopic.label}</span>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/10 text-slate-300 font-normal">
-                          {question.trim().length > 3 ? "Đã nhận diện" : "Đang chờ câu hỏi..."}
-                        </span>
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        AI sẽ tự động định hướng cách luận giải và trải bài phù hợp nhất
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsAutoTopic(false)}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 transition cursor-pointer"
-                  >
-                    Đổi
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {TOPIC_LIST.map((t) => (
-                    <button
-                      key={t.code}
-                      type="button"
-                      onClick={() => setManualTopic(t.code)}
-                      className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 transition cursor-pointer ${
-                        manualTopic === t.code
-                          ? "bg-white/15 border-white/40 text-white shadow-md font-semibold"
-                          : "bg-white/[0.02] border-white/10 text-slate-400 hover:border-white/20 hover:text-slate-200"
-                      }`}
-                    >
-                      <span>{t.icon}</span>
-                      <span className="truncate">{t.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* CUNG HOÀNG ĐẠO */}
@@ -311,12 +217,12 @@ function ReadingContent() {
             <button
               type="submit"
               disabled={isReadingLoading}
-              className="w-full mt-4 py-3.5 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer shadow-xl"
+              className="w-full mt-4 py-4 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer shadow-xl hover:scale-[1.01]"
             >
               {isReadingLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-slate-950" />
-                  <span>Đang xáo bài và kết nối với AI Reader...</span>
+                  <span>AI đang phân tích câu hỏi & kết nối năng lượng lá bài...</span>
                 </>
               ) : (
                 <>
@@ -334,9 +240,6 @@ function ReadingContent() {
       {readingResult && (
         <div className="space-y-12 animate-fade-in">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/[0.04] border border-white/15 text-xs text-slate-200 mb-3">
-              <span>🔮 Chủ đề: {readingResult.topic}</span>
-            </div>
             <h1 className="text-xl sm:text-3xl font-bold text-white leading-relaxed">
               &ldquo;{readingResult.userQuestion}&rdquo;
             </h1>
@@ -350,7 +253,7 @@ function ReadingContent() {
             <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10">
               {readingResult.drawnCards.map((card, idx) => (
                 <TarotCard3D
-                  key={card.cardId}
+                  key={card.id || card.cardId || card.card?.id || idx}
                   card={card}
                   index={idx}
                   onFlip={() => setFlippedCount((prev) => prev + 1)}
@@ -370,7 +273,7 @@ function ReadingContent() {
               <MessageSquare className="w-5 h-5 text-slate-300" />
               <span>Trò Chuyện & Hỏi Sâu Với AI Reader</span>
             </div>
-            <ChatBox readingId={readingResult.readingId} />
+            <ChatBox readingId={readingResult.id || readingResult.readingId || 0} />
           </div>
 
           <div className="text-center pt-6">

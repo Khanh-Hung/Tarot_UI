@@ -46,12 +46,19 @@ export const TarotCard3D: React.FC<TarotCard3DProps> = ({
     }
   };
 
+  const nameVi = card.nameVi || card.card?.nameVi || "Lá bài";
+  const nameEn = card.nameEn || card.card?.nameEn || "";
+  const element = card.element || card.card?.element;
+  const keywords = card.keywords || card.card?.keywords;
+  const cardCode = card.cardCode || card.card?.deckCode || "TAROT";
+  const imageUrl = card.imageUrl || card.card?.imageUrl;
+
   return (
     <div className="flex flex-col items-center">
       {/* Vị trí lá bài badge */}
       <div className="mb-3 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/15 text-xs font-medium text-slate-200 shadow-lg backdrop-blur-md flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-        {card.positionName || `Lá số ${card.positionIndex + 1}`}
+        {card.positionName || `Lá số ${card.positionIndex}`}
       </div>
 
       {/* Thẻ 3D Container */}
@@ -120,12 +127,12 @@ export const TarotCard3D: React.FC<TarotCard3DProps> = ({
             {/* Header lá bài */}
             <div className="flex justify-between items-center z-10 px-1">
               <span className="text-[10px]  font-bold uppercase tracking-wider text-slate-200 bg-white/10 px-2 py-0.5 rounded border border-white/15">
-                {card.cardCode}
+                {cardCode}
               </span>
-              {card.element && (
+              {element && (
                 <div className="flex items-center gap-1 text-[11px] font-medium text-slate-300 bg-black/40 px-2 py-0.5 rounded-full border border-white/10">
-                  {getElementIcon(card.element)}
-                  <span>{card.element}</span>
+                  {getElementIcon(element)}
+                  <span>{element}</span>
                 </div>
               )}
             </div>
@@ -137,17 +144,26 @@ export const TarotCard3D: React.FC<TarotCard3DProps> = ({
                   card.isReversed ? "rotate-180" : ""
                 }`}
               >
-                <div className="absolute inset-0 bg-radial from-white/10 via-transparent to-transparent"></div>
-                <Sparkles className="w-12 h-12 text-slate-200" />
+                {imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={imageUrl} alt={nameVi} className="w-full h-full object-cover rounded-lg" />
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-radial from-white/10 via-transparent to-transparent"></div>
+                    <Sparkles className="w-12 h-12 text-slate-200" />
+                  </>
+                )}
               </div>
 
               {/* Tên lá bài tiếng Việt & Tiếng Anh */}
               <h3 className="mt-3 text-base sm:text-lg font-bold  text-white tracking-wide">
-                {card.nameVi}
+                {nameVi}
               </h3>
-              <p className="text-xs text-slate-400 italic ">
-                {card.nameEn}
-              </p>
+              {nameEn && (
+                <p className="text-xs text-slate-400 italic ">
+                  {nameEn}
+                </p>
+              )}
 
               {/* Trạng thái Xuôi / Ngược */}
               <div
@@ -172,10 +188,10 @@ export const TarotCard3D: React.FC<TarotCard3DProps> = ({
             </div>
 
             {/* Keywords ở chân lá bài */}
-            {card.keywords && (
+            {keywords && (
               <div className="z-10 bg-black/40 border border-white/10 rounded-lg p-1.5 text-center backdrop-blur-sm">
                 <p className="text-[10px] text-slate-300 font-medium line-clamp-1">
-                  🔑 {card.keywords}
+                  🔑 {keywords}
                 </p>
               </div>
             )}
