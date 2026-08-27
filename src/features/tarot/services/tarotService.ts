@@ -30,7 +30,17 @@ export const tarotService = {
     return response.data;
   },
 
-  async getReadingHistory(userId: number, page = 0, size = 10): Promise<PagedResponse<ReadingSummaryResponse>> {
+  async getReadingHistory(userId?: number | null, page = 0, size = 10): Promise<PagedResponse<ReadingSummaryResponse>> {
+    if (!userId) {
+      return {
+        items: [],
+        totalElements: 0,
+        totalPages: 0,
+        page,
+        size,
+        last: true,
+      };
+    }
     const response = await apiClient.get<PagedResponse<ReadingSummaryResponse>>(
       `/readings/user/${userId}?page=${page}&size=${size}`
     );

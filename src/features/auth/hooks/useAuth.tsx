@@ -28,7 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const savedUser = localStorage.getItem("tarot_user");
       if (savedToken && savedUser) {
         setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        if (parsed.id && !parsed.userId) {
+          parsed.userId = parsed.id;
+        }
+        setUser(parsed);
       }
     } catch (e) {
       console.error("Failed to restore auth session:", e);
