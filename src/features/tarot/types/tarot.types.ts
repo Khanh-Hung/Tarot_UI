@@ -1,10 +1,17 @@
 export type DeckCode = 
   | "RIDER_WAITE_CLASSIC" 
+  | "ANIME_MANGA" 
+  | "CYBERPUNK_NEON" 
+  | "MYSTICAL_CATS"
   | "MARSEILLE_HERMETIC" 
   | "THOTH_ALEISTER" 
   | "SHADOWSCAPES_ETHEREAL";
 
 export type Topic = 
+  | "LOVE_AND_RELATIONSHIP"
+  | "CAREER_AND_FINANCE"
+  | "SELF_GROWTH_AND_HEALING"
+  | "GENERAL_GUIDANCE"
   | "LOVE_RELATIONSHIP" 
   | "CAREER_MONEY" 
   | "SPIRITUAL_HEALING" 
@@ -12,6 +19,9 @@ export type Topic =
   | "GENERAL_QUESTION";
 
 export type SpreadType = 
+  | "PAST_PRESENT_FUTURE"
+  | "TWO_PATHS_CHOICE"
+  | "DAILY_ORACLE"
   | "THREE_CARDS_TIMELINE" 
   | "SINGLE_CARD_FOCUS" 
   | "CELTIC_CROSS";
@@ -33,7 +43,8 @@ export interface DeckDto {
 
 export interface CardDto {
   id: number;
-  code: string;
+  code?: string;
+  deckCode?: DeckCode | string;
   nameEn: string;
   nameVi: string;
   arcanaType: string;
@@ -47,10 +58,11 @@ export interface CardDto {
 }
 
 export interface DrawnCardDto {
-  cardId: number;
-  cardCode: string;
-  nameVi: string;
-  nameEn: string;
+  id?: number;
+  cardId?: number;
+  cardCode?: string;
+  nameVi?: string;
+  nameEn?: string;
   isReversed: boolean;
   positionIndex: number;
   positionName: string;
@@ -58,21 +70,23 @@ export interface DrawnCardDto {
   element?: string;
   keywords?: string;
   meaning?: string;
+  card?: CardDto;
 }
 
 export interface CreateReadingCommand {
   userId: number;
   userQuestion: string;
-  topic: Topic;
+  topic?: Topic;
   zodiacSign?: ZodiacSign;
   spreadType?: SpreadType;
   deckCode?: DeckCode;
 }
 
 export interface CreateReadingResponse {
-  readingId: number;
+  id: number;
+  readingId?: number;
   userQuestion: string;
-  topic: Topic;
+  topic?: Topic;
   spreadType: SpreadType;
   initialReading: string;
   createdAt: string;
@@ -90,7 +104,7 @@ export interface ReadingDetailResponse {
   id: number;
   userId: number;
   userQuestion: string;
-  topic: Topic;
+  topic?: Topic;
   spreadType: SpreadType;
   deckCode: DeckCode;
   initialReading: string;
@@ -102,7 +116,7 @@ export interface ReadingDetailResponse {
 export interface ReadingSummaryResponse {
   id: number;
   userQuestion: string;
-  topic: Topic;
+  topic?: Topic;
   spreadType: SpreadType;
   deckCode: DeckCode;
   createdAt: string;

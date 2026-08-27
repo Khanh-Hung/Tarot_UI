@@ -38,7 +38,8 @@ export const tarotService = {
   },
 
   async sendChatMessage(readingId: number, message: string): Promise<string> {
-    const response = await apiClient.post<string>(`/readings/${readingId}/messages`, { message });
-    return response.data;
+    const response = await apiClient.post<any>(`/readings/${readingId}/messages`, { message });
+    if (typeof response.data === "string") return response.data;
+    return response.data?.content || response.data?.message || "";
   },
 };
