@@ -122,20 +122,10 @@ export const Navbar: React.FC = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2.5 p-1 sm:px-3 sm:py-1.5 rounded-full sm:rounded-2xl border border-white/15 bg-white/[0.04] hover:border-white/30 hover:bg-white/[0.08] transition-all cursor-pointer shadow-sm active:scale-95 select-none"
-                  title={user.username}
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 hover:border-white/40 bg-gradient-to-br from-slate-200 via-slate-300 to-slate-500 flex items-center justify-center text-slate-950 font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 ring-2 ring-white/10 hover:ring-white/25 select-none"
+                  title={`${user.username} (${user.zodiacSign || "Seeker"})`}
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-500 flex items-center justify-center text-slate-950 font-bold text-xs">
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="hidden sm:flex flex-col text-left">
-                    <span className="text-xs font-bold text-slate-100 line-clamp-1 max-w-[100px]">
-                      {user.username}
-                    </span>
-                    <span className="text-[10px] text-slate-400 -mt-0.5">
-                      {user.zodiacSign !== "UNKNOWN" ? user.zodiacSign : "Seeker"}
-                    </span>
-                  </div>
+                  {user.username.charAt(0).toUpperCase()}
                 </button>
 
                 {isDropdownOpen && (

@@ -254,13 +254,29 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     shufflePhaseRef.current = shufflePhase;
   }, [shufflePhase]);
 
+  const [drawnCardsMap, setDrawnCardsMap] = useState<{ [cardId: number]: { slotIndex: number; isReversed: boolean } }>({});
+  const drawnCardsMapRef = useRef<{ [cardId: number]: { slotIndex: number; isReversed: boolean } }>({});
+
+  useEffect(() => {
+    drawnCardsMapRef.current = drawnCardsMap;
+  }, [drawnCardsMap]);
+
   const handleCardSelect3D = (meshGroup: THREE.Group, card: CardDto) => {
     setSelectedCards((prev) => {
       if (prev.length >= 3) return prev;
       if (prev.some((s) => s.card.id === card.id)) return prev;
 
-      meshGroup.userData.isDrawn = true;
+      const slotIdx = prev.length;
       const isReversed = Math.random() < 0.35;
+
+      meshGroup.userData.isDrawn = true;
+      meshGroup.userData.slotIndex = slotIdx;
+
+      setDrawnCardsMap((m) => ({
+        ...m,
+        [card.id]: { slotIndex: slotIdx, isReversed },
+      }));
+
       return [...prev, { card, isReversed }];
     });
   };
@@ -270,8 +286,17 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   const start3DShuffleSequence = () => {
     setIsShuffling(true);
     setSelectedCards([]);
+    setDrawnCardsMap({});
     isSpreadRef.current = false;
     shuffleStartTimeRef.current = performance.now();
+
+    // Reset toàn bộ lá bài về trạng thái chưa rút
+    if (cardMeshesRef.current) {
+      cardMeshesRef.current.forEach((g) => {
+        g.userData.isDrawn = false;
+        delete g.userData.slotIndex;
+      });
+    }
 
     // 1. Trộn bài xoáy nước vòng tròn khắp mặt thảm (Tarot Vortex Wash)
     setShufflePhase("VORTEX");
@@ -327,24 +352,22 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     }
   }, [deckCards.length]);
 
-
-
   // Khởi tạo Scene Three.js
   useEffect(() => {
     if (!mountRef.current || deckCards.length === 0) return;
 
     const container = mountRef.current;
     const width = container.clientWidth || 1000;
-    const height = container.clientHeight || 520;
+    const height = container.clientHeight || 640;
 
     // 1. SCENE
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. CAMERA (ĐẶT VỊ TRÍ CHUẨN XÁC ĐỂ THẤY TRỌN VẸN TOÀN BỘ 78 LÁ KHÔNG BỊ CHE)
+    // 2. CAMERA ĐƯỢC CĂN CHỈNH BAO QUÁT CẢ 3 VỊ TRÍ ĐÓN BÀI VÀ BÀN TRẢI 78 LÁ
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-    camera.position.set(0, 0.0, 7.8);
-    camera.lookAt(0, -0.1, 0);
+    camera.position.set(0, 0.4, 8.8);
+    camera.lookAt(0, 0.2, 0);
 
     // 3. RENDERER
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -377,7 +400,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     scene.add(pointLight);
 
     // 5. MẶT THẢM BÀN TAROT (VELVET MAT)
-    const tableGeo = new THREE.PlaneGeometry(30, 20);
+    const tableGeo = new THREE.PlaneGeometry(32, 24);
     const tableMat = new THREE.MeshStandardMaterial({
       color: 0x0a1020,
       roughness: 0.8,
@@ -387,6 +410,36 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     tableMesh.position.set(0, 0, -0.6);
     tableMesh.receiveShadow = true;
     scene.add(tableMesh);
+
+    // 🌟 TẠO 3 Ô ĐÓN BÀI 3D (3 HOLOGRAPHIC GOLDEN SLOTS TRÊN MẶT BÀN)
+    const slotXPositions = [-2.1, 0, 2.1];
+    const slotYPos = 1.65;
+
+    slotXPositions.forEach((slotX) => {
+      // Khung viền mạ vàng 3D của ô chờ (khớp khít 100% với kích thước lá bài 0.85 x 1.45)
+      const slotGeo = new THREE.PlaneGeometry(0.85, 1.45);
+      const slotEdges = new THREE.EdgesGeometry(slotGeo);
+      const slotLineMat = new THREE.LineBasicMaterial({
+        color: 0xf2d07c,
+        linewidth: 2,
+        transparent: true,
+        opacity: 0.55,
+      });
+      const slotWireframe = new THREE.LineSegments(slotEdges, slotLineMat);
+      slotWireframe.position.set(slotX, slotYPos, 0.005);
+      scene.add(slotWireframe);
+
+      // Thảm nền ô chờ
+      const slotBackMat = new THREE.MeshBasicMaterial({
+        color: 0x162238,
+        transparent: true,
+        opacity: 0.45,
+        side: THREE.DoubleSide,
+      });
+      const slotBackMesh = new THREE.Mesh(slotGeo, slotBackMat);
+      slotBackMesh.position.set(slotX, slotYPos, 0.002);
+      scene.add(slotBackMesh);
+    });
 
     // 6. KHỞI TẠO 78 LÁ BÀI 3D (TỈ LỆ VÀNG 0.85 x 1.45)
     const cardCanvas = renderTarotCardBackCanvas();
@@ -445,23 +498,47 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       isSpreadRef.current = true;
     }, 400);
 
-    // 7. RAYCASTER BẮT CHUỘT
+    // 7. BẮT CHUỘT VÀ TÍNH TOÁN HOVER MƯỢT MÀ KHÔNG RUNG LẮC
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(-999, -999);
+    let targetHoverIndex = -1;
 
     const onMouseMove = (e: MouseEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-      pointLight.position.x = mouse.x * 4;
-      pointLight.position.y = mouse.y * 3 + 1;
+      // Tính toán lá bài được hover trực tiếp dựa trên vị trí chuột liên tục
+      if (!isShufflingRef.current && isSpreadRef.current && mouse.y > -0.9 && mouse.y < 0.15) {
+        if (spreadModeRef.current === "RIBBON") {
+          const clampedX = Math.max(-0.88, Math.min(0.88, mouse.x));
+          const norm = (clampedX + 0.88) / (0.88 * 2); // 0 -> 1
+          targetHoverIndex = Math.floor(norm * deckCards.length);
+        } else {
+          const angle = Math.atan2(mouse.x, mouse.y + 0.9);
+          const maxAngle = Math.PI * 0.32;
+          const norm = (angle + maxAngle) / (maxAngle * 2);
+          targetHoverIndex = Math.floor(norm * deckCards.length);
+        }
+        targetHoverIndex = Math.max(0, Math.min(deckCards.length - 1, targetHoverIndex));
+      } else {
+        targetHoverIndex = -1;
+      }
     };
 
     const onClick = (e: MouseEvent) => {
-      // Tuyệt đối không cho chọn bài khi đang trong chuỗi xáo bài hoặc chưa trải bài xong
       if (isShufflingRef.current || !isSpreadRef.current) return;
 
+      if (targetHoverIndex >= 0 && targetHoverIndex < cardGroups.length) {
+        const topHit = cardGroups[targetHoverIndex];
+        if (topHit && !topHit.userData.isDrawn) {
+          const cardData = topHit.userData.card as CardDto;
+          handleCardSelect3D(topHit, cardData);
+          return;
+        }
+      }
+
+      // Fallback raycaster
       const rect = renderer.domElement.getBoundingClientRect();
       const clickMouse = new THREE.Vector2(
         ((e.clientX - rect.left) / rect.width) * 2 - 1,
@@ -469,7 +546,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       );
 
       raycaster.setFromCamera(clickMouse, camera);
-      const meshes = cardGroups.map((g) => g.children[0]);
+      const meshes = cardGroups.filter((g) => !g.userData.isDrawn).map((g) => g.children[0]);
       const intersects = raycaster.intersectObjects(meshes);
 
       if (intersects.length > 0) {
@@ -492,15 +569,10 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
 
-      raycaster.setFromCamera(mouse, camera);
-      const activeMeshes = cardGroups.filter((g) => !g.userData.isDrawn).map((g) => g.children[0]);
-      const intersects = raycaster.intersectObjects(activeMeshes);
-
-      let currentHover: THREE.Group | null = null;
-      // Chỉ kích hoạt hiệu ứng hover nhấc lá bài khi đã kết thúc xáo bài và trải bài xong
-      if (!isShufflingRef.current && isSpreadRef.current && intersects.length > 0) {
-        currentHover = intersects[0].object.parent as THREE.Group;
-      }
+      const currentHover =
+        !isShufflingRef.current && isSpreadRef.current && targetHoverIndex >= 0
+          ? cardGroups[targetHoverIndex]
+          : null;
       hoveredMeshRef.current = currentHover;
 
       const total = cardGroups.length;
@@ -508,13 +580,26 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       const currentPhase = shufflePhaseRef.current;
 
       cardGroups.forEach((group, i) => {
+        // 🚀 NẾU LÁ BÀI ĐÃ ĐƯỢC RÚT: ĐẶT NẰM NGAY NGẮN XUỐNG THẢM BÀN TẠI VỊ TRÍ Ô CHỜ
         if (group.userData.isDrawn) {
-          group.scale.lerp(new THREE.Vector3(0, 0, 0), delta * 8);
+          const slotIdx = group.userData.slotIndex ?? 0;
+          const targetSlotX = slotXPositions[slotIdx] || 0;
+          const targetSlotY = slotYPos - 0.725;
+          const targetSlotZ = 0.008;
+
+          group.position.x = THREE.MathUtils.lerp(group.position.x, targetSlotX, delta * 10);
+          group.position.y = THREE.MathUtils.lerp(group.position.y, targetSlotY, delta * 10);
+          group.position.z = THREE.MathUtils.lerp(group.position.z, targetSlotZ, delta * 10);
+
+          group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, 0, delta * 10);
+          group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, 0, delta * 10);
+          group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, 0, delta * 10);
+
+          group.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 10);
           return;
         }
 
         const isHover = currentHover === group;
-        const mesh = group.children[0] as THREE.Mesh;
         const normalized = (i - (total - 1) / 2) / ((total - 1) / 2); // -1 đến +1
 
         let targetX = 0;
@@ -522,7 +607,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         let targetZ = i * 0.005;
         let targetRotZ = 0;
         let targetRotX = 0;
-        let hoverLift = isHover ? 0.7 : 0;
+        let targetScale = isHover ? 1.06 : 1.0;
 
         if (currentPhase === "VORTEX") {
           // 🌀 BƯỚC 1: TRỘN BÀI XOÁY NƯỚC VÒNG TRÒN KHẮP BÀN TAROT
@@ -532,14 +617,14 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           const theta = elapsed * orbitSpeed + (i * (Math.PI * 2 / total) * 3.2);
 
           targetX = Math.cos(theta) * orbitRadius;
-          targetY = Math.sin(theta) * (orbitRadius * 0.55) - 0.2;
+          targetY = Math.sin(theta) * (orbitRadius * 0.55) - 0.7;
           targetZ = (i % 12) * 0.012;
           targetRotZ = theta + i * 0.2;
           targetRotX = 0.18;
         } else if (currentPhase === "GATHER") {
           // 📦 BƯỚC 2: GOM BÀI VỀ 1 CỌC TẠI TÂM
           targetX = 0;
-          targetY = -0.6;
+          targetY = -1.1;
           targetZ = i * 0.005;
           targetRotZ = Math.sin(i * 99) * 0.04;
           targetRotX = 0.12;
@@ -551,7 +636,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
           if (packetProgress < 0) {
             targetX = 0;
-            targetY = -0.6;
+            targetY = -1.1;
             targetZ = i * 0.005;
             targetRotZ = 0;
             targetRotX = 0.15;
@@ -559,13 +644,13 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
             const u = packetProgress;
             const arc = Math.sin(u * Math.PI);
             targetX = arc * 1.5;
-            targetY = -0.6 + arc * 1.1;
+            targetY = -1.1 + arc * 1.1;
             targetZ = 0.05 + u * 0.5 + (i % 15) * 0.006;
             targetRotZ = arc * 0.22;
             targetRotX = 0.15 + arc * 0.1;
           } else {
             targetX = 0;
-            targetY = -0.6;
+            targetY = -1.1;
             targetZ = 0.3 + (i % 15) * 0.006;
             targetRotZ = 0;
             targetRotX = 0.15;
@@ -577,17 +662,15 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           const dropProgress = Math.max(0, Math.min(1, (elapsed - dropTime) / 380));
 
           if (dropProgress === 0) {
-            // Nằm ở cọc trên cao lơ lửng góc trái
             targetX = -1.6 + (i * 0.004);
-            targetY = 1.2;
+            targetY = 0.7;
             targetZ = 0.7 + (i * 0.005);
             targetRotZ = 0.32;
             targetRotX = 0.38;
           } else {
-            // Rơi theo đường cong parabol ánh sáng trút xuống bàn
             const p = dropProgress;
             targetX = THREE.MathUtils.lerp(-1.6, 0, p);
-            targetY = THREE.MathUtils.lerp(1.2, -0.6, p);
+            targetY = THREE.MathUtils.lerp(0.7, -1.1, p);
             targetZ = THREE.MathUtils.lerp(0.7, i * 0.005, p);
             targetRotZ = THREE.MathUtils.lerp(0.32, 0, p);
             targetRotX = THREE.MathUtils.lerp(0.38, 0.15, p);
@@ -597,7 +680,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           const isLeft = i < total / 2;
           const halfIdx = isLeft ? i : i - total / 2;
           targetX = isLeft ? -1.7 : 1.7;
-          targetY = -0.3;
+          targetY = -0.8;
           targetZ = halfIdx * 0.008;
           targetRotZ = isLeft ? -0.22 : 0.22;
           targetRotX = 0.2;
@@ -605,29 +688,29 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           // 🌊 BƯỚC 5: CHẺ BÀI ĐAN XEN LƯỢN SÓNG 3D
           const isLeft = i % 2 === 0;
           targetX = isLeft ? -0.25 : 0.25;
-          targetY = -0.5 + Math.sin(i * 0.35) * 0.15;
+          targetY = -0.9 + Math.sin(i * 0.35) * 0.15;
           targetZ = i * 0.005;
           targetRotZ = isLeft ? -0.06 : 0.06;
           targetRotX = 0.15;
         } else if (isSpreadRef.current) {
-          // 🎴 BƯỚC 6: TRẢI BÀI HOÀN CHỈNH RA MẶT THẢM
+          // 🎴 BƯỚC 6: TRẢI BÀI HOÀN CHỈNH RA NỬA DƯỚI BÀN THẢM
           if (currentMode === "RIBBON") {
             targetX = normalized * 3.8;
-            targetY = -(normalized ** 2) * 0.45 - 0.2;
-            targetRotZ = -normalized * 0.22;
-            targetRotX = 0.22;
-            targetZ = isHover ? 0.8 : i * 0.005;
+            targetY = -(normalized ** 2) * 0.38 - 1.05 + (isHover ? 0.45 : 0);
+            targetRotZ = -normalized * 0.2;
+            targetRotX = 0.25;
+            targetZ = isHover ? 0.6 : i * 0.005;
           } else {
             const angle = normalized * Math.PI * 0.32;
             targetX = 0;
-            targetY = -1.6;
+            targetY = -2.2 + (isHover ? 0.35 : 0);
             targetRotZ = -angle;
-            targetRotX = 0;
-            targetZ = isHover ? 0.8 : i * 0.005;
+            targetRotX = 0.05;
+            targetZ = isHover ? 0.6 : i * 0.005;
           }
         } else {
           targetX = 0;
-          targetY = -0.6;
+          targetY = -1.1;
           targetZ = i * 0.005;
           targetRotZ = 0;
           targetRotX = 0.15;
@@ -638,9 +721,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         group.position.z = THREE.MathUtils.lerp(group.position.z, targetZ, delta * 15);
         group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, targetRotZ, delta * 12);
         group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, targetRotX, delta * 12);
-
-        mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, 0.725 + hoverLift, delta * 15);
-        mesh.scale.lerp(isHover ? new THREE.Vector3(1.2, 1.2, 1.2) : new THREE.Vector3(1, 1, 1), delta * 15);
+        group.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 15);
       });
 
       renderer.render(scene, camera);
@@ -651,7 +732,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     const handleResize = () => {
       if (!mountRef.current || !rendererRef.current) return;
       const w = mountRef.current.clientWidth;
-      const h = mountRef.current.clientHeight || 520;
+      const h = mountRef.current.clientHeight || 640;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       rendererRef.current.setSize(w, h);
@@ -667,12 +748,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     };
   }, [deckCards]);
 
-
   const handleReshuffle3D = () => {
-    cardMeshesRef.current.forEach((g) => {
-      g.userData.isDrawn = false;
-      g.scale.set(1, 1, 1);
-    });
     start3DShuffleSequence();
   };
 
@@ -682,15 +758,20 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     const shuffled = [...available].sort(() => Math.random() - 0.5);
     const chosenMeshes = shuffled.slice(0, 3);
 
-    const chosen = chosenMeshes.map((m) => {
+    const chosen: { card: CardDto; isReversed: boolean }[] = [];
+    const mapUpdate: { [cardId: number]: { slotIndex: number; isReversed: boolean } } = {};
+
+    chosenMeshes.forEach((m, idx) => {
       m.userData.isDrawn = true;
-      return {
-        card: m.userData.card as CardDto,
-        isReversed: Math.random() < 0.35,
-      };
+      m.userData.slotIndex = idx;
+      const c = m.userData.card as CardDto;
+      const isReversed = Math.random() < 0.35;
+      chosen.push({ card: c, isReversed });
+      mapUpdate[c.id] = { slotIndex: idx, isReversed };
     });
 
     setSelectedCards(chosen);
+    setDrawnCardsMap(mapUpdate);
   };
 
   const handleConfirm = () => {
@@ -707,17 +788,17 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   const currentSlotIndex = selectedCards.length;
 
   return (
-    <div className="w-full space-y-8 animate-fade-in select-none">
+    <div className="w-full space-y-6 animate-fade-in select-none">
       {/* 🔮 TIÊU ĐỀ HƯỚNG DẪN */}
       <div className="text-center max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.06] border border-white/20 text-xs text-slate-100 mb-3 shadow-xl backdrop-blur-md">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.06] border border-white/20 text-xs text-slate-100 mb-2 shadow-xl backdrop-blur-md">
           <Moon className="w-4 h-4 text-amber-300 animate-pulse" />
-          <span>Bàn Trải Bài 3D WebGL (78 Lá Mạ Vàng Chuẩn 1909)</span>
+          <span>Bàn Trải Bài 3D WebGL Toàn Cảnh (78 Lá Mạ Vàng Chuẩn 1909)</span>
         </div>
         <h2 className="text-xl sm:text-3xl font-bold text-white leading-relaxed">
           &ldquo;{userQuestion}&rdquo;
         </h2>
-        <p className="mt-2 text-xs sm:text-sm text-slate-300">
+        <p className="mt-1.5 text-xs sm:text-sm text-slate-300">
           {isShuffling ? (
             <span className="text-amber-300 font-medium flex items-center justify-center gap-1.5 animate-pulse">
               <RotateCcw className="w-4 h-4 animate-spin text-amber-300" />
@@ -740,103 +821,28 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         </p>
       </div>
 
-      {/* 🌟 3 VỊ TRÍ ĐÓN LÁ BÀI RÚT (SLOTS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-        {SLOT_NAMES.map((slot, idx) => {
-          const picked = selectedCards[idx];
-          return (
-            <div
-              key={idx}
-              className={`p-4 rounded-3xl flex flex-col items-center justify-between text-center transition-all duration-500 min-h-[210px] ${
-                picked
-                  ? "silver-card border-amber-300/40 shadow-2xl shadow-amber-300/10"
-                  : currentSlotIndex === idx
-                  ? "bg-white/[0.08] border-2 border-dashed border-amber-300/50 shadow-lg scale-[1.02]"
-                  : "bg-white/[0.03] border border-dashed border-white/10 opacity-70"
-              }`}
-            >
-              <div className="w-full">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-400/15 border border-amber-300/30 px-2.5 py-0.5 rounded-full mb-1.5">
-                  <span>{slot.icon}</span>
-                  <span>Lá số {idx + 1}</span>
-                </span>
-                <h4 className="text-sm font-bold text-white">{slot.title}</h4>
-                <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">{slot.desc}</p>
-              </div>
-
-              {/* Lá bài bay vào slot với tỉ lệ chuẩn 100% không bị dư khung viền */}
-              <div className="my-2 flex items-center justify-center [perspective:800px]">
-                {picked ? (
-                  <div
-                    className="w-[90px] sm:w-[105px] aspect-[1024/1600] rounded-[6px] shadow-2xl relative transition-transform duration-500 animate-scale-up overflow-hidden"
-                    style={{
-                      transform: "rotateX(10deg) rotateY(-5deg)",
-                      boxShadow: "0 16px 32px -6px rgba(0,0,0,0.9), 0 0 20px rgba(242,208,124,0.3)",
-                    }}
-                  >
-                    {cardBackDataUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={cardBackDataUrl}
-                        alt="Tarot Card Back"
-                        className="w-full h-full object-fill block"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-[#121b33]" />
-                    )}
-
-                    {/* Lớp bóng gương khúc xạ ánh sáng 3D chân thực */}
-                    <div
-                      className="absolute inset-0 pointer-events-none opacity-30"
-                      style={{
-                        background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.25) 100%)",
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="w-[90px] sm:w-[105px] aspect-[1024/1600] rounded-[6px] border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-slate-500 gap-1.5 bg-white/[0.02]"
-                    style={{
-                      transform: "rotateX(10deg) rotateY(-5deg)",
-                    }}
-                  >
-                    <Sparkles className="w-5 h-5 opacity-40 text-amber-300 animate-pulse" />
-                    <span className="text-[10px] text-slate-400 font-medium">Chờ rút</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 🎴 KHUNG CANVAS THREE.JS 3D TRẢI BÀI */}
-      <div className="rounded-3xl p-6 sm:p-8 silver-card relative overflow-hidden bg-gradient-to-b from-[#0B132B] via-[#111C3D] to-[#080E20] border border-amber-400/20 shadow-2xl">
-        {/* Nút điều khiển */}
-        <div className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-4 mb-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-300/30 flex items-center justify-center text-amber-200 shadow-md">
+      {/* 🎴 KHUNG CANVAS THREE.JS 3D TOÀN CẢNH KẾT HỢP CẢ 3 Ô ĐÓN BÀI & BÀN TRẢI */}
+      <div className="rounded-3xl p-4 sm:p-6 silver-card relative overflow-hidden bg-gradient-to-b from-[#0B132B] via-[#111C3D] to-[#080E20] border border-amber-400/20 shadow-2xl">
+        {/* THANH ĐIỀU KHIỂN & TIÊU ĐỀ 3 Ô ĐÓN BÀI TRÊN 3D */}
+        <div className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-3 mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-amber-400/15 border border-amber-300/30 flex items-center justify-center text-amber-200 shadow-md">
               <Eye className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-white">
-                Bàn Trải 3D Velvet (78 Lá Bài Tự Nhiên)
+              <h3 className="text-xs sm:text-sm font-semibold text-white">
+                Bàn Trải 3D Velvet Không Gian Thực
               </h3>
-              <p className="text-[11px] text-slate-300">
-                {isShuffling
-                  ? "Đang xáo bài... Vui lòng đợi kết thúc nghi thức"
-                  : `${deckCards.length - selectedCards.length} lá 3D • Rê chuột qua dải bài để nhấc lá bài, click để rút`}
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
-            {/* Nút đổi kiểu trải bài: Cánh Cung Trải Thảm vs Xòe Quạt */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Nút đổi kiểu trải bài */}
             <div className="inline-flex rounded-xl bg-black/40 border border-white/15 p-0.5 text-xs">
               <button
                 onClick={() => setSpreadMode("RIBBON")}
                 disabled={isShuffling}
-                className={`px-2.5 py-1.5 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
+                className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
                   spreadMode === "RIBBON"
                     ? "bg-amber-400/25 text-amber-200 border border-amber-300/40"
                     : "text-slate-400 hover:text-white"
@@ -848,7 +854,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
               <button
                 onClick={() => setSpreadMode("FAN")}
                 disabled={isShuffling}
-                className={`px-2.5 py-1.5 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
+                className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
                   spreadMode === "FAN"
                     ? "bg-amber-400/25 text-amber-200 border border-amber-300/40"
                     : "text-slate-400 hover:text-white"
@@ -862,7 +868,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
             <button
               onClick={() => handleReshuffle3D()}
               disabled={isShuffling || isLoading}
-              className="px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-200 hover:text-white transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md"
+              className="px-2.5 py-1 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-200 hover:text-white transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isShuffling ? "animate-spin" : ""}`} />
               <span>Xáo lại</span>
@@ -871,7 +877,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
             <button
               onClick={handleQuickPick3D}
               disabled={isShuffling || isLoading}
-              className="px-3 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-xs font-bold text-amber-200 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-md"
+              className="px-2.5 py-1 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-xs font-bold text-amber-200 transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Rút nhanh</span>
@@ -879,21 +885,49 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           </div>
         </div>
 
-        {/* CONTAINER CHỨA CANVAS THREE.JS */}
+        {/* 🌟 HUD TIÊU ĐỀ 3 Ô VỊ TRÍ ĐÓN BÀI NẰM NGAY TRÊN 3D SLOTS */}
+        <div className="grid grid-cols-3 gap-2 max-w-4xl mx-auto pt-1 pb-1 relative z-20 pointer-events-none">
+          {SLOT_NAMES.map((slot, idx) => {
+            const isPicked = selectedCards.length > idx;
+            return (
+              <div
+                key={idx}
+                className={`text-center p-2 rounded-2xl transition-all duration-500 backdrop-blur-sm ${
+                  isPicked
+                    ? "bg-amber-400/10 border border-amber-300/30"
+                    : currentSlotIndex === idx
+                    ? "bg-white/[0.08] border border-dashed border-amber-300/40"
+                    : "bg-white/[0.02] border border-white/5 opacity-60"
+                }`}
+              >
+                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-400/20 px-2 py-0.5 rounded-full mb-0.5">
+                  <span>{slot.icon}</span>
+                  <span>Lá {idx + 1}</span>
+                </span>
+                <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-1">{slot.title}</h4>
+                <p className="text-[10px] sm:text-[11px] text-slate-300 line-clamp-1 hidden sm:block">
+                  {slot.desc}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CONTAINER CHỨA CANVAS THREE.JS DUY NHẤT */}
         <div
           ref={mountRef}
-          className={`w-full h-[460px] sm:h-[500px] relative transition-opacity duration-300 ${
+          className={`w-full h-[540px] sm:h-[620px] relative transition-opacity duration-300 ${
             isShuffling ? "cursor-wait pointer-events-none opacity-95" : "cursor-pointer"
           }`}
         />
       </div>
 
       {/* 🚀 NÚT HÀNH ĐỘNG XÁC NHẬN */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-1">
         <button
           onClick={onCancel}
           disabled={isLoading}
-          className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 font-medium text-sm transition cursor-pointer"
+          className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 font-medium text-sm transition cursor-pointer"
         >
           Nhập lại câu hỏi
         </button>

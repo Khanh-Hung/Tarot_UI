@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/features/auth/hooks/useAuth";
 import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -39,7 +38,6 @@ export default function RootLayout({
             </div>
 
             <main className="flex-1 relative z-10">{children}</main>
-            <Footer />
           </div>
         </AuthProvider>
       </body>

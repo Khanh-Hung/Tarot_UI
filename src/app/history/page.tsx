@@ -23,15 +23,16 @@ export default function HistoryPage() {
       return;
     }
 
-    if (user?.userId) {
-      loadHistory(page);
+    const currentUserId = user?.userId || (user as any)?.id;
+    if (currentUserId) {
+      loadHistory(currentUserId, page);
     }
   }, [user, page, isAuthenticated, isAuthLoading]);
 
-  const loadHistory = async (pageIndex: number) => {
+  const loadHistory = async (userId: number, pageIndex: number) => {
     setIsLoading(true);
     try {
-      const data = await tarotService.getReadingHistory(user!.userId, pageIndex, 8);
+      const data = await tarotService.getReadingHistory(userId, pageIndex, 8);
       setHistoryList(data.items || []);
       setTotalPages(data.totalPages || 1);
     } catch (e) {
