@@ -80,6 +80,8 @@ export interface CreateReadingCommand {
   zodiacSign?: ZodiacSign;
   spreadType?: SpreadType;
   deckCode?: DeckCode;
+  selectedCardIds?: number[];
+  isReversedList?: boolean[];
 }
 
 export interface CreateReadingResponse {
