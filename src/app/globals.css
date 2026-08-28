@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #060910;
-  --foreground: #F8FAFC;
+  --background: #18191c;
+  --foreground: #f4f4f5;
   color-scheme: dark;
 }
 
 html,
 body {
-  background-color: #060910;
-  color: #F8FAFC;
+  background-color: #18191c;
+  color: #f4f4f5;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -31,8 +31,8 @@ input::placeholder,
 textarea::placeholder,
 input::-webkit-input-placeholder,
 textarea::-webkit-input-placeholder {
-  color: #64748b !important;
-  -webkit-text-fill-color: #64748b !important;
+  color: #636570 !important;
+  -webkit-text-fill-color: #636570 !important;
   opacity: 1 !important;
   font-size: 0.85em !important;
 }
@@ -43,20 +43,20 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:focus-visible,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #0d1222 inset !important;
-  box-shadow: 0 0 0 1000px #0d1222 inset !important;
-  -webkit-text-fill-color: #f8fafc !important;
-  color: #f8fafc !important;
-  caret-color: #f8fafc !important;
+  -webkit-box-shadow: 0 0 0 1000px #1a1b1f inset !important;
+  box-shadow: 0 0 0 1000px #1a1b1f inset !important;
+  -webkit-text-fill-color: #f4f4f5 !important;
+  color: #f4f4f5 !important;
+  caret-color: #f4f4f5 !important;
   border-radius: 0.75rem !important;
-  border-color: #334155 !important;
+  border-color: #31333a !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Custom Sleek Scrollbar 5px siêu mượt cho toàn bộ trang */
+/* Custom Sleek Scrollbar cho TOÀN BỘ trang và mọi container con */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #334155 transparent;
+  scrollbar-color: #3b3d46 transparent;
 }
 
 *::-webkit-scrollbar {
@@ -74,7 +74,7 @@ input:-webkit-autofill:active {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #334155;
+  background-color: #353740;
   border-radius: 9999px;
   border: 1px solid transparent;
   background-clip: padding-box;
@@ -82,7 +82,7 @@ input:-webkit-autofill:active {
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: #64748b;
+  background-color: #525562;
 }
 
 /* Ẩn triệt để 100% nút mũi tên và góc vuông cuộn trên Windows/Chrome */
@@ -123,23 +123,23 @@ textarea {
 
 .silver-gradient-btn {
   background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 60%, #CBD5E1 100%);
-  color: #070A12;
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
+  color: #121316;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .silver-gradient-btn:hover {
   background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
-  box-shadow: 0 6px 25px rgba(255, 255, 255, 0.22);
+  box-shadow: 0 6px 22px rgba(255, 255, 255, 0.15);
 }
 
 .silver-card {
-  background: rgba(13, 18, 30, 0.75);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: #1e1f24;
+  backdrop-filter: blur(16px);
+  border: 1px solid #31333a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 .silver-card:hover {
-  border-color: rgba(226, 232, 240, 0.28);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(226, 232, 240, 0.06);
+  border-color: #525560;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
 }

@@ -161,22 +161,22 @@ function ReadingContent() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* 🔮 GIAI ĐOẠN 1: FORM NHẬP CÂU HỎI & CUNG HOÀNG ĐẠO */}
       {stage === "FORM" && (
-        <div className="max-w-2xl mx-auto p-7 sm:p-9 rounded-3xl silver-card">
+        <div className="max-w-2xl mx-auto p-7 sm:p-9 rounded-3xl border border-[#31333a] bg-[#191a1e] shadow-xl">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/15 text-xs text-slate-200 mb-3">
-              <Moon className="w-3.5 h-3.5 text-slate-300" />
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#23242a] border border-[#3b3d46] text-xs text-zinc-200 mb-3 shadow-sm">
+              <Moon className="w-3.5 h-3.5 text-zinc-400" />
               <span>Trải Bài 3 Lá (Quá khứ - Hiện tại - Tương lai)</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">
               Bắt Đầu Quẻ Bói Tarot
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-slate-400">
+            <p className="mt-1 text-xs sm:text-sm text-zinc-400">
               Hãy tĩnh tâm, nhắm mắt vài giây và đặt câu hỏi chân thành nhất của bạn
             </p>
           </div>
 
           {errorMsg && (
-            <div className="mb-6 p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/30 text-xs text-rose-200 text-center">
+            <div className="mb-6 p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-200 text-center">
               {errorMsg}
             </div>
           )}
@@ -184,8 +184,8 @@ function ReadingContent() {
           <form onSubmit={handleProceedToPicking} className="space-y-6">
             {/* CÂU HỎI CỦA NGƯỜI DÙNG */}
             <div>
-              <label className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-slate-300" />
+              <label className="text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4 text-zinc-400" />
                 <span>Câu hỏi hoặc điều bạn đang trăn trở *</span>
               </label>
               <textarea
@@ -194,15 +194,15 @@ function ReadingContent() {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Ví dụ: Công việc sắp tới của tôi sẽ có cơ hội thăng tiến nào không? Hay: Mối quan hệ hiện tại giữa tôi và người ấy đang có rào cản gì?"
-                className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-white/30 transition"
+                className="w-full bg-[#212227] border border-[#31333a] rounded-2xl p-4 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#525560] transition"
               />
             </div>
 
             {/* CUNG HOÀNG ĐẠO */}
             {(!user?.zodiacSign || user.zodiacSign === "UNKNOWN") && (
               <div>
-                <label className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center gap-1.5">
-                  <Star className="w-4 h-4 text-slate-300" />
+                <label className="text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+                  <Star className="w-4 h-4 text-zinc-400" />
                   <span>Cung Hoàng Đạo của bạn *</span>
                 </label>
                 <CustomSelect
@@ -217,8 +217,8 @@ function ReadingContent() {
             {/* BỘ BÀI TAROT */}
             {decks.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center gap-1.5">
-                  <BookOpen className="w-4 h-4 text-slate-300" />
+                <label className="text-xs font-semibold text-zinc-200 mb-1.5 flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-zinc-400" />
                   <span>Bộ bài Tarot muốn sử dụng</span>
                 </label>
                 <CustomSelect
@@ -233,11 +233,11 @@ function ReadingContent() {
             {/* NÚT TIẾN HÀNH XÁO & TRẢI BÀI */}
             <button
               type="submit"
-              className="w-full mt-4 py-4 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-xl hover:scale-[1.01]"
+              className="w-full mt-4 py-4 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01]"
             >
-              <Sparkles className="w-5 h-5 text-slate-950" />
+              <Sparkles className="w-5 h-5 text-zinc-950" />
               <span>Tiến Hành Xáo & Trải Bài Ra Bàn</span>
-              <ArrowRight className="w-5 h-5 text-slate-950" />
+              <ArrowRight className="w-5 h-5 text-zinc-950" />
             </button>
           </form>
         </div>
@@ -261,13 +261,13 @@ function ReadingContent() {
             <h1 className="text-xl sm:text-3xl font-bold text-white leading-relaxed">
               &ldquo;{readingResult.userQuestion}&rdquo;
             </h1>
-            <p className="mt-2 text-xs sm:text-sm text-slate-400">
+            <p className="mt-2 text-xs sm:text-sm text-zinc-400">
               Chạm vào từng lá bài úp bên dưới để lật mở năng lượng vũ trụ dành cho bạn
             </p>
           </div>
 
           {/* BÀN TRẢI BÀI 3D */}
-          <div className="py-8 px-4 rounded-3xl silver-card">
+          <div className="py-8 px-4 rounded-3xl border border-[#31333a] bg-[#191a1e] shadow-xl">
             <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10">
               {readingResult.drawnCards.map((card, idx) => (
                 <TarotCard3D
@@ -281,14 +281,14 @@ function ReadingContent() {
           </div>
 
           {/* BẢN LUẬN GIẢI AI */}
-          <div className="p-6 sm:p-10 rounded-3xl silver-card">
+          <div className="p-6 sm:p-10 rounded-3xl border border-[#31333a] bg-[#191a1e] shadow-xl">
             <MarkdownRenderer content={readingResult.initialReading} />
           </div>
 
           {/* KHUNG CHAT */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 silver-gradient-text text-lg font-bold">
-              <MessageSquare className="w-5 h-5 text-slate-300" />
+            <div className="flex items-center gap-2 text-zinc-100 text-lg font-bold">
+              <MessageSquare className="w-5 h-5 text-zinc-300" />
               <span>Trò Chuyện & Hỏi Sâu Với AI Reader</span>
             </div>
             <ChatBox readingId={readingResult.id || readingResult.readingId || 0} />
@@ -297,7 +297,7 @@ function ReadingContent() {
           <div className="text-center pt-6">
             <button
               onClick={handleReset}
-              className="px-6 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-200 hover:text-white font-medium text-sm inline-flex items-center gap-2 transition cursor-pointer"
+              className="px-6 py-3 rounded-2xl border border-[#3b3d46] bg-[#23242a] hover:bg-[#2b2c33] hover:border-[#525560] text-zinc-200 hover:text-white font-medium text-sm inline-flex items-center gap-2 transition cursor-pointer"
             >
               <RotateCcw className="w-4 h-4 text-slate-300" />
               <span>Bốc Quẻ Bài Tarot Mới</span>
