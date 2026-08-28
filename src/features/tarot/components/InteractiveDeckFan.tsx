@@ -9,7 +9,7 @@ import { tarotService } from "../services/tarotService";
 interface InteractiveDeckFanProps {
   deckCode: string;
   userQuestion: string;
-  onConfirmSelection: (selectedCards: { cardId: number; isReversed: boolean }[]) => void;
+  onConfirmSelection: (selectedCards: { cardId: string | number; isReversed: boolean }[]) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

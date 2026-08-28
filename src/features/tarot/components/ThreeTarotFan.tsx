@@ -9,7 +9,7 @@ import { tarotService } from "../services/tarotService";
 interface ThreeTarotFanProps {
   deckCode: string;
   userQuestion: string;
-  onConfirmSelection: (selectedCards: { cardId: number; isReversed: boolean }[]) => void;
+  onConfirmSelection: (selectedCards: { cardId: string | number; isReversed: boolean }[]) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -254,8 +254,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     shufflePhaseRef.current = shufflePhase;
   }, [shufflePhase]);
 
-  const [drawnCardsMap, setDrawnCardsMap] = useState<{ [cardId: number]: { slotIndex: number; isReversed: boolean } }>({});
-  const drawnCardsMapRef = useRef<{ [cardId: number]: { slotIndex: number; isReversed: boolean } }>({});
+  const [drawnCardsMap, setDrawnCardsMap] = useState<{ [cardId: string]: { slotIndex: number; isReversed: boolean } }>({});
+  const drawnCardsMapRef = useRef<{ [cardId: string]: { slotIndex: number; isReversed: boolean } }>({});
 
   useEffect(() => {
     drawnCardsMapRef.current = drawnCardsMap;
@@ -283,7 +283,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
       setDrawnCardsMap((m) => ({
         ...m,
-        [card.id]: { slotIndex: slotIdx, isReversed },
+        [String(card.id)]: { slotIndex: slotIdx, isReversed },
       }));
 
       return [...prev, { card, isReversed }];
@@ -879,7 +879,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     const chosenMeshes = shuffled.slice(0, 3);
 
     const chosen: { card: CardDto; isReversed: boolean }[] = [];
-    const mapUpdate: { [cardId: number]: { slotIndex: number; isReversed: boolean } } = {};
+    const mapUpdate: { [cardId: string]: { slotIndex: number; isReversed: boolean } } = {};
 
     chosenMeshes.forEach((m, idx) => {
       m.userData.isDrawn = true;
@@ -887,7 +887,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       const c = m.userData.card as CardDto;
       const isReversed = Math.random() < 0.35;
       chosen.push({ card: c, isReversed });
-      mapUpdate[c.id] = { slotIndex: idx, isReversed };
+      mapUpdate[String(c.id)] = { slotIndex: idx, isReversed };
     });
 
     setSelectedCards(chosen);

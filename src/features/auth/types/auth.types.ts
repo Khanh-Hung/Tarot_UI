@@ -1,5 +1,5 @@
 export interface UserProfile {
-  userId: number;
+  userId: string | number;
   email: string;
   username: string;
   zodiacSign: string;
@@ -8,7 +8,7 @@ export interface UserProfile {
 
 export interface AuthResponse {
   token: string;
-  userId: number;
+  userId: string | number;
   email: string;
   username: string;
   zodiacSign: string;

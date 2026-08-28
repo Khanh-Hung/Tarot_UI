@@ -94,7 +94,7 @@ function ReadingContent() {
 
   // Người dùng xác nhận 3 lá bài đã tự tay bốc
   const handleConfirmSelectedCards = async (
-    picked: { cardId: number; isReversed: boolean }[]
+    picked: { cardId: string | number; isReversed: boolean }[]
   ) => {
     setErrorMsg("");
     setIsReadingLoading(true);

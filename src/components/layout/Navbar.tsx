@@ -80,13 +80,13 @@ export const Navbar: React.FC = () => {
       icon: <Sparkles className="w-3.5 h-3.5" />,
     },
     {
-      label: "Lịch Sử Quẻ",
+      label: "Lịch Sử Xem Bài",
       href: "/history",
       icon: <History className="w-3.5 h-3.5" />,
       requireAuth: true,
     },
     {
-      label: "Thư Viện 78 Lá",
+      label: "Thư Viện Bài",
       href: "/decks",
       icon: <BookOpen className="w-3.5 h-3.5" />,
     },
@@ -106,37 +106,17 @@ export const Navbar: React.FC = () => {
             scrolled ? "h-14" : "h-16"
           }`}
         >
-          {/* 🌟 LEFT: BRAND & LOGO */}
+          {/* 🌟 LEFT: BRAND & LOGO (PURE WORDMARK) */}
           <div className="flex-1 flex items-center justify-start">
-            <Link href="/" className="flex items-center gap-3 group select-none cursor-pointer">
-              <div
-                className={`rounded-xl bg-gradient-to-br from-white via-zinc-200 to-zinc-400 flex items-center justify-center shadow-md shadow-white/10 group-hover:scale-105 transition-all duration-500 ${
-                  scrolled ? "w-8 h-8 rounded-lg" : "w-9 h-9"
-                }`}
-              >
-                <Moon
-                  className={`text-zinc-950 fill-zinc-950 transition-all duration-500 ${
-                    scrolled ? "w-3.5 h-3.5" : "w-4 h-4"
-                  }`}
-                />
-              </div>
-              <div className="flex flex-col transition-all duration-500">
-                <span className="font-sans text-base sm:text-lg font-bold tracking-wider text-zinc-100 group-hover:text-white transition-all duration-500">
-                  ORACLE TAROT
-                </span>
-                <span
-                  className={`tracking-[0.2em] text-zinc-400 uppercase transition-all duration-500 ${
-                    scrolled ? "text-[8px] opacity-70" : "text-[9px] opacity-100 -mt-0.5"
-                  }`}
-                >
-                  Moonlit Wisdom
-                </span>
-              </div>
+            <Link href="/" className="group select-none cursor-pointer flex items-center">
+              <span className="font-sans text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-zinc-200 transition-colors">
+                Nyxoris
+              </span>
             </Link>
           </div>
 
-          {/* 🌟 CENTER: NAVIGATION */}
-          <nav className="hidden md:flex items-center gap-2 transition-all duration-500">
+          {/* 🌟 CENTER: NAVIGATION (PURE CLEAN TEXT) */}
+          <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => {
               if (item.requireAuth && !isAuthenticated) return null;
               const active = pathname === item.href;
@@ -144,13 +124,13 @@ export const Navbar: React.FC = () => {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-500 ${
+                  className={`flex items-center gap-2 text-xs sm:text-sm font-medium transition-colors duration-150 select-none py-1 ${
                     active
-                      ? "text-white bg-white/[0.08] border border-white/10 shadow-sm"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-[#23242a]"
+                      ? "text-white"
+                      : "text-zinc-400 hover:text-white"
                   }`}
                 >
-                  <span className="transition-transform duration-300 group-hover:scale-110">
+                  <span className="shrink-0">
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
@@ -209,7 +189,7 @@ export const Navbar: React.FC = () => {
                         className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition"
                       >
                         <History className="w-4 h-4 text-zinc-400" />
-                        <span>Lịch sử các quẻ bói</span>
+                        <span>Lịch sử xem bài</span>
                       </Link>
                     </div>
 
@@ -229,23 +209,15 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2 sm:gap-3 transition-all duration-500">
+              <div className="flex items-center transition-all duration-500">
                 <Link
                   href="/login"
-                  className={`rounded-xl font-semibold border border-[#3b3d46] bg-[#23242a] text-zinc-200 hover:border-[#525560] hover:bg-[#2b2c33] hover:text-white transition-all duration-300 flex items-center gap-1.5 ${
-                    scrolled ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs"
+                  className={`rounded-xl font-bold silver-gradient-btn transition-all duration-300 shadow-md whitespace-nowrap flex items-center gap-1.5 ${
+                    scrolled ? "px-3.5 py-1.5 text-[11px]" : "px-4 py-2 text-xs"
                   }`}
                 >
-                  <LogIn className="w-3.5 h-3.5" />
+                  <LogIn className="w-3.5 h-3.5 text-zinc-950" />
                   <span>Đăng nhập</span>
-                </Link>
-                <Link
-                  href="/register"
-                  className={`rounded-xl font-bold silver-gradient-btn transition-all duration-300 shadow-md whitespace-nowrap ${
-                    scrolled ? "px-4 py-1.5 text-[11px]" : "px-5 py-2 text-xs"
-                  }`}
-                >
-                  Đăng ký
                 </Link>
               </div>
             )}

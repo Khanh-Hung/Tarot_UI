@@ -21,6 +21,7 @@ import {
   Check,
   Users,
   Hash,
+  RotateCcw,
 } from "lucide-react";
 import { CardDto, DeckCode, DeckDto } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
@@ -181,11 +182,7 @@ function DecksContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in">
       {/* 🔮 HERO HEADER */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/15 text-xs text-slate-200 shadow-xl backdrop-blur-md">
-          <BookOpen className="w-4 h-4 text-amber-300" />
-          <span>Bách Khoa Toàn Thư & Tra Cứu Ý Nghĩa 78 Lá Bài Tarot</span>
-        </div>
+      <div className="text-center max-w-3xl mx-auto space-y-2">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white">
           Khám Phá Các Bộ Bài Tarot Kinh Điển
         </h1>
@@ -273,10 +270,8 @@ function DecksContent() {
                         )}
                         <div className="min-w-0">
                           <div className="text-xs font-bold truncate">{deck.nameVi}</div>
-                          <div className="text-[10px] text-zinc-400 flex items-center gap-1.5">
+                          <div className="text-[10px] text-zinc-400">
                             <span className="truncate">{schoolLabel}</span>
-                            <span>•</span>
-                            <span>78 lá</span>
                           </div>
                         </div>
                       </div>
@@ -329,62 +324,128 @@ function DecksContent() {
           </div>
         </div>
 
-        {/* Hàng 2: Ô tìm kiếm lá bài + Bộ lọc danh mục */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-          {/* Ô tìm kiếm lá bài */}
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm theo tên lá bài hoặc từ khóa..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#191a1e] border border-[#2c2e35] text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#525560] transition"
-            />
-            {searchQuery && (
+        {/* Hàng 2: Ô tìm kiếm lá bài + Dropdown lọc danh mục + Đếm số lượng */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+            {/* Ô tìm kiếm lá bài */}
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm theo tên lá bài hoặc từ khóa..."
+                className="w-full h-10 pl-10 pr-8 rounded-xl bg-[#191a1e] border border-[#2c2e35] text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#525560] transition"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* 🎴 DROPDOWN BỘ LỌC DANH MỤC COMPACT */}
+            {(() => {
+              const CATEGORY_OPTIONS: { key: CategoryFilter; label: string; countBadge: string; icon: React.ReactNode }[] = [
+                { key: "ALL", label: "Tất Cả", countBadge: "78 lá", icon: <Layers className="w-3.5 h-3.5 text-zinc-400" /> },
+                { key: "MAJOR", label: "22 Ẩn Chính", countBadge: "22 lá", icon: <Crown className="w-3.5 h-3.5 text-amber-400" /> },
+                { key: "COURT", label: "16 Hoàng Gia", countBadge: "16 lá", icon: <Users className="w-3.5 h-3.5 text-purple-400" /> },
+                { key: "PIPS", label: "40 Lá Số", countBadge: "40 lá", icon: <Hash className="w-3.5 h-3.5 text-zinc-300" /> },
+                { key: "WANDS", label: "Gậy (Hỏa)", countBadge: "14 lá", icon: <Flame className="w-3.5 h-3.5 text-amber-400" /> },
+                { key: "CUPS", label: "Cốc (Thủy)", countBadge: "14 lá", icon: <Droplets className="w-3.5 h-3.5 text-sky-400" /> },
+                { key: "SWORDS", label: "Kiếm (Khí)", countBadge: "14 lá", icon: <Wind className="w-3.5 h-3.5 text-slate-300" /> },
+                { key: "PENTACLES", label: "Tiền/Đĩa (Đất)", countBadge: "14 lá", icon: <Globe2 className="w-3.5 h-3.5 text-emerald-400" /> },
+              ];
+              const currentCat = CATEGORY_OPTIONS.find((c) => c.key === activeCategory) || CATEGORY_OPTIONS[0];
+
+              return (
+                <div ref={categoryDropdownRef} className="relative w-full sm:w-52 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                    className={`w-full h-10 px-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 select-none text-left ${
+                      isCategoryDropdownOpen
+                        ? "bg-[#23242a] border-amber-400/80 shadow-lg ring-1 ring-amber-400/30 text-amber-200"
+                        : activeCategory !== "ALL"
+                        ? "bg-[#23242a] border-amber-400/50 text-amber-200 font-semibold"
+                        : "bg-[#191a1e] border-[#2c2e35] hover:border-[#42454e] hover:bg-[#1e1f24] text-zinc-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="shrink-0">{currentCat.icon}</span>
+                      <span className="text-xs font-bold truncate">{currentCat.label}</span>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 shrink-0 ${isCategoryDropdownOpen ? "rotate-180 text-amber-300" : ""}`} />
+                  </button>
+
+                  {/* Menu danh mục thả xuống nhỏ gọn & chống tràn màn hình */}
+                  {isCategoryDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1.5 w-full sm:w-60 max-h-[60vh] overflow-y-auto z-50 rounded-2xl bg-[#1c1d22]/95 backdrop-blur-xl border border-[#31333a] shadow-2xl p-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-2">
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 border-b border-[#2c2e35] mb-1 flex items-center justify-between">
+                        <span>Danh Mục</span>
+                        <span>8 Nhóm</span>
+                      </div>
+                      {CATEGORY_OPTIONS.map((cat) => {
+                        const isSelected = activeCategory === cat.key;
+                        return (
+                          <div
+                            key={cat.key}
+                            onClick={() => {
+                              setActiveCategory(cat.key);
+                              setIsCategoryDropdownOpen(false);
+                            }}
+                            className={`px-2.5 py-1.5 rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 select-none ${
+                              isSelected
+                                ? "bg-[#282a32] text-amber-200 border border-amber-400/30 font-semibold"
+                                : "hover:bg-[#23242a] text-zinc-200 hover:text-white"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="shrink-0">{cat.icon}</span>
+                              <span className="text-xs font-medium truncate">{cat.label}</span>
+                            </div>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-md border font-mono shrink-0 transition-colors ${
+                                isSelected
+                                  ? "text-amber-300 bg-amber-400/20 border-amber-400/40 font-bold"
+                                  : "text-zinc-400 bg-black/40 border-white/5"
+                              }`}
+                            >
+                              {cat.countBadge}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Nút xóa bộ lọc & tìm kiếm */}
+            {(activeCategory !== "ALL" || searchQuery) && (
               <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                type="button"
+                onClick={() => {
+                  setActiveCategory("ALL");
+                  setSearchQuery("");
+                }}
+                className="h-10 px-3 rounded-xl border border-rose-500/30 bg-rose-950/20 hover:bg-rose-950/40 text-rose-300 hover:text-rose-200 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shrink-0 animate-in fade-in zoom-in-95 cursor-pointer shadow-sm"
+                title="Xóa bộ lọc và quay về Tất cả 78 lá"
               >
-                <X className="w-3.5 h-3.5" />
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Xóa bộ lọc</span>
               </button>
             )}
           </div>
 
           {/* Đếm số lá bài */}
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-zinc-400 self-center sm:self-auto shrink-0">
             Hiển thị <strong className="text-white font-bold">{filteredCards.length}</strong> / {cards.length} lá bài
           </div>
-        </div>
-
-        {/* Nút lọc danh mục chuẩn quốc tế */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {[
-            { key: "ALL", label: "Tất Cả (78)", icon: <Layers className="w-3.5 h-3.5" /> },
-            { key: "MAJOR", label: "22 Ẩn Chính", icon: <Crown className="w-3.5 h-3.5" /> },
-            { key: "COURT", label: "16 Hoàng Gia", icon: <Users className="w-3.5 h-3.5" /> },
-            { key: "PIPS", label: "40 Lá Số", icon: <Hash className="w-3.5 h-3.5" /> },
-            { key: "WANDS", label: "Gậy (Hỏa)", icon: <Flame className="w-3.5 h-3.5" /> },
-            { key: "CUPS", label: "Cốc (Thủy)", icon: <Droplets className="w-3.5 h-3.5" /> },
-            { key: "SWORDS", label: "Kiếm (Khí)", icon: <Wind className="w-3.5 h-3.5" /> },
-            { key: "PENTACLES", label: "Tiền/Đĩa (Đất)", icon: <Globe2 className="w-3.5 h-3.5" /> },
-          ].map((cat) => {
-            const isActive = activeCategory === cat.key;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => setActiveCategory(cat.key as CategoryFilter)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer select-none ${
-                  isActive
-                    ? "bg-zinc-100 text-zinc-950 shadow-md shadow-white/10 font-bold active:scale-95"
-                    : "bg-[#23242a] text-zinc-400 hover:text-zinc-200 hover:bg-[#2b2c33] border border-[#3b3d46]"
-                }`}
-              >
-                {cat.icon}
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
         </div>
       </div>
 
@@ -452,264 +513,261 @@ function DecksContent() {
         </div>
       )}
 
-      {/* 🌟 MODAL XEM CHI TIẾT LÁ BÀI COMPACT & TINH TẾ */}
+      {/* 🌟 MODAL XEM CHI TIẾT LÁ BÀI COMPACT & TINH TẾ (FIXED HEADER/FOOTER, SCROLLABLE BODY) */}
       {selectedCard && (
         <div
           onClick={() => setSelectedCard(null)}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-xl animate-in fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pt-16 pb-6 sm:pt-20 sm:pb-8 bg-black/85 backdrop-blur-md animate-in fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-3xl border border-[#31333a] bg-[#1a1b1f] p-5 sm:p-6 shadow-2xl space-y-4 my-auto"
+            className="relative w-full max-w-xl max-h-[75vh] flex flex-col rounded-2xl border border-white/10 bg-[#16171a] shadow-2xl overflow-hidden my-auto"
           >
-            {/* Header Modal: Tiêu đề & Nút đóng */}
-            <div className="flex items-center justify-between pb-2.5 border-b border-[#2c2e35]">
-              <div className="flex items-center gap-2 text-xs font-bold text-zinc-300">
-                <BookOpen className="w-4 h-4 text-amber-400" />
+            {/* Header Modal Cố Định */}
+            <div className="shrink-0 flex items-center justify-between px-5 pt-4 pb-3 border-b border-white/[0.08] bg-[#16171a]">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-300">
+                <BookOpen className="w-4 h-4 text-zinc-400" />
                 <span>Chi Tiết Lá Bài Tarot</span>
               </div>
-
-              {/* Nút đóng */}
               <button
                 onClick={() => setSelectedCard(null)}
-                className="w-7 h-7 rounded-full bg-[#23242a] hover:bg-[#2b2c33] border border-[#3b3d46] flex items-center justify-center text-zinc-300 hover:text-white transition cursor-pointer"
+                className="w-6 h-6 rounded-full bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Khung nội dung */}
-            <div className="flex flex-col sm:flex-row gap-5 items-start">
-              {/* Cột trái: Ảnh lá bài nhỏ gọn */}
-              <div className="w-32 sm:w-36 aspect-[1/1.7] shrink-0 rounded-2xl overflow-hidden bg-black/80 border-2 border-amber-400/40 shadow-xl mx-auto sm:mx-0">
-                {selectedCard.imageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={selectedCard.imageUrl}
-                    alt={selectedCard.nameVi}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-
-              {/* Cột phải: Thông tin chi tiết */}
-              <div className="flex-1 space-y-3 min-w-0">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-200 bg-amber-400/20 px-2 py-0.5 rounded-md border border-amber-300/30">
-                      {(selectedCard.arcanaType === "MAJOR" || selectedCard.arcanaType === "MAJOR_ARCANA")
-                        ? "22 Ẩn Chính"
-                        : "56 Ẩn Phụ"}
-                    </span>
-                    {getElementBadge(selectedCard.element)}
+            {/* Nội dung chi tiết lá bài (CHỈ CUỘN PHẦN NÀY) */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 [scrollbar-gutter:stable]">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
+                {/* Cột trái: Ảnh lá bài */}
+                <div className="sm:col-span-5 flex flex-col items-center">
+                  <div className="w-full max-w-[150px] aspect-[1/1.65] rounded-xl overflow-hidden bg-black/80 shadow-lg">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={selectedCard.imageUrl || "/cards/card-back.jpg"}
+                      alt={selectedCard.nameVi}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-zinc-100 leading-tight">
-                    {selectedCard.nameVi}
-                  </h2>
+                  <div className="mt-2.5 text-center">
+                    <h3 className="font-bold text-sm text-white">
+                      {selectedCard.nameVi}
+                    </h3>
+                    <p className="text-[11px] text-zinc-400 italic">
+                      {selectedCard.nameEn}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Từ khóa */}
-                {selectedCard.keywords && (
-                  <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-0.5">
-                      Từ Khóa Cốt Lõi
-                    </h4>
-                    <p className="text-xs text-amber-200/90 font-medium leading-relaxed">
-                      {selectedCard.keywords}
-                    </p>
+                {/* Cột phải: Thông tin & Luận giải */}
+                <div className="sm:col-span-7 space-y-2.5 text-xs">
+                  {/* Meta tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 pb-1 border-b border-white/[0.06]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/[0.06] text-zinc-200">
+                      {selectedCard.arcanaType === "MAJOR" ? "Ẩn Chính" : "Ẩn Phụ"}
+                    </span>
+                    {selectedCard.suit && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/[0.04] text-zinc-400">
+                        Bộ: {selectedCard.suit}
+                      </span>
+                    )}
+                    {selectedCard.element && getElementBadge(selectedCard.element)}
                   </div>
-                )}
 
-                {/* Ý nghĩa xuôi */}
-                {selectedCard.uprightMeaning && (
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/25 space-y-1">
-                    <h4 className="text-xs font-bold text-emerald-300 flex items-center gap-1">
-                      <span>☀️</span>
-                      <span>Ý Nghĩa Chiều Xuôi</span>
-                    </h4>
-                    <p className="text-xs text-zinc-200 leading-relaxed">
-                      {selectedCard.uprightMeaning}
-                    </p>
-                  </div>
-                )}
+                  {/* Từ khóa */}
+                  {selectedCard.keywords && (
+                    <div className="p-2.5 rounded-xl bg-white/[0.03] space-y-0.5">
+                      <span className="font-semibold text-zinc-300 text-[11px] block">
+                        🔑 Từ Khóa Cốt Lõi:
+                      </span>
+                      <p className="text-zinc-400 text-[11px]">
+                        {selectedCard.keywords}
+                      </p>
+                    </div>
+                  )}
 
-                {/* Ý nghĩa ngược */}
-                {selectedCard.reversedMeaning && (
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-rose-950/20 border border-rose-500/25 space-y-1">
-                    <h4 className="text-xs font-bold text-rose-300 flex items-center gap-1">
-                      <span>🌙</span>
-                      <span>Ý Nghĩa Chiều Ngược</span>
-                    </h4>
-                    <p className="text-xs text-zinc-200 leading-relaxed">
-                      {selectedCard.reversedMeaning}
-                    </p>
-                  </div>
-                )}
+                  {/* Ý nghĩa xuôi */}
+                  {selectedCard.uprightMeaning && (
+                    <div className="p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-500/20 space-y-0.5">
+                      <h4 className="text-[11px] font-bold text-emerald-300 flex items-center gap-1">
+                        <span>☀️</span>
+                        <span>Ý Nghĩa Chiều Xuôi</span>
+                      </h4>
+                      <p className="text-[11px] text-zinc-200 leading-relaxed">
+                        {selectedCard.uprightMeaning}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Ý nghĩa ngược */}
+                  {selectedCard.reversedMeaning && (
+                    <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-0.5">
+                      <h4 className="text-[11px] font-bold text-rose-300 flex items-center gap-1">
+                        <span>🌙</span>
+                        <span>Ý Nghĩa Chiều Ngược</span>
+                      </h4>
+                      <p className="text-[11px] text-zinc-200 leading-relaxed">
+                        {selectedCard.reversedMeaning}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Footer modal */}
-            <div className="pt-3 border-t border-[#2c2e35] flex items-center justify-between gap-3">
+            {/* Footer modal Cố Định */}
+            <div className="shrink-0 px-5 py-3 border-t border-white/[0.08] flex items-center justify-between gap-3 bg-[#16171a]">
               <button
                 onClick={() => setSelectedCard(null)}
-                className="px-4 py-2 rounded-xl border border-[#3b3d46] bg-[#23242a] hover:bg-[#2b2c33] hover:border-[#525560] text-xs font-medium text-zinc-300 hover:text-white transition cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-medium text-zinc-400 hover:text-white transition cursor-pointer"
               >
                 Đóng
               </button>
 
               <Link
                 href={`/reading?deckCode=${selectedDeckCode}`}
-                className="px-5 py-2 rounded-xl silver-gradient-btn font-bold text-xs flex items-center gap-1.5 transition hover:scale-105 shadow-md"
+                className="px-4 py-1.5 rounded-xl silver-gradient-btn font-bold text-xs flex items-center gap-1.5 transition hover:scale-105 shadow-md"
               >
-                <Sparkles className="w-4 h-4 text-zinc-950" />
-                <span>Bốc quẻ bài với bộ này</span>
-                <ArrowRight className="w-4 h-4 text-zinc-950" />
+                <Sparkles className="w-3.5 h-3.5 text-zinc-950" />
+                <span>Bốc bài với bộ này</span>
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-950" />
               </Link>
             </div>
           </div>
         </div>
       )}
 
-      {/* 📜 MODAL BÁCH KHOA LỊCH SỬ & TRƯỜNG PHÁI BỘ BÀI */}
+      {/* 📜 MODAL BÁCH KHOA LỊCH SỬ & TRƯỜNG PHÁI BỘ BÀI (FIXED HEADER/FOOTER, SCROLLABLE BODY) */}
       {isDeckLoreModalOpen && (
         <div
           onClick={() => setIsDeckLoreModalOpen(false)}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-xl animate-in fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pt-16 pb-6 sm:pt-20 sm:pb-8 bg-black/85 backdrop-blur-md animate-in fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-3xl border border-[#31333a] bg-[#1a1b1f] p-5 sm:p-7 shadow-2xl space-y-5 my-auto"
+            className="relative w-full max-w-[620px] max-h-[74vh] flex flex-col rounded-2xl border border-white/10 bg-[#16171a] shadow-2xl overflow-hidden my-auto"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#2c2e35]">
-              <div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
-                <BookOpen className="w-4 h-4 text-amber-400" />
-                <span>Bách Khoa Lịch Sử & Trường Phái: {DECK_LORE_MAP[selectedDeckCode]?.name || "Bộ Bài"}</span>
+            {/* Header Cố Định */}
+            <div className="shrink-0 flex items-center justify-between px-5 pt-4 pb-3 border-b border-white/[0.08] bg-[#16171a]">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-100">
+                <BookOpen className="w-4 h-4 text-zinc-300" />
+                <span className="truncate">Lịch Sử: {DECK_LORE_MAP[selectedDeckCode]?.name || "Bộ Bài"}</span>
               </div>
               <button
                 onClick={() => setIsDeckLoreModalOpen(false)}
-                className="w-7 h-7 rounded-full bg-[#23242a] hover:bg-[#2b2c33] border border-[#3b3d46] flex items-center justify-center text-zinc-300 hover:text-white transition cursor-pointer"
+                className="w-6 h-6 rounded-full bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-white transition cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Meta Card */}
-            {(() => {
-              const lore = DECK_LORE_MAP[selectedDeckCode] || DECK_LORE_MAP.RIDER_WAITE_CLASSIC;
-              return (
-                <>
-                  <div className="flex gap-4 items-center p-4 rounded-2xl bg-[#212227] border border-[#2c2e35]">
-                    <div className="w-14 sm:w-16 aspect-[1/1.65] shrink-0 rounded-lg overflow-hidden bg-black/80 border border-amber-400/40 shadow-lg">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={lore.coverImage} alt={lore.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-1.5 text-xs">
-                      <h3 className="font-bold text-base text-amber-200">{lore.originalName}</h3>
-                      <div className="text-zinc-300 flex flex-col gap-1 text-[11px] pt-0.5">
-                        <div className="flex items-start gap-1.5">
-                          <span className="shrink-0 text-zinc-400 font-semibold">🏛️ Tác giả:</span>
-                          <span className="text-zinc-200">{lore.author}</span>
-                        </div>
-                        <div className="flex items-start gap-1.5">
-                          <span className="shrink-0 text-zinc-400 font-semibold">🎨 Họa sĩ:</span>
-                          <span className="text-zinc-200">{lore.illustrator}</span>
-                        </div>
-                        <div className="flex items-start gap-1.5">
-                          <span className="shrink-0 text-zinc-400 font-semibold">📅 Năm sáng tác:</span>
-                          <span className="text-zinc-200">{lore.year}</span>
-                        </div>
-                        <div className="flex items-start gap-1.5">
-                          <span className="shrink-0 text-zinc-400 font-semibold">🔮 Trường phái:</span>
-                          <span className="text-zinc-200">{lore.school}</span>
+            {/* Scrollable Modal Body (CHỈ CUỘN NỘI DUNG NÀY) */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 [scrollbar-gutter:stable]">
+              {(() => {
+                const lore = DECK_LORE_MAP[selectedDeckCode] || DECK_LORE_MAP.RIDER_WAITE_CLASSIC;
+                return (
+                  <>
+                    <div className="flex gap-3.5 items-center p-3 rounded-xl bg-white/[0.03]">
+                      <div className="w-12 aspect-[1/1.65] shrink-0 rounded-md overflow-hidden bg-black/80 shadow">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={lore.coverImage} alt={lore.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1 text-xs">
+                        <h3 className="font-bold text-sm text-white truncate">{lore.originalName}</h3>
+                        <div className="text-zinc-400 flex flex-col gap-1 text-[11px]">
+                          <div>
+                            <span className="text-zinc-500 font-medium">🏛️ Tác giả:</span>{" "}
+                            <span className="text-zinc-300">{lore.author}</span>
+                          </div>
+                          <div>
+                            <span className="text-zinc-500 font-medium">🎨 Họa sĩ:</span>{" "}
+                            <span className="text-zinc-300">{lore.illustrator}</span>
+                          </div>
+                          <div>
+                            <span className="text-zinc-500 font-medium">📅 Năm sáng tác:</span>{" "}
+                            <span className="text-zinc-300">{lore.year}</span>
+                          </div>
+                          <div>
+                            <span className="text-zinc-500 font-medium">🔮 Trường phái:</span>{" "}
+                            <span className="text-zinc-300">{lore.school}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Body Sections */}
-                  <div className="space-y-3.5 text-xs leading-relaxed text-zinc-200">
-                    {/* Tóm tắt */}
-                    <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-1">
-                      <h4 className="font-bold text-amber-300 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                        <span>🌟</span>
-                        <span>Tổng Quan</span>
-                      </h4>
-                      <p className="text-zinc-300">{lore.summary}</p>
+                    {/* Body Sections Stream */}
+                    <div className="space-y-3 text-xs leading-relaxed text-zinc-300">
+                      {/* Tổng quan */}
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-zinc-200 text-xs flex items-center gap-1.5">
+                          <span>🌟</span>
+                          <span>Tổng Quan</span>
+                        </h4>
+                        <p className="text-zinc-400 text-[11.5px]">{lore.summary}</p>
+                      </div>
+
+                      {/* Lịch sử */}
+                      <div className="space-y-1 pt-2 border-t border-white/[0.06]">
+                        <h4 className="font-semibold text-zinc-200 text-xs flex items-center gap-1.5">
+                          <span>📜</span>
+                          <span>Hoàn Cảnh Ra Đời</span>
+                        </h4>
+                        <p className="text-zinc-400 text-[11.5px]">{lore.history}</p>
+                      </div>
+
+                      {/* Nghệ thuật */}
+                      <div className="space-y-1 pt-2 border-t border-white/[0.06]">
+                        <h4 className="font-semibold text-zinc-200 text-xs flex items-center gap-1.5">
+                          <span>🎨</span>
+                          <span>Phong Cách Nghệ Thuật</span>
+                        </h4>
+                        <p className="text-zinc-400 text-[11.5px]">{lore.artStyle}</p>
+                      </div>
+
+                      {/* Điểm khác biệt */}
+                      <div className="space-y-1.5 pt-2 border-t border-white/[0.06]">
+                        <h4 className="font-semibold text-zinc-200 text-xs flex items-center gap-1.5">
+                          <span>🔮</span>
+                          <span>Điểm Khác Biệt Nổi Bật</span>
+                        </h4>
+                        <ul className="space-y-1 pl-1 text-[11.5px] text-zinc-400">
+                          {lore.keyDifferences.map((diff, i) => (
+                            <li key={i} className="flex items-start gap-1.5">
+                              <span className="text-zinc-500 font-bold">•</span>
+                              <span>{diff}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Phù hợp cho ai */}
+                      <div className="p-2.5 rounded-xl bg-white/[0.03] space-y-0.5 text-[11.5px]">
+                        <span className="font-semibold text-zinc-200 block">🎯 Phù hợp nhất khi:</span>
+                        <p className="text-zinc-400">{lore.bestFor}</p>
+                      </div>
                     </div>
+                  </>
+                );
+              })()}
+            </div>
 
-                    {/* Lịch sử */}
-                    <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-1">
-                      <h4 className="font-bold text-amber-300 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                        <span>📜</span>
-                        <span>Lịch Sử & Hoàn Cảnh Ra Đời</span>
-                      </h4>
-                      <p className="text-zinc-300">{lore.history}</p>
-                    </div>
-
-                    {/* Nghệ thuật */}
-                    <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-1">
-                      <h4 className="font-bold text-sky-300 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                        <span>🎨</span>
-                        <span>Phong Cách Nghệ Thuật & Biểu Tượng</span>
-                      </h4>
-                      <p className="text-zinc-300">{lore.artStyle}</p>
-                    </div>
-
-                    {/* Điểm khác biệt */}
-                    <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-                      <h4 className="font-bold text-emerald-300 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                        <span>🔮</span>
-                        <span>Điểm Khác Biệt So Với Các Bộ Bài Khác</span>
-                      </h4>
-                      <ul className="space-y-1.5 pl-1">
-                        {lore.keyDifferences.map((diff, i) => (
-                          <li key={i} className="flex items-start gap-2 text-zinc-300">
-                            <span className="text-amber-400 font-bold mt-0.5">•</span>
-                            <span>{diff}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Phù hợp cho ai */}
-                    <div className="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/25 space-y-1">
-                      <h4 className="font-bold text-amber-200 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                        <span>🎯</span>
-                        <span>Khi Nào Nên Bốc Quẻ Bộ Bài Này?</span>
-                      </h4>
-                      <p className="text-zinc-200">{lore.bestFor}</p>
-                    </div>
-
-                    {/* Triết lý tâm linh */}
-                    <div className="p-3.5 rounded-2xl bg-purple-950/20 border border-purple-500/25 space-y-1">
-                      <h4 className="font-bold text-purple-200 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                        <span>🕊️</span>
-                        <span>Triết Lý Huyền Học Cốt Lõi</span>
-                      </h4>
-                      <p className="text-zinc-200 italic">{lore.spiritualMeaning}</p>
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
-
-            {/* Footer */}
-            <div className="pt-3 border-t border-[#2c2e35] flex items-center justify-between gap-3">
+            {/* Footer Cố Định */}
+            <div className="shrink-0 px-5 py-3 border-t border-white/[0.08] flex items-center justify-between gap-3 bg-[#16171a]">
               <button
                 onClick={() => setIsDeckLoreModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-[#3b3d46] bg-[#23242a] hover:bg-[#2b2c33] hover:border-[#525560] text-xs font-medium text-zinc-300 hover:text-white transition cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-medium text-zinc-400 hover:text-white transition cursor-pointer"
               >
                 Đóng
               </button>
 
               <Link
                 href={`/reading?deckCode=${selectedDeckCode}`}
-                className="px-5 py-2 rounded-xl silver-gradient-btn font-bold text-xs flex items-center gap-1.5 transition hover:scale-105 shadow-md"
+                className="px-4 py-1.5 rounded-xl silver-gradient-btn font-bold text-xs flex items-center gap-1.5 transition hover:scale-105 shadow-md"
               >
-                <Sparkles className="w-4 h-4 text-zinc-950" />
-                <span>Bốc quẻ bài với bộ này</span>
-                <ArrowRight className="w-4 h-4 text-zinc-950" />
+                <Sparkles className="w-3.5 h-3.5 text-zinc-950" />
+                <span>Bốc bài với bộ này</span>
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-950" />
               </Link>
             </div>
           </div>

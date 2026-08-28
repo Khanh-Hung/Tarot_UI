@@ -33,7 +33,7 @@ export type ZodiacSign =
   | "UNKNOWN";
 
 export interface DeckDto {
-  id?: number;
+  id?: string | number;
   code: DeckCode;
   nameVi: string;
   nameEn: string;
@@ -45,7 +45,7 @@ export interface DeckDto {
 }
 
 export interface CardDto {
-  id: number;
+  id: string | number;
   code?: string;
   deckCode?: DeckCode | string;
   nameEn: string;
@@ -64,8 +64,8 @@ export interface CardDto {
 }
 
 export interface DrawnCardDto {
-  id?: number;
-  cardId?: number;
+  id?: string | number;
+  cardId?: string | number;
   cardCode?: string;
   nameVi?: string;
   nameEn?: string;
@@ -80,19 +80,19 @@ export interface DrawnCardDto {
 }
 
 export interface CreateReadingCommand {
-  userId: number;
+  userId: string | number;
   userQuestion: string;
   topic?: Topic;
   zodiacSign?: ZodiacSign;
   spreadType?: SpreadType;
   deckCode?: DeckCode;
-  selectedCardIds?: number[];
+  selectedCardIds?: (string | number)[];
   isReversedList?: boolean[];
 }
 
 export interface CreateReadingResponse {
-  id: number;
-  readingId?: number;
+  id: string | number;
+  readingId?: string | number;
   userQuestion: string;
   topic?: Topic;
   spreadType: SpreadType;
@@ -102,15 +102,15 @@ export interface CreateReadingResponse {
 }
 
 export interface ChatMessageDto {
-  id: number;
+  id: string | number;
   sender: "USER" | "AI";
   message: string;
   createdAt: string;
 }
 
 export interface ReadingDetailResponse {
-  id: number;
-  userId: number;
+  id: string | number;
+  userId: string | number;
   userQuestion: string;
   topic?: Topic;
   spreadType: SpreadType;
@@ -122,7 +122,7 @@ export interface ReadingDetailResponse {
 }
 
 export interface ReadingSummaryResponse {
-  id: number;
+  id: string | number;
   userQuestion: string;
   topic?: Topic;
   spreadType: SpreadType;

@@ -2,12 +2,49 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, BookOpen, HeartHandshake, Eye, Moon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sparkles,
+  ArrowRight,
+  BookOpen,
+  Eye,
+  Moon,
+  HeartHandshake,
+} from "lucide-react";
 import { DeckDto } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
+import { DeckShowcase3D } from "@/features/tarot/components/DeckShowcase3D";
+
+const FLOATING_CARD_PAIRS = [
+  {
+    id: "magician-world",
+    left: { src: "/cards/rws/m01.jpg", name: "I. The Magician", halo: "rgba(251, 191, 36, 0.25)" },
+    right: { src: "/cards/rws/m21.jpg", name: "XXI. The World", halo: "rgba(168, 85, 247, 0.25)" },
+    tag: "Ý Chí Kiến Tạo & Sự Viên Mãn",
+  },
+  {
+    id: "sun-moon",
+    left: { src: "/cards/rws/m19.jpg", name: "XIX. The Sun", halo: "rgba(245, 158, 11, 0.25)" },
+    right: { src: "/cards/rws/m18.jpg", name: "XVIII. The Moon", halo: "rgba(56, 189, 248, 0.25)" },
+    tag: "Âm Dương Nhật Nguyệt",
+  },
+  {
+    id: "priestess-empress",
+    left: { src: "/cards/rws/m02.jpg", name: "II. The High Priestess", halo: "rgba(99, 102, 241, 0.25)" },
+    right: { src: "/cards/rws/m03.jpg", name: "III. The Empress", halo: "rgba(236, 72, 153, 0.25)" },
+    tag: "Trực Giác & Tình Yêu Thuần Khiết",
+  },
+  {
+    id: "star-wheel",
+    left: { src: "/cards/rws/m17.jpg", name: "XVII. The Star", halo: "rgba(56, 189, 248, 0.25)" },
+    right: { src: "/cards/rws/m10.jpg", name: "X. Wheel of Fortune", halo: "rgba(234, 179, 8, 0.25)" },
+    tag: "Ánh Sao Hy Vọng & Vận Mệnh",
+  },
+];
 
 export default function HomePage() {
   const [decks, setDecks] = useState<DeckDto[]>([]);
+  const [currentPairIndex, setCurrentPairIndex] = useState(0);
 
   useEffect(() => {
     async function loadDecks() {
@@ -21,166 +58,184 @@ export default function HomePage() {
     loadDecks();
   }, []);
 
+  // Tự động xoay lật đổi cặp bài sau mỗi 8 giây
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentPairIndex((prev) => (prev + 1) % FLOATING_CARD_PAIRS.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const activePair = FLOATING_CARD_PAIRS[currentPairIndex];
+
   return (
     <div className="flex flex-col items-center">
-      {/* 🌙 HERO SECTION */}
-      <section className="w-full py-20 sm:py-28 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center flex flex-col items-center">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#23242a] border border-[#3b3d46] text-xs sm:text-sm font-medium text-zinc-200 shadow-md backdrop-blur-md mb-8">
-          <Moon className="w-4 h-4 text-zinc-400" />
-          <span>Trí Tuệ Nhân Tạo & Nghệ Thuật Chiêm Tinh Tarot Chữa Lành</span>
+      {/* 🌙 CELESTIAL MOONLIT ORACLE HERO SECTION */}
+      <section className="relative w-full pt-20 pb-16 sm:pt-28 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto text-center flex flex-col items-center overflow-hidden">
+        {/* Vầng hào quang ánh trăng sâu thẳm */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[380px] bg-gradient-to-b from-white/[0.06] via-indigo-500/[0.03] to-transparent rounded-full blur-[130px] pointer-events-none" />
+
+        {/* Vòng tròn ma pháp chiêm tinh xoay chậm phía sau */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] sm:w-[680px] h-[520px] sm:h-[680px] rounded-full border border-white/[0.03] pointer-events-none flex items-center justify-center">
+          <div className="w-[380px] sm:w-[480px] h-[380px] sm:h-[480px] rounded-full border border-dashed border-white/[0.04] animate-spin-slow" />
         </div>
 
-        {/* Big Title */}
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
-          Lắng Nghe Thông Điệp <br className="hidden sm:inline" />
-          <span className="silver-gradient-text">
-            Dưới Ánh Trăng & Trực Giác Của Bạn
+        {/* Các hạt sao lấp lánh (Twinkling Constellation Stars) */}
+        <div className="absolute top-16 left-1/4 w-1.5 h-1.5 rounded-full bg-white animate-twinkle pointer-events-none shadow-[0_0_8px_white]" />
+        <div className="absolute top-28 right-1/4 w-1.5 h-1.5 rounded-full bg-amber-200 animate-twinkle pointer-events-none shadow-[0_0_8px_rgba(251,191,36,0.8)] [animation-delay:1.5s]" />
+        <div className="absolute bottom-20 left-1/6 w-1 h-1 rounded-full bg-sky-200 animate-twinkle pointer-events-none shadow-[0_0_6px_cyan] [animation-delay:2.5s]" />
+        <div className="absolute bottom-24 right-1/5 w-1 h-1 rounded-full bg-purple-200 animate-twinkle pointer-events-none shadow-[0_0_6px_purple] [animation-delay:0.8s]" />
+
+        {/* 🎴 LÁ BÀI TRÁI BAY BỒNG BỀNH & TỰ ĐỔI 3D */}
+        <div className="hidden lg:block absolute left-2 xl:left-8 top-16 z-0 select-none">
+          <div className="animate-float-slow">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activePair.left.src}
+                initial={{ opacity: 0, rotateY: 90, scale: 0.85 }}
+                animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                exit={{ opacity: 0, rotateY: -90, scale: 0.85 }}
+                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                onClick={() => setCurrentPairIndex((prev) => (prev + 1) % FLOATING_CARD_PAIRS.length)}
+                title="Bấm để đổi cặp bài tiếp theo"
+                className="relative w-32 xl:w-36 aspect-[1/1.7] rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-[#16171b] cursor-pointer group backdrop-blur-md"
+                style={{
+                  boxShadow: `0 20px 50px rgba(0,0,0,0.9), 0 0 35px ${activePair.left.halo}`,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={activePair.left.src}
+                  alt={activePair.left.name}
+                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-transparent pointer-events-none" />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* 🎴 LÁ BÀI PHẢI BAY BỒNG BỀNH & TỰ ĐỔI 3D */}
+        <div className="hidden lg:block absolute right-2 xl:right-8 top-16 z-0 select-none">
+          <div className="animate-float-reverse">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activePair.right.src}
+                initial={{ opacity: 0, rotateY: -90, scale: 0.85 }}
+                animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                exit={{ opacity: 0, rotateY: 90, scale: 0.85 }}
+                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                onClick={() => setCurrentPairIndex((prev) => (prev + 1) % FLOATING_CARD_PAIRS.length)}
+                title="Bấm để đổi cặp bài tiếp theo"
+                className="relative w-32 xl:w-36 aspect-[1/1.7] rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-[#16171b] cursor-pointer group backdrop-blur-md"
+                style={{
+                  boxShadow: `0 20px 50px rgba(0,0,0,0.9), 0 0 35px ${activePair.right.halo}`,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={activePair.right.src}
+                  alt={activePair.right.name}
+                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-transparent pointer-events-none" />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Micro Pill Badge */}
+        <div className="relative z-10 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/12 text-xs font-medium text-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.04)] backdrop-blur-xl mb-6 hover:border-white/25 transition-all">
+          <Moon className="w-3.5 h-3.5 text-zinc-300" />
+          <span>✦ Nyxoris AI & Chiêm Tinh Học Tarot ✦</span>
+        </div>
+
+        {/* Tiêu đề ngắn gọn, siêu sắc nét */}
+        <h1 className="relative z-10 text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.12] max-w-3xl mx-auto">
+          Lắng Nghe Tiềm Thức <br />
+          <span className="bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent drop-shadow-[0_15px_35px_rgba(255,255,255,0.15)]">
+            Dưới Ánh Trăng
           </span>
         </h1>
 
-        {/* Subtitle */}
-        <p className="mt-6 text-base sm:text-lg text-zinc-300 max-w-2xl leading-relaxed">
-          Đặt câu hỏi về tình duyên, sự nghiệp hoặc những nút thắt trong tâm hồn. Bốc 3 lá bài 3D tương tác và nhận bản luận giải chuyên sâu từ Oracle AI Reader.
+        {/* Lời dẫn tinh tế, súc tích */}
+        <p className="relative z-10 mt-5 text-sm sm:text-base text-zinc-300/80 max-w-xl mx-auto leading-relaxed">
+          Trải nghiệm bốc bài 3D tương tác với đa dạng trải bài và nhận bản luận giải sâu sắc về tình duyên, sự nghiệp và nội tâm từ Nyxoris AI.
         </p>
 
-        {/* Call to Actions */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
+        {/* Nút bấm kim loại cao cấp bo tròn chuẩn High-Fashion */}
+        <div className="relative z-10 mt-8 flex flex-col sm:flex-row items-center gap-3.5">
           <Link
             href="/reading"
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 hover:scale-105 transition duration-300 shadow-lg"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-full silver-gradient-btn font-bold text-sm text-zinc-950 flex items-center justify-center gap-2 hover:scale-105 transition-all duration-300 shadow-[0_4px_25px_rgba(255,255,255,0.2)] active:scale-95 cursor-pointer"
           >
-            <Sparkles className="w-5 h-5 text-zinc-950" />
+            <Sparkles className="w-4 h-4 text-zinc-950 fill-current" />
             <span>Bắt Đầu Bốc Bài Ngay</span>
-            <ArrowRight className="w-5 h-5 text-zinc-950" />
+            <ArrowRight className="w-4 h-4 text-zinc-950" />
           </Link>
           <Link
             href="/decks"
-            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl border border-[#3b3d46] bg-[#23242a] hover:bg-[#2b2c33] hover:border-[#525560] text-zinc-200 hover:text-white font-medium text-base transition flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-full border border-white/12 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/25 text-zinc-200 hover:text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md"
           >
-            <BookOpen className="w-5 h-5 text-zinc-300" />
-            <span>Thư Viện Tra Cứu 78 Lá</span>
+            <BookOpen className="w-4 h-4 text-zinc-300" />
+            <span>Thư Viện Bài</span>
           </Link>
         </div>
       </section>
 
-      {/* 🌟 3 ĐẶC ĐIỂM NỔI BẬT */}
-      <section className="w-full py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-7 rounded-3xl border border-[#31333a] bg-[#191a1e] hover:border-[#525560] hover:bg-[#212227] flex flex-col items-start transition duration-300 shadow-md">
-          <div className="w-12 h-12 rounded-2xl bg-[#23242a] border border-[#3b3d46] flex items-center justify-center text-zinc-200 mb-4">
-            <Eye className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-bold text-zinc-100">Trải Nghiệm 3D Chân Thực</h3>
-          <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-            Tự tay chạm để xáo bài, rút và lật mở từng lá bài với chuyển động 3D mượt mà kèm hiệu ứng ánh trăng huyền ảo.
-          </p>
-        </div>
+      {/* 🎴 SHOWCASE BANNER TRƯỢT 3D FRAMER MOTION CAO CẤP */}
+      <DeckShowcase3D decks={decks} />
 
-        <div className="p-7 rounded-3xl border border-[#31333a] bg-[#191a1e] hover:border-[#525560] hover:bg-[#212227] flex flex-col items-start transition duration-300 shadow-md">
-          <div className="w-12 h-12 rounded-2xl bg-[#23242a] border border-[#3b3d46] flex items-center justify-center text-zinc-200 mb-4">
-            <Moon className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-bold text-zinc-100">Bộ Não AI Luận Giải 4 Phần</h3>
-          <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-            Kết hợp ý nghĩa truyền thống, cung hoàng đạo và ngữ cảnh câu hỏi để đưa ra lời khuyên hành động và thông điệp chữa lành.
-          </p>
-        </div>
+      {/* 🌟 3 ĐẶC ĐIỂM NỔI BẬT (NGẮN GỌN & SÚC TÍCH) */}
+      <section className="w-full py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1 */}
+          <div className="relative p-6 sm:p-7 rounded-3xl border border-white/10 bg-[#151619] hover:bg-[#1b1c20] hover:border-emerald-400/30 transition-all duration-300 shadow-lg hover:-translate-y-1 overflow-hidden group">
+            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none group-hover:bg-emerald-500/20 transition duration-500" />
 
-        <div className="p-7 rounded-3xl border border-[#31333a] bg-[#191a1e] hover:border-[#525560] hover:bg-[#212227] flex flex-col items-start transition duration-300 shadow-md">
-          <div className="w-12 h-12 rounded-2xl bg-[#23242a] border border-[#3b3d46] flex items-center justify-center text-zinc-200 mb-4">
-            <HeartHandshake className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-bold text-zinc-100">Tâm Sự 1-1 Nối Tiếp</h3>
-          <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-            Không dừng lại ở 1 lần luận giải, bạn có thể nhắn tin hỏi sâu bất kỳ thắc mắc nào bám sát vào 3 lá bài đang nằm trên bàn.
-          </p>
-        </div>
-      </section>
-
-      {/* 🎴 DANH MỤC BỘ BÀI TAROT */}
-      <section id="decks" className="w-full py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-zinc-100">
-            Các Bộ Bài Tarot Trong Hệ Thống
-          </h2>
-          <p className="mt-2 text-sm text-zinc-400">
-            Tuyển tập các trường phái Tarot kinh điển thế giới đã được nạp dữ liệu đầy đủ
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {decks.map((deck) => (
-            <div
-              key={deck.code}
-              className="group relative overflow-hidden p-5 sm:p-6 rounded-3xl border border-[#2c2e35] bg-[#191a1e] hover:border-[#42454e] hover:bg-[#1e1f24] hover:shadow-2xl hover:shadow-black/60 flex flex-col justify-between transition-all duration-300 select-none"
-            >
-              {/* Ambient Background Glow */}
-              {deck.coverImageUrl && (
-                <div className="absolute -right-6 -bottom-6 w-36 h-48 opacity-[0.06] pointer-events-none overflow-hidden rounded-2xl rotate-12 blur-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={deck.coverImageUrl} alt="" className="w-full h-full object-cover" />
-                </div>
-              )}
-
-              {/* Top Row: Badges */}
-              <div className="relative z-10 flex items-center justify-between gap-2">
-                <span className="rounded-full bg-white/[0.06] backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-zinc-200 border border-white/10 flex items-center gap-1.5 shadow-sm">
-                  <span>{deck.code === "RIDER_WAITE_CLASSIC" ? "🏛️" : deck.code === "THOTH_ALEISTER" ? "🔮" : "⚜️"}</span>
-                  <span>{deck.code === "RIDER_WAITE_CLASSIC" ? "Kinh Điển 1909" : deck.code === "THOTH_ALEISTER" ? "Huyền Học Thelema" : "Cổ Điển Pháp 1760"}</span>
-                </span>
-                <span className="text-[10px] font-semibold text-zinc-300 bg-[#23242a] px-2.5 py-1 rounded-full border border-[#3b3d46]">
-                  78 Lá Bài
-                </span>
-              </div>
-
-              {/* Center Row: Cover Artwork + Text */}
-              <div className="relative z-10 my-4 flex gap-4 items-center">
-                {deck.coverImageUrl && (
-                  <div className="w-16 sm:w-20 aspect-[1/1.65] shrink-0 rounded-xl overflow-hidden bg-black/60 border border-white/15 shadow-xl group-hover:scale-105 group-hover:border-amber-300/40 transition-all duration-300">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={deck.coverImageUrl}
-                      alt={deck.nameVi}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1 space-y-1">
-                  <h3 className="text-base sm:text-lg font-bold text-zinc-100 group-hover:text-amber-200 transition leading-snug">
-                    {deck.nameVi}
-                  </h3>
-                  <p className="text-[11px] sm:text-xs text-zinc-300 leading-relaxed line-clamp-3">
-                    {deck.description || deck.descriptionVi || deck.nameVi}
-                  </p>
-                </div>
-              </div>
-
-              {/* Bottom Row: Actions */}
-              <div className="relative z-10 mt-2 pt-4 border-t border-white/[0.08] space-y-2.5">
-                <div className="text-[11px] text-zinc-400 font-medium flex items-center gap-1.5">
-                  <span>🎴</span>
-                  <span>22 Ẩn Chính + 56 Ẩn Phụ Chuẩn Quốc Tế</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href={`/decks?deckCode=${deck.code}`}
-                    className="px-3 py-2 rounded-xl border border-[#3b3d46] bg-[#23242a] hover:bg-[#2b2c33] hover:border-[#525560] text-zinc-200 hover:text-white font-semibold text-xs text-center transition flex items-center justify-center gap-1 group-hover:border-amber-300/30"
-                  >
-                    <span>Xem 78 lá bài</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                  <Link
-                    href={`/reading?deckCode=${deck.code}`}
-                    className="px-3 py-2 rounded-xl silver-gradient-btn font-bold text-xs text-center transition flex items-center justify-center gap-1 shadow-md hover:scale-[1.02]"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-zinc-950" />
-                    <span>Bốc quẻ ngay</span>
-                  </Link>
-                </div>
-              </div>
+            <div className="w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-emerald-300 mb-5 group-hover:scale-110 transition duration-300">
+              <Eye className="w-5 h-5" />
             </div>
-          ))}
+
+            <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-emerald-200 transition duration-200">
+              Chạm & Bốc Bài 3D
+            </h3>
+            <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+              Đa dạng trải bài, tự tay xáo và lật mở từng lá bài 3D trực quan theo trực giác của bạn.
+            </p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="relative p-6 sm:p-7 rounded-3xl border border-white/10 bg-[#151619] hover:bg-[#1b1c20] hover:border-purple-400/30 transition-all duration-300 shadow-lg hover:-translate-y-1 overflow-hidden group">
+            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-purple-500/10 blur-2xl pointer-events-none group-hover:bg-purple-500/20 transition duration-500" />
+
+            <div className="w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-purple-300 mb-5 group-hover:scale-110 transition duration-300">
+              <Moon className="w-5 h-5" />
+            </div>
+
+            <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-purple-200 transition duration-200">
+              Luận Giải & Chữa Lành
+            </h3>
+            <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+              Nyxoris AI thấu cảm câu chuyện, gửi trao lời khuyên dịu dàng và định hướng tích cực.
+            </p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="relative p-6 sm:p-7 rounded-3xl border border-white/10 bg-[#151619] hover:bg-[#1b1c20] hover:border-amber-400/30 transition-all duration-300 shadow-lg hover:-translate-y-1 overflow-hidden group">
+            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-amber-500/10 blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition duration-500" />
+
+            <div className="w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-amber-300 mb-5 group-hover:scale-110 transition duration-300">
+              <HeartHandshake className="w-5 h-5" />
+            </div>
+
+            <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-amber-200 transition duration-200">
+              Tâm Sự 1-1 Nối Tiếp
+            </h3>
+            <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+              Thoải mái hỏi sâu và trò chuyện cùng Nyxoris AI để gỡ rối mọi băn khoăn.
+            </p>
+          </div>
         </div>
       </section>
     </div>

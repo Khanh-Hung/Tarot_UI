@@ -25,12 +25,12 @@ export const tarotService = {
     return response.data;
   },
 
-  async getReadingById(id: number): Promise<ReadingDetailResponse> {
+  async getReadingById(id: string | number): Promise<ReadingDetailResponse> {
     const response = await apiClient.get<ReadingDetailResponse>(`/readings/${id}`);
     return response.data;
   },
 
-  async getReadingHistory(userId?: number | null, page = 0, size = 10): Promise<PagedResponse<ReadingSummaryResponse>> {
+  async getReadingHistory(userId?: string | number | null, page = 0, size = 10): Promise<PagedResponse<ReadingSummaryResponse>> {
     if (!userId) {
       return {
         items: [],
@@ -47,7 +47,7 @@ export const tarotService = {
     return response.data;
   },
 
-  async sendChatMessage(readingId: number, message: string): Promise<string> {
+  async sendChatMessage(readingId: string | number, message: string): Promise<string> {
     const response = await apiClient.post<any>(`/readings/${readingId}/messages`, { message });
     if (typeof response.data === "string") return response.data;
     return response.data?.content || response.data?.message || "";

@@ -27,12 +27,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const savedToken = localStorage.getItem("tarot_jwt_token");
       const savedUser = localStorage.getItem("tarot_user");
       if (savedToken && savedUser) {
-        setToken(savedToken);
         const parsed = JSON.parse(savedUser);
         if (parsed.id && !parsed.userId) {
           parsed.userId = parsed.id;
         }
-        setUser(parsed);
+
+        // Kiểm tra tính hợp lệ của UUID v7 / UUID string
+        const isValidUUID =
+          typeof parsed.userId === "string" &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parsed.userId);
+
+        if (!isValidUUID) {
+          // Xóa session cũ từ thời chưa dùng UUID v7
+          localStorage.removeItem("tarot_jwt_token");
+          localStorage.removeItem("tarot_user");
+          setToken(null);
+          setUser(null);
+        } else {
+          setToken(savedToken);
+          setUser(parsed);
+        }
       }
     } catch (e) {
       console.error("Failed to restore auth session:", e);

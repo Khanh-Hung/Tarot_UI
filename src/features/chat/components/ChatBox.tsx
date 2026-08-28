@@ -7,7 +7,7 @@ import { tarotService } from "@/features/tarot/services/tarotService";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface ChatBoxProps {
-  readingId: number;
+  readingId: string | number;
   initialMessages?: ChatMessageDto[];
 }
 
