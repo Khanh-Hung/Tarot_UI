@@ -108,36 +108,58 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {decks.map((deck) => (
             <div
               key={deck.code}
-              className="p-6 rounded-3xl border border-[#31333a] bg-[#191a1e] hover:border-[#525560] hover:bg-[#212227] flex flex-col justify-between group transition duration-300 shadow-lg"
+              className="group relative overflow-hidden p-5 sm:p-6 rounded-3xl border border-[#2c2e35] bg-[#191a1e] hover:border-[#42454e] hover:bg-[#1e1f24] hover:shadow-2xl hover:shadow-black/60 flex flex-col justify-between transition-all duration-300 select-none"
             >
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-400/15 px-2.5 py-1 rounded-md border border-amber-300/30">
-                    {deck.code === "RIDER_WAITE_CLASSIC" ? "Kinh Điển" : deck.code === "THOTH_ALEISTER" ? "Huyền Học Hermetic" : "Cổ Điển Pháp"}
-                  </span>
-                  <span className="text-[10px] font-semibold text-zinc-300 bg-[#23242a] px-2 py-1 rounded-md border border-[#3b3d46]">
-                    Trọn bộ 78 Lá
-                  </span>
+              {/* Ambient Background Glow */}
+              {deck.coverImageUrl && (
+                <div className="absolute -right-6 -bottom-6 w-36 h-48 opacity-[0.06] pointer-events-none overflow-hidden rounded-2xl rotate-12 blur-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={deck.coverImageUrl} alt="" className="w-full h-full object-cover" />
                 </div>
-                <h3 className="mt-3.5 text-lg font-bold text-zinc-100 group-hover:text-amber-200 transition">
-                  {deck.nameVi}
-                </h3>
-                <p className="text-xs text-zinc-400 italic mb-2">
-                  {deck.nameEn}
-                </p>
-                <p className="text-xs text-zinc-300 leading-relaxed line-clamp-3">
-                  {deck.description || deck.descriptionVi || deck.nameVi}
-                </p>
+              )}
+
+              {/* Top Row: Badges */}
+              <div className="relative z-10 flex items-center justify-between gap-2">
+                <span className="rounded-full bg-white/[0.06] backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-zinc-200 border border-white/10 flex items-center gap-1.5 shadow-sm">
+                  <span>{deck.code === "RIDER_WAITE_CLASSIC" ? "🏛️" : deck.code === "THOTH_ALEISTER" ? "🔮" : "⚜️"}</span>
+                  <span>{deck.code === "RIDER_WAITE_CLASSIC" ? "Kinh Điển 1909" : deck.code === "THOTH_ALEISTER" ? "Huyền Học Thelema" : "Cổ Điển Pháp 1760"}</span>
+                </span>
+                <span className="text-[10px] font-semibold text-zinc-300 bg-[#23242a] px-2.5 py-1 rounded-full border border-[#3b3d46]">
+                  78 Lá Bài
+                </span>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-[#31333a] space-y-2.5">
-                <div className="text-[11px] text-amber-200/90 font-medium flex items-center gap-1">
+              {/* Center Row: Cover Artwork + Text */}
+              <div className="relative z-10 my-4 flex gap-4 items-center">
+                {deck.coverImageUrl && (
+                  <div className="w-16 sm:w-20 aspect-[1/1.65] shrink-0 rounded-xl overflow-hidden bg-black/60 border border-white/15 shadow-xl group-hover:scale-105 group-hover:border-amber-300/40 transition-all duration-300">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={deck.coverImageUrl}
+                      alt={deck.nameVi}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <h3 className="text-base sm:text-lg font-bold text-zinc-100 group-hover:text-amber-200 transition leading-snug">
+                    {deck.nameVi}
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-zinc-300 leading-relaxed line-clamp-3">
+                    {deck.description || deck.descriptionVi || deck.nameVi}
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom Row: Actions */}
+              <div className="relative z-10 mt-2 pt-4 border-t border-white/[0.08] space-y-2.5">
+                <div className="text-[11px] text-zinc-400 font-medium flex items-center gap-1.5">
                   <span>🎴</span>
-                  <span>78 lá (22 Ẩn Chính + 56 Ẩn Phụ)</span>
+                  <span>22 Ẩn Chính + 56 Ẩn Phụ Chuẩn Quốc Tế</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
