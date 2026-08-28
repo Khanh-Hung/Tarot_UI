@@ -33,12 +33,15 @@ export type ZodiacSign =
   | "UNKNOWN";
 
 export interface DeckDto {
+  id?: number;
   code: DeckCode;
   nameVi: string;
   nameEn: string;
-  descriptionVi: string;
-  totalCards: number;
-  styleTag: string;
+  description?: string;
+  descriptionVi?: string;
+  coverImageUrl?: string;
+  totalCards?: number;
+  styleTag?: string;
 }
 
 export interface CardDto {
@@ -53,7 +56,10 @@ export interface CardDto {
   element?: string;
   uprightMeaning: string;
   reversedMeaning: string;
+  uprightMeaningEn?: string;
+  reversedMeaningEn?: string;
   keywords: string;
+  keywordsEn?: string;
   imageUrl?: string;
 }
 

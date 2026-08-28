@@ -261,6 +261,15 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     drawnCardsMapRef.current = drawnCardsMap;
   }, [drawnCardsMap]);
 
+  const selectedCardsRef = useRef<{ card: CardDto; isReversed: boolean }[]>([]);
+  useEffect(() => {
+    selectedCardsRef.current = selectedCards;
+  }, [selectedCards]);
+
+  const [isRevealing, setIsRevealing] = useState(false);
+  const isRevealingRef = useRef<boolean>(false);
+  const revealStartTimeRef = useRef<number>(0);
+
   const handleCardSelect3D = (meshGroup: THREE.Group, card: CardDto) => {
     setSelectedCards((prev) => {
       if (prev.length >= 3) return prev;
@@ -441,13 +450,12 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       scene.add(slotBackMesh);
     });
 
-    // 6. KHỞI TẠO 78 LÁ BÀI 3D (TỈ LỆ VÀNG 0.85 x 1.45)
+    // 6. KHỞI TẠO 78 LÁ BÀI 3D (TỈ LỆ VÀNG 0.85 x 1.45) & BỤI SAO MA THUẬT
     const cardCanvas = renderTarotCardBackCanvas();
     const cardBackTex = new THREE.CanvasTexture(cardCanvas);
     cardBackTex.anisotropy = 16;
     const cardGeo = new THREE.BoxGeometry(0.85, 1.45, 0.012);
 
-    // Cả mặt trước và mặt sau lá bài khi úp trên thảm đều hiển thị trọn vẹn hoa văn mặt lưng Tarot
     const cardMatBack = new THREE.MeshStandardMaterial({
       map: cardBackTex,
       roughness: 0.25,
@@ -459,18 +467,36 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       roughness: 0.2,
     });
 
-    const materials = [
-      cardMatEdge,
-      cardMatEdge,
-      cardMatEdge,
-      cardMatEdge,
-      cardMatBack, // Face 4 (+Z): Hướng thẳng vào camera khi úp bài
-      cardMatBack, // Face 5 (-Z): Mặt lưng đối xứng
-    ];
-
+    const textureLoader = new THREE.TextureLoader();
     const cardGroups: THREE.Group[] = [];
 
     deckCards.forEach((card, i) => {
+      // Mặt trước lá bài (Face 5: -Z) được nạp hình ảnh lá bài tương ứng
+      const cardMatFront = new THREE.MeshStandardMaterial({
+        map: cardBackTex,
+        roughness: 0.25,
+        metalness: 0.15,
+      });
+
+      if (card.imageUrl) {
+        textureLoader.load(card.imageUrl, (tex) => {
+          tex.anisotropy = 16;
+          tex.center.set(0.5, 0.5);
+          tex.repeat.set(-1, 1); // Đảo trục X để khi lật 180 độ không bị ngược gương
+          cardMatFront.map = tex;
+          cardMatFront.needsUpdate = true;
+        });
+      }
+
+      const materials = [
+        cardMatEdge,
+        cardMatEdge,
+        cardMatEdge,
+        cardMatEdge,
+        cardMatBack, // Face 4 (+Z): Mặt lưng bài khi úp
+        cardMatFront, // Face 5 (-Z): Mặt trước hình vẽ lá bài khi lật mở
+      ];
+
       const cardMesh = new THREE.Mesh(cardGeo, materials);
       cardMesh.castShadow = true;
       cardMesh.receiveShadow = true;
@@ -491,6 +517,52 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       scene.add(group);
       cardGroups.push(group);
     });
+
+    // ✨ HỆ THỐNG BỤI SAO VÀNG MA THUẬT KHI LẬT BÀI (GOLDEN STARLIGHT PARTICLES)
+    const particleCount = 180;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleVelocities = new Float32Array(particleCount * 3);
+
+    for (let p = 0; p < particleCount; p++) {
+      const slotX = slotXPositions[p % 3];
+      particlePositions[p * 3] = slotX + (Math.random() - 0.5) * 1.4;
+      particlePositions[p * 3 + 1] = slotYPos + (Math.random() - 0.5) * 1.8;
+      particlePositions[p * 3 + 2] = 0.05 + Math.random() * 0.4;
+
+      particleVelocities[p * 3] = (Math.random() - 0.5) * 0.35;
+      particleVelocities[p * 3 + 1] = 0.3 + Math.random() * 0.7;
+      particleVelocities[p * 3 + 2] = (Math.random() - 0.5) * 0.2;
+    }
+    particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
+
+    const createSparkleTexture = () => {
+      const c = document.createElement("canvas");
+      c.width = 64;
+      c.height = 64;
+      const ctx = c.getContext("2d")!;
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, "rgba(255, 250, 220, 1)");
+      grad.addColorStop(0.25, "rgba(242, 208, 124, 0.9)");
+      grad.addColorStop(0.65, "rgba(212, 175, 55, 0.3)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(32, 32, 32, 0, Math.PI * 2);
+      ctx.fill();
+      return new THREE.CanvasTexture(c);
+    };
+
+    const particleMat = new THREE.PointsMaterial({
+      size: 0.16,
+      map: createSparkleTexture(),
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const starParticles = new THREE.Points(particleGeo, particleMat);
+    scene.add(starParticles);
 
     cardMeshesRef.current = cardGroups;
 
@@ -580,16 +652,44 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       const currentPhase = shufflePhaseRef.current;
 
       cardGroups.forEach((group, i) => {
-        // 🚀 NẾU LÁ BÀI ĐÃ ĐƯỢC RÚT: ĐẶT NẰM NGAY NGẮN XUỐNG THẢM BÀN TẠI VỊ TRÍ Ô CHỜ
+        // 🚀 NẾU LÁ BÀI ĐÃ ĐƯỢC RÚT:
         if (group.userData.isDrawn) {
           const slotIdx = group.userData.slotIndex ?? 0;
           const targetSlotX = slotXPositions[slotIdx] || 0;
           const targetSlotY = slotYPos - 0.725;
-          const targetSlotZ = 0.008;
+          const cardData = selectedCardsRef.current[slotIdx];
+          const isRev = cardData ? cardData.isReversed : false;
+
+          if (isRevealingRef.current) {
+            // ✨ HIỆU ỨNG 3D LẬT BÀI & PHÁT SÁNG BỤI SAO VÀNG KHI XÁC NHẬN
+            const elapsed = currentTime - revealStartTimeRef.current;
+            const cardDelay = slotIdx * 400; // Mỗi lá lật cách nhau 400ms
+            const flipProgress = Math.max(0, Math.min(1, (elapsed - cardDelay) / 550));
+
+            // Đường cong bay bổng nhấc lên khỏi mặt bàn
+            const zArc = Math.sin(flipProgress * Math.PI) * 0.45;
+            const targetZ = 0.008 + zArc;
+
+            // Xoay 180 độ quanh trục Y để lộ mặt trước
+            const rotY = flipProgress * Math.PI;
+            // Nếu lá bài bị ngược (reversed), xoay thêm 180 độ quanh trục Z
+            const rotZ = isRev ? (flipProgress * Math.PI) : 0;
+
+            group.position.x = THREE.MathUtils.lerp(group.position.x, targetSlotX, delta * 12);
+            group.position.y = THREE.MathUtils.lerp(group.position.y, targetSlotY, delta * 12);
+            group.position.z = THREE.MathUtils.lerp(group.position.z, targetZ, delta * 12);
+
+            group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, 0, delta * 12);
+            group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, rotY, delta * 12);
+            group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, rotZ, delta * 12);
+
+            group.scale.lerp(new THREE.Vector3(1.04, 1.04, 1.04), delta * 10);
+            return;
+          }
 
           group.position.x = THREE.MathUtils.lerp(group.position.x, targetSlotX, delta * 10);
           group.position.y = THREE.MathUtils.lerp(group.position.y, targetSlotY, delta * 10);
-          group.position.z = THREE.MathUtils.lerp(group.position.z, targetSlotZ, delta * 10);
+          group.position.z = THREE.MathUtils.lerp(group.position.z, 0.008, delta * 10);
 
           group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, 0, delta * 10);
           group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, 0, delta * 10);
@@ -724,6 +824,25 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         group.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 15);
       });
 
+      // ✨ CẬP NHẬT BỤI SAO VÀNG KHI LẬT MỞ BÀI
+      if (isRevealingRef.current) {
+        particleMat.opacity = Math.min(0.95, particleMat.opacity + delta * 3);
+        pointLight.intensity = THREE.MathUtils.lerp(pointLight.intensity, 4.5, delta * 4);
+
+        const posAttr = particleGeo.attributes.position as THREE.BufferAttribute;
+        const positions = posAttr.array as Float32Array;
+        for (let p = 0; p < particleCount; p++) {
+          positions[p * 3 + 1] += particleVelocities[p * 3 + 1] * delta;
+          positions[p * 3] += particleVelocities[p * 3] * delta;
+          if (positions[p * 3 + 1] > 3.2) {
+            positions[p * 3 + 1] = 1.2;
+            const sX = slotXPositions[p % 3];
+            positions[p * 3] = sX + (Math.random() - 0.5) * 1.2;
+          }
+        }
+        posAttr.needsUpdate = true;
+      }
+
       renderer.render(scene, camera);
     };
 
@@ -749,11 +868,12 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   }, [deckCards]);
 
   const handleReshuffle3D = () => {
+    if (isRevealing) return;
     start3DShuffleSequence();
   };
 
   const handleQuickPick3D = () => {
-    if (deckCards.length < 3) return;
+    if (isRevealing || deckCards.length < 3) return;
     const available = cardMeshesRef.current.filter((g) => !g.userData.isDrawn);
     const shuffled = [...available].sort(() => Math.random() - 0.5);
     const chosenMeshes = shuffled.slice(0, 3);
@@ -775,13 +895,20 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   };
 
   const handleConfirm = () => {
-    if (selectedCards.length === 3) {
-      onConfirmSelection(
-        selectedCards.map((s) => ({
-          cardId: s.card.id,
-          isReversed: s.isReversed,
-        }))
-      );
+    if (selectedCards.length === 3 && !isRevealing) {
+      setIsRevealing(true);
+      isRevealingRef.current = true;
+      revealStartTimeRef.current = performance.now();
+
+      // Sau khi 3 lá bài lật mở hoàn chỉnh và phát sáng lung linh (~2.1s), chuyển tiếp sang AI Reader
+      setTimeout(() => {
+        onConfirmSelection(
+          selectedCards.map((s) => ({
+            cardId: s.card.id,
+            isReversed: s.isReversed,
+          }))
+        );
+      }, 2100);
     }
   };
 
@@ -812,6 +939,11 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
               </strong>{" "}
               ({currentSlotIndex + 1}/3)
             </span>
+          ) : isRevealing ? (
+            <span className="text-amber-300 font-medium flex items-center justify-center gap-1.5 animate-pulse">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+              Đang lật mở 3 lá bài & kết nối năng lượng vũ trụ...
+            </span>
           ) : (
             <span className="text-emerald-400 font-medium flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -841,7 +973,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
             <div className="inline-flex rounded-xl bg-black/40 border border-white/15 p-0.5 text-xs">
               <button
                 onClick={() => setSpreadMode("RIBBON")}
-                disabled={isShuffling}
+                disabled={isShuffling || isRevealing}
                 className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
                   spreadMode === "RIBBON"
                     ? "bg-amber-400/25 text-amber-200 border border-amber-300/40"
@@ -853,7 +985,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
               </button>
               <button
                 onClick={() => setSpreadMode("FAN")}
-                disabled={isShuffling}
+                disabled={isShuffling || isRevealing}
                 className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
                   spreadMode === "FAN"
                     ? "bg-amber-400/25 text-amber-200 border border-amber-300/40"
@@ -867,7 +999,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
             <button
               onClick={() => handleReshuffle3D()}
-              disabled={isShuffling || isLoading}
+              disabled={isShuffling || isLoading || isRevealing}
               className="px-2.5 py-1 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-200 hover:text-white transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isShuffling ? "animate-spin" : ""}`} />
@@ -876,7 +1008,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
             <button
               onClick={handleQuickPick3D}
-              disabled={isShuffling || isLoading}
+              disabled={isShuffling || isLoading || isRevealing}
               className="px-2.5 py-1 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-xs font-bold text-amber-200 transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
@@ -917,7 +1049,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         <div
           ref={mountRef}
           className={`w-full h-[540px] sm:h-[620px] relative transition-opacity duration-300 ${
-            isShuffling ? "cursor-wait pointer-events-none opacity-95" : "cursor-pointer"
+            isShuffling || isRevealing ? "cursor-wait pointer-events-none opacity-95" : "cursor-pointer"
           }`}
         />
       </div>
@@ -926,7 +1058,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-1">
         <button
           onClick={onCancel}
-          disabled={isLoading}
+          disabled={isLoading || isRevealing}
           className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 font-medium text-sm transition cursor-pointer"
         >
           Nhập lại câu hỏi
@@ -934,13 +1066,13 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
         <button
           onClick={handleConfirm}
-          disabled={selectedCards.length < 3 || isShuffling || isLoading}
+          disabled={selectedCards.length < 3 || isShuffling || isLoading || isRevealing}
           className="w-full sm:w-auto px-10 py-3.5 rounded-2xl silver-gradient-btn font-bold text-base flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xl hover:scale-105"
         >
-          {isLoading ? (
+          {isLoading || isRevealing ? (
             <>
               <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
-              <span>AI Reader đang kết nối năng lượng 3 lá bài...</span>
+              <span>{isRevealing ? "Đang khai mở 3 lá bài & bụi sao..." : "AI Reader đang kết nối năng lượng..."}</span>
             </>
           ) : (
             <>
