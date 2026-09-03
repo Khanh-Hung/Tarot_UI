@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Sparkles, Calendar, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, MessageSquare, Loader2 } from "lucide-react";
 import { ReadingDetailResponse } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { TarotCard3D } from "@/features/tarot/components/TarotCard3D";
@@ -12,19 +12,12 @@ import { ChatBox } from "@/features/chat/components/ChatBox";
 
 export default function HistoryDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const readingId = Number(params?.id);
 
   const [reading, setReading] = useState<ReadingDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (readingId) {
-      loadDetail(readingId);
-    }
-  }, [readingId]);
-
-  const loadDetail = async (id: number) => {
+  const loadDetail = useCallback(async (id: number) => {
     try {
       const data = await tarotService.getReadingById(id);
       setReading(data);
@@ -33,7 +26,13 @@ export default function HistoryDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (readingId) {
+      loadDetail(readingId);
+    }
+  }, [readingId, loadDetail]);
 
   if (isLoading) {
     return (

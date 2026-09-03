@@ -4,13 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Moon,
   Sparkles,
   History,
   BookOpen,
-  User as UserIcon,
   LogOut,
-  ChevronRight,
   LogIn,
   Star,
 } from "lucide-react";

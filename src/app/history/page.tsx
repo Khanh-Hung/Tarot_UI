@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   History,
   Sparkles,
-  Calendar,
   Loader2,
   ArrowRight,
   ChevronLeft,
@@ -119,19 +118,7 @@ export default function HistoryPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    const currentUserId = user?.userId || (user as any)?.id;
-    if (currentUserId) {
-      loadAllHistory(currentUserId);
-    }
-  }, [user, isAuthenticated, isAuthLoading]);
-
-  const loadAllHistory = async (userId: string | number) => {
+  const loadAllHistory = React.useCallback(async (userId: string | number) => {
     setIsLoading(true);
     try {
       // Tải tối đa 100 quẻ để tìm kiếm và lọc tức thì
@@ -142,7 +129,19 @@ export default function HistoryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    const currentUserId = user?.userId || (user as { id?: string | number })?.id;
+    if (currentUserId) {
+      loadAllHistory(currentUserId);
+    }
+  }, [user, isAuthenticated, isAuthLoading, router, loadAllHistory]);
 
   // 🔍 TÌM KIẾM & LỌC DỮ LIỆU
   const filteredHistory = useMemo(() => {

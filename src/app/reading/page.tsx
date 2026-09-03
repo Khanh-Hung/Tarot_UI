@@ -40,8 +40,11 @@ function ReadingContent() {
 
   const [stage, setStage] = useState<"FORM" | "PICKING" | "RESULT">("FORM");
   const [question, setQuestion] = useState("");
-  const [deckCode, setDeckCode] = useState<DeckCode>("RIDER_WAITE_CLASSIC");
-  const [selectedZodiac, setSelectedZodiac] = useState<ZodiacSign>("UNKNOWN");
+  const initialDeck = (searchParams.get("deckCode") as DeckCode) || "RIDER_WAITE_CLASSIC";
+  const [deckCode, setDeckCode] = useState<DeckCode>(initialDeck);
+  const [selectedZodiac, setSelectedZodiac] = useState<ZodiacSign>(
+    (user?.zodiacSign as ZodiacSign) || "UNKNOWN"
+  );
   const [decks, setDecks] = useState<DeckDto[]>([]);
 
   const [isReadingLoading, setIsReadingLoading] = useState(false);
@@ -50,9 +53,6 @@ function ReadingContent() {
   const [, setFlippedCount] = useState(0);
 
   useEffect(() => {
-    const deckParam = searchParams.get("deckCode") as DeckCode;
-    if (deckParam) setDeckCode(deckParam);
-
     async function loadDecks() {
       try {
         const data = await tarotService.getDecks();
@@ -62,13 +62,7 @@ function ReadingContent() {
       }
     }
     loadDecks();
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (user?.zodiacSign && user.zodiacSign !== "UNKNOWN") {
-      setSelectedZodiac(user.zodiacSign as ZodiacSign);
-    }
-  }, [user]);
+  }, []);
 
   // Chuyển từ Form sang Bàn xòe bài 78 lá
   const handleProceedToPicking = (e: React.FormEvent) => {
@@ -116,10 +110,11 @@ function ReadingContent() {
       if (selectedZodiac !== "UNKNOWN") {
         updateUserZodiac(selectedZodiac);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Create reading failed:", err);
       const serverMessage =
-        err.response?.data?.message || "Không thể thực hiện quẻ bói. Vui lòng thử lại.";
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Không thể thực hiện quẻ bói. Vui lòng thử lại.";
       setErrorMsg(serverMessage);
     } finally {
       setIsReadingLoading(false);

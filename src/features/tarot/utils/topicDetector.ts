@@ -10,8 +10,8 @@ export interface DetectedTopicResult {
 export function detectTopicFromQuestion(question: string): DetectedTopicResult {
   if (!question || question.trim().length < 3) {
     return {
-      topic: "GENERAL_QUESTION",
-      label: "Tự động nhận diện",
+      topic: "GENERAL_GUIDANCE",
+      label: "Định Hướng Tổng Quan",
       icon: "✨",
       confidence: "LOW",
     };
@@ -27,8 +27,8 @@ export function detectTopicFromQuestion(question: string): DetectedTopicResult {
   ];
   if (loveKeywords.some((kw) => q.includes(kw))) {
     return {
-      topic: "LOVE_RELATIONSHIP",
-      label: "Tình Yêu & Mối Quan Hệ",
+      topic: "LOVE_AND_RELATIONSHIP",
+      label: "Tình Duyên & Mối Quan Hệ",
       icon: "💖",
       confidence: "HIGH",
     };
@@ -42,14 +42,14 @@ export function detectTopicFromQuestion(question: string): DetectedTopicResult {
   ];
   if (careerKeywords.some((kw) => q.includes(kw))) {
     return {
-      topic: "CAREER_MONEY",
+      topic: "CAREER_AND_FINANCE",
       label: "Sự Nghiệp & Tài Chính",
       icon: "💼",
       confidence: "HIGH",
     };
   }
 
-  // 3. CHỮA LÀNH & TÂM THỨC
+  // 3. CHỮA LÀNH & NỘI TÂM
   const healingKeywords = [
     "chữa lành", "mệt mỏi", "áp lực", "stress", "bế tắc", "trầm cảm", "lo âu",
     "bất an", "tĩnh tâm", "tâm thức", "nội tâm", "mất phương hướng", "cô đơn",
@@ -57,31 +57,17 @@ export function detectTopicFromQuestion(question: string): DetectedTopicResult {
   ];
   if (healingKeywords.some((kw) => q.includes(kw))) {
     return {
-      topic: "SPIRITUAL_HEALING",
-      label: "Chữa Lành & Tâm Thức",
+      topic: "SELF_GROWTH_AND_HEALING",
+      label: "Chữa Lành & Nội Tâm",
       icon: "🌿",
       confidence: "HIGH",
     };
   }
 
-  // 4. THÔNG ĐIỆP NGÀY MỚI
-  const dailyKeywords = [
-    "hôm nay", "ngày mai", "ngày mới", "tuần này", "tháng này", "thông điệp",
-    "vận may", "tổng quan", "dự báo", "tuần mới", "ngày hôm nay"
-  ];
-  if (dailyKeywords.some((kw) => q.includes(kw))) {
-    return {
-      topic: "DAILY_GUIDANCE",
-      label: "Thông Điệp Ngày Mới",
-      icon: "☀️",
-      confidence: "MEDIUM",
-    };
-  }
-
   return {
-    topic: "GENERAL_QUESTION",
-    label: "Câu Hỏi Đa Chiều",
-    icon: "🔮",
+    topic: "GENERAL_GUIDANCE",
+    label: "Định Hướng Tổng Quan",
+    icon: "🧭",
     confidence: "LOW",
   };
 }

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export default function LoginPage() {
@@ -24,9 +24,11 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       router.push("/reading");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login failed:", err);
-      const serverMessage = err.response?.data?.message || "Email hoặc mật khẩu không chính xác.";
+      const serverMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Email hoặc mật khẩu không chính xác.";
       setErrorMsg(serverMessage);
     } finally {
       setIsLoading(false);

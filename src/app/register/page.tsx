@@ -36,9 +36,11 @@ export default function RegisterPage() {
     try {
       await register({ email, password });
       router.push("/reading");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Registration failed:", err);
-      const serverMessage = err.response?.data?.message || "Đăng ký thất bại. Email có thể đã được sử dụng.";
+      const serverMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Đăng ký thất bại. Email có thể đã được sử dụng.";
       setErrorMsg(serverMessage);
     } finally {
       setIsLoading(false);

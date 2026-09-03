@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, User, Bot, Loader2, Moon } from "lucide-react";
+import { Send, User, Bot, Loader2, Moon } from "lucide-react";
 import { ChatMessageDto } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { MarkdownRenderer } from "./MarkdownRenderer";
