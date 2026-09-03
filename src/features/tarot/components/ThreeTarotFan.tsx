@@ -1,10 +1,21 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { Sparkles, RotateCcw, ArrowRight, Moon, Shuffle, CheckCircle2, Eye, LayoutGrid } from "lucide-react";
+import { Sparkles, RotateCcw, ArrowRight, Moon, CheckCircle2, Eye, LayoutGrid } from "lucide-react";
 import { CardDto } from "../types/tarot.types";
 import { tarotService } from "../services/tarotService";
+import { renderTarotCardBackCanvas } from "../three/cardCanvas";
+import {
+  createGoldenParticleSystem,
+  updateParticleAnimation,
+  ParticleSystemHandle,
+} from "../three/particleSystem";
+import {
+  calculateCardShuffleTransform,
+  ShufflePhase,
+  SpreadMode,
+} from "../three/shufflePhysics";
 
 interface ThreeTarotFanProps {
   deckCode: string;
@@ -20,182 +31,8 @@ const SLOT_NAMES = [
   { title: "Tương Lai và Xu Hướng", desc: "Kết quả và hướng đi phát triển tự nhiên", icon: "🌘" },
 ];
 
-// Hàm tạo Canvas vẽ mặt lưng lá bài Tarot 3D chuẩn 100%
-const renderTarotCardBackCanvas = (): HTMLCanvasElement => {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1600;
-  const ctx = canvas.getContext("2d")!;
-
-  // 1. NỀN XANH ĐÊM HUYỀN BÍ & CHIỀU SÂU VŨ TRỤ (CHUẨN ĐỘ SÂU ĐẸP MẮT)
-  const bgGrad = ctx.createRadialGradient(512, 800, 100, 512, 800, 900);
-  bgGrad.addColorStop(0, "#1c2b4d");
-  bgGrad.addColorStop(0.5, "#121b33");
-  bgGrad.addColorStop(1, "#080d1a");
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 1024, 1600);
-
-  // 2. HOA VĂN LƯỚI ĐAN MẮT CÁO RIDER-WAITE 1909 (SACRED DIAMOND CROSSHATCH GRID)
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(60, 60, 904, 1480);
-  ctx.clip();
-
-  ctx.strokeStyle = "rgba(242, 208, 124, 0.16)";
-  ctx.lineWidth = 2;
-  const step = 48;
-  for (let x = -1600; x < 2600; x += step) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x + 1600, 1600);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(x, 1600);
-    ctx.lineTo(x + 1600, 0);
-    ctx.stroke();
-  }
-
-  // Các điểm sao nhỏ tại giao điểm lưới
-  ctx.fillStyle = "rgba(255, 235, 175, 0.35)";
-  for (let y = 100; y < 1500; y += step * 2) {
-    for (let x = 100; x < 924; x += step * 2) {
-      ctx.beginPath();
-      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-
-  // 3. KHUNG VIỀN ĐÔI MẠ VÀNG KIM LOẠI (DUAL GILDED FILIGREE BORDER)
-  ctx.strokeStyle = "#F2D07C";
-  ctx.lineWidth = 16;
-  ctx.strokeRect(36, 36, 952, 1528);
-
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 3;
-  ctx.strokeRect(56, 56, 912, 1488);
-
-  ctx.strokeStyle = "rgba(242, 208, 124, 0.6)";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(72, 72, 880, 1456);
-
-  // 4. HOA VĂN 4 GÓC HOÀNG GIA (GILDED CORNER FLOURISHES)
-  const drawCornerOrnament = (cx: number, cy: number, rot: number) => {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(rot);
-
-    ctx.strokeStyle = "#F5D77F";
-    ctx.fillStyle = "#F2D07C";
-    ctx.lineWidth = 3;
-
-    ctx.beginPath();
-    ctx.arc(0, 0, 18, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Tia hào quang góc
-    ctx.beginPath();
-    ctx.moveTo(0, 20);
-    ctx.lineTo(0, 45);
-    ctx.moveTo(20, 0);
-    ctx.lineTo(45, 0);
-    ctx.stroke();
-
-    ctx.restore();
-  };
-
-  drawCornerOrnament(100, 100, 0);
-  drawCornerOrnament(924, 100, Math.PI / 2);
-  drawCornerOrnament(924, 1500, Math.PI);
-  drawCornerOrnament(100, 1500, -Math.PI / 2);
-
-  // 5. TRUNG TÂM: MẶT TRĂNG & MẶT TRỜI THÁI CỰC ĐỐI XỨNG 180° (CELESTIAL SUN & MOON MANDALA)
-  ctx.save();
-  ctx.translate(512, 800);
-
-  // Vòng tròn chiêm tinh ngoài
-  ctx.strokeStyle = "#F2D07C";
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.arc(0, 0, 220, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.setLineDash([10, 8]);
-  ctx.strokeStyle = "rgba(255, 245, 215, 0.7)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(0, 0, 195, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // 12 Tia Hào Quang Mặt Trời Tỏa Rộng
-  for (let r = 0; r < 12; r++) {
-    const angle = (r * Math.PI * 2) / 12;
-    ctx.save();
-    ctx.rotate(angle);
-    ctx.strokeStyle = "#F5D77F";
-    ctx.lineWidth = r % 2 === 0 ? 5 : 3;
-    ctx.beginPath();
-    ctx.moveTo(0, 140);
-    ctx.lineTo(0, r % 2 === 0 ? 185 : 170);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // Đĩa Mặt Trời Trung Tâm Mạ Vàng
-  const sunGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, 130);
-  sunGrad.addColorStop(0, "#FFF5D0");
-  sunGrad.addColorStop(0.6, "#E5B84B");
-  sunGrad.addColorStop(1, "#8A6414");
-  ctx.fillStyle = sunGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, 125, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Vầng Trăng Khuyết Đối Xứng Hai Chiều
-  ctx.fillStyle = "#121b33";
-  ctx.beginPath();
-  ctx.arc(38, -20, 105, 0, Math.PI * 2, true);
-  ctx.fill();
-
-  // Ngôi sao 8 cánh Alchemical Star trung tâm
-  ctx.fillStyle = "#FFF7D6";
-  for (let s = 0; s < 8; s++) {
-    const sAngle = (s * Math.PI * 2) / 8;
-    ctx.save();
-    ctx.rotate(sAngle);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(-12, 35);
-    ctx.lineTo(0, 85);
-    ctx.lineTo(12, 35);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Tâm điểm ngọc sáng
-  ctx.fillStyle = "#FFFFFF";
-  ctx.beginPath();
-  ctx.arc(0, 0, 15, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
-
-  // 6. CHU KỲ MẶT TRĂNG (LUNAR PHASES ĐỐI XỨNG TRÊN VÀ DƯỚI)
-  ctx.fillStyle = "#F5D77F";
-  ctx.font = "bold 34px serif";
-  ctx.textAlign = "center";
-  ctx.fillText("🌑    🌓    🌕    🌗    🌘", 512, 240);
-  ctx.fillText("🌘    🌗    🌕    🌓    🌑", 512, 1360);
-
-  return canvas;
-};
+const slotXPositions = [-2.1, 0, 2.1];
+const slotYPos = 1.65;
 
 export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   deckCode,
@@ -209,13 +46,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   const [selectedCards, setSelectedCards] = useState<{ card: CardDto; isReversed: boolean }[]>([]);
   const [isShuffling, setIsShuffling] = useState(false);
   const isShufflingRef = useRef(false);
-  const [spreadMode, setSpreadMode] = useState<"RIBBON" | "FAN">("RIBBON");
+  const [spreadMode, setSpreadMode] = useState<SpreadMode>("RIBBON");
 
-  // Tạo sẵn DataURL của mặt lưng lá bài đồng bộ 100% với canvas 3D
-  const cardBackDataUrl = useMemo(() => {
-    if (typeof document === "undefined") return "";
-    return renderTarotCardBackCanvas().toDataURL("image/png");
-  }, []);
 
   // References cho Three.js scene
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -224,7 +56,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   const hoveredMeshRef = useRef<THREE.Group | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const isSpreadRef = useRef<boolean>(false);
-  const spreadModeRef = useRef<"RIBBON" | "FAN">("RIBBON");
+  const spreadModeRef = useRef<SpreadMode>("RIBBON");
 
   useEffect(() => {
     isShufflingRef.current = isShuffling;
@@ -246,22 +78,17 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     loadCards();
   }, [deckCode]);
 
-  const [shufflePhase, setShufflePhase] = useState<"IDLE" | "VORTEX" | "GATHER" | "OVERHAND" | "WATERFALL" | "SPLIT" | "RIFFLE" | "DEAL">("IDLE");
-  const shufflePhaseRef = useRef<"IDLE" | "VORTEX" | "GATHER" | "OVERHAND" | "WATERFALL" | "SPLIT" | "RIFFLE" | "DEAL">("IDLE");
+  const [shufflePhase, setShufflePhase] = useState<ShufflePhase>("IDLE");
+  const shufflePhaseRef = useRef<ShufflePhase>("IDLE");
   const shuffleStartTimeRef = useRef<number>(0);
 
   useEffect(() => {
     shufflePhaseRef.current = shufflePhase;
   }, [shufflePhase]);
 
-  const [drawnCardsMap, setDrawnCardsMap] = useState<{ [cardId: string]: { slotIndex: number; isReversed: boolean } }>({});
-  const drawnCardsMapRef = useRef<{ [cardId: string]: { slotIndex: number; isReversed: boolean } }>({});
-
-  useEffect(() => {
-    drawnCardsMapRef.current = drawnCardsMap;
-  }, [drawnCardsMap]);
-
+  const [, setDrawnCardsMap] = useState<{ [cardId: string]: { slotIndex: number; isReversed: boolean } }>({});
   const selectedCardsRef = useRef<{ card: CardDto; isReversed: boolean }[]>([]);
+
   useEffect(() => {
     selectedCardsRef.current = selectedCards;
   }, [selectedCards]);
@@ -291,7 +118,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   };
 
   // KÍCH HOẠT SIÊU NGHI THỨC XÁO BÀI 3D TOÀN DIỆN (7 BƯỚC HOÀNG GIA):
-  // 1. TRỘN XOÁY NƯỚC -> 2. GOM BÀI -> 3. TRÁO DƯỚI LÊN -> 4. THÁC NƯỚC RƠI TỰ DO -> 5. CẮT CỌC -> 6. CHẺ ĐAN XEN -> 7. TRẢI BÀI
+  // 1. TRỘN XOÁY NƯỚC -> 2. GOM BÀI -> 3. TRÁO DƯỚI LÊN -> 4. THÁC NƯỚC RƠI -> 5. CẮT CỌC -> 6. CHẺ ĐAN XEN -> 7. TRẢI BÀI
   const start3DShuffleSequence = () => {
     setIsShuffling(true);
     setSelectedCards([]);
@@ -368,6 +195,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     const container = mountRef.current;
     const width = container.clientWidth || 1000;
     const height = container.clientHeight || 640;
+    const isMobile = window.innerWidth < 768;
 
     // 1. SCENE
     const scene = new THREE.Scene();
@@ -378,16 +206,27 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     camera.position.set(0, 0.4, 8.8);
     camera.lookAt(0, 0.2, 0);
 
-    // 3. RENDERER
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // 3. RENDERER (Tối ưu pixelRatio & shadowMap trên thiết bị di động)
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     rendererRef.current = renderer;
 
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
+
+    // Lắng nghe phục hồi WebGL Context nếu trình duyệt giải phóng bộ nhớ
+    const handleContextLost = (e: Event) => {
+      e.preventDefault();
+      console.warn("WebGL Context lost. Waiting for restoration...");
+    };
+    const handleContextRestored = () => {
+      console.info("WebGL Context restored successfully.");
+    };
+    renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+    renderer.domElement.addEventListener("webglcontextrestored", handleContextRestored);
 
     // 4. ÁNH SÁNG
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.4);
@@ -396,8 +235,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     const mainLight = new THREE.DirectionalLight(0xfff8ed, 3.2);
     mainLight.position.set(2, 9, 8);
     mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 2048;
-    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.mapSize.width = isMobile ? 1024 : 2048;
+    mainLight.shadow.mapSize.height = isMobile ? 1024 : 2048;
     scene.add(mainLight);
 
     const rimLight = new THREE.DirectionalLight(0xdbeafe, 2.0);
@@ -421,11 +260,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     scene.add(tableMesh);
 
     // 🌟 TẠO 3 Ô ĐÓN BÀI 3D (3 HOLOGRAPHIC GOLDEN SLOTS TRÊN MẶT BÀN)
-    const slotXPositions = [-2.1, 0, 2.1];
-    const slotYPos = 1.65;
-
     slotXPositions.forEach((slotX) => {
-      // Khung viền mạ vàng 3D của ô chờ (khớp khít 100% với kích thước lá bài 0.85 x 1.45)
       const slotGeo = new THREE.PlaneGeometry(0.85, 1.45);
       const slotEdges = new THREE.EdgesGeometry(slotGeo);
       const slotLineMat = new THREE.LineBasicMaterial({
@@ -438,7 +273,6 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       slotWireframe.position.set(slotX, slotYPos, 0.005);
       scene.add(slotWireframe);
 
-      // Thảm nền ô chờ
       const slotBackMat = new THREE.MeshBasicMaterial({
         color: 0x162238,
         transparent: true,
@@ -450,7 +284,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       scene.add(slotBackMesh);
     });
 
-    // 6. KHỞI TẠO 78 LÁ BÀI 3D (TỈ LỆ VÀNG 0.85 x 1.45) & BỤI SAO MA THUẬT
+    // 6. KHỞI TẠO 78 LÁ BÀI 3D (TỈ LỆ VÀNG 0.85 x 1.45)
     const cardCanvas = renderTarotCardBackCanvas();
     const cardBackTex = new THREE.CanvasTexture(cardCanvas);
     cardBackTex.anisotropy = 16;
@@ -471,7 +305,6 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     const cardGroups: THREE.Group[] = [];
 
     deckCards.forEach((card, i) => {
-      // Mặt trước lá bài (Face 5: -Z) được nạp hình ảnh lá bài tương ứng
       const cardMatFront = new THREE.MeshStandardMaterial({
         map: cardBackTex,
         roughness: 0.25,
@@ -482,7 +315,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         textureLoader.load(card.imageUrl, (tex) => {
           tex.anisotropy = 16;
           tex.center.set(0.5, 0.5);
-          tex.repeat.set(-1, 1); // Đảo trục X để khi lật 180 độ không bị ngược gương
+          tex.repeat.set(-1, 1);
           cardMatFront.map = tex;
           cardMatFront.needsUpdate = true;
         });
@@ -493,8 +326,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         cardMatEdge,
         cardMatEdge,
         cardMatEdge,
-        cardMatBack, // Face 4 (+Z): Mặt lưng bài khi úp
-        cardMatFront, // Face 5 (-Z): Mặt trước hình vẽ lá bài khi lật mở
+        cardMatBack,
+        cardMatFront,
       ];
 
       const cardMesh = new THREE.Mesh(cardGeo, materials);
@@ -510,7 +343,6 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         isDrawn: false,
       };
 
-      // Ban đầu ở cọc bài
       group.position.set(0, -1.0, i * 0.005);
       group.rotation.set(0, 0, 0);
 
@@ -518,51 +350,9 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       cardGroups.push(group);
     });
 
-    // ✨ HỆ THỐNG BỤI SAO VÀNG MA THUẬT KHI LẬT BÀI (GOLDEN STARLIGHT PARTICLES)
-    const particleCount = 180;
-    const particleGeo = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-    const particleVelocities = new Float32Array(particleCount * 3);
-
-    for (let p = 0; p < particleCount; p++) {
-      const slotX = slotXPositions[p % 3];
-      particlePositions[p * 3] = slotX + (Math.random() - 0.5) * 1.4;
-      particlePositions[p * 3 + 1] = slotYPos + (Math.random() - 0.5) * 1.8;
-      particlePositions[p * 3 + 2] = 0.05 + Math.random() * 0.4;
-
-      particleVelocities[p * 3] = (Math.random() - 0.5) * 0.35;
-      particleVelocities[p * 3 + 1] = 0.3 + Math.random() * 0.7;
-      particleVelocities[p * 3 + 2] = (Math.random() - 0.5) * 0.2;
-    }
-    particleGeo.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
-
-    const createSparkleTexture = () => {
-      const c = document.createElement("canvas");
-      c.width = 64;
-      c.height = 64;
-      const ctx = c.getContext("2d")!;
-      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, "rgba(255, 250, 220, 1)");
-      grad.addColorStop(0.25, "rgba(242, 208, 124, 0.9)");
-      grad.addColorStop(0.65, "rgba(212, 175, 55, 0.3)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(32, 32, 32, 0, Math.PI * 2);
-      ctx.fill();
-      return new THREE.CanvasTexture(c);
-    };
-
-    const particleMat = new THREE.PointsMaterial({
-      size: 0.16,
-      map: createSparkleTexture(),
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const starParticles = new THREE.Points(particleGeo, particleMat);
-    scene.add(starParticles);
+    // ✨ HỆ THỐNG BỤI SAO VÀNG MA THUẬT KHI LẬT BÀI
+    const particleHandle: ParticleSystemHandle = createGoldenParticleSystem(slotXPositions, slotYPos, 180);
+    scene.add(particleHandle.points);
 
     cardMeshesRef.current = cardGroups;
 
@@ -570,7 +360,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       isSpreadRef.current = true;
     }, 400);
 
-    // 7. BẮT CHUỘT VÀ TÍNH TOÁN HOVER MƯỢT MÀ KHÔNG RUNG LẮC
+    // 7. BẮT CHUỘT VÀ TÍNH TOÁN HOVER MƯỢT MÀ
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(-999, -999);
     let targetHoverIndex = -1;
@@ -580,11 +370,10 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-      // Tính toán lá bài được hover trực tiếp dựa trên vị trí chuột liên tục
       if (!isShufflingRef.current && isSpreadRef.current && mouse.y > -0.9 && mouse.y < 0.15) {
         if (spreadModeRef.current === "RIBBON") {
           const clampedX = Math.max(-0.88, Math.min(0.88, mouse.x));
-          const norm = (clampedX + 0.88) / (0.88 * 2); // 0 -> 1
+          const norm = (clampedX + 0.88) / (0.88 * 2);
           targetHoverIndex = Math.floor(norm * deckCards.length);
         } else {
           const angle = Math.atan2(mouse.x, mouse.y + 0.9);
@@ -663,17 +452,13 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           if (isRevealingRef.current) {
             // ✨ HIỆU ỨNG 3D LẬT BÀI & PHÁT SÁNG BỤI SAO VÀNG KHI XÁC NHẬN
             const elapsed = currentTime - revealStartTimeRef.current;
-            const cardDelay = slotIdx * 400; // Mỗi lá lật cách nhau 400ms
+            const cardDelay = slotIdx * 400;
             const flipProgress = Math.max(0, Math.min(1, (elapsed - cardDelay) / 550));
 
-            // Đường cong bay bổng nhấc lên khỏi mặt bàn
             const zArc = Math.sin(flipProgress * Math.PI) * 0.45;
             const targetZ = 0.008 + zArc;
-
-            // Xoay 180 độ quanh trục Y để lộ mặt trước
             const rotY = flipProgress * Math.PI;
-            // Nếu lá bài bị ngược (reversed), xoay thêm 180 độ quanh trục Z
-            const rotZ = isRev ? (flipProgress * Math.PI) : 0;
+            const rotZ = isRev ? flipProgress * Math.PI : 0;
 
             group.position.x = THREE.MathUtils.lerp(group.position.x, targetSlotX, delta * 12);
             group.position.y = THREE.MathUtils.lerp(group.position.y, targetSlotY, delta * 12);
@@ -699,148 +484,31 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           return;
         }
 
-        const isHover = currentHover === group;
-        const normalized = (i - (total - 1) / 2) / ((total - 1) / 2); // -1 đến +1
+        // TÍNH TOÁN VẬT LÝ VÀ VỊ TRÍ TỪ MODULE RIÊNG
+        const transform = calculateCardShuffleTransform({
+          index: i,
+          totalCards: total,
+          currentPhase,
+          isSpread: isSpreadRef.current,
+          spreadMode: currentMode,
+          currentTime,
+          shuffleStartTime: shuffleStartTimeRef.current,
+          isHover: currentHover === group,
+        });
 
-        let targetX = 0;
-        let targetY = 0;
-        let targetZ = i * 0.005;
-        let targetRotZ = 0;
-        let targetRotX = 0;
-        let targetScale = isHover ? 1.06 : 1.0;
-
-        if (currentPhase === "VORTEX") {
-          // 🌀 BƯỚC 1: TRỘN BÀI XOÁY NƯỚC VÒNG TRÒN KHẮP BÀN TAROT
-          const elapsed = (currentTime - shuffleStartTimeRef.current) * 0.0035;
-          const orbitRadius = 0.85 + (i % 8) * 0.38;
-          const orbitSpeed = 1.3 + (i % 5) * 0.35;
-          const theta = elapsed * orbitSpeed + (i * (Math.PI * 2 / total) * 3.2);
-
-          targetX = Math.cos(theta) * orbitRadius;
-          targetY = Math.sin(theta) * (orbitRadius * 0.55) - 0.7;
-          targetZ = (i % 12) * 0.012;
-          targetRotZ = theta + i * 0.2;
-          targetRotX = 0.18;
-        } else if (currentPhase === "GATHER") {
-          // 📦 BƯỚC 2: GOM BÀI VỀ 1 CỌC TẠI TÂM
-          targetX = 0;
-          targetY = -1.1;
-          targetZ = i * 0.005;
-          targetRotZ = Math.sin(i * 99) * 0.04;
-          targetRotX = 0.12;
-        } else if (currentPhase === "OVERHAND") {
-          // 🎴 BƯỚC 3: TRÁO BÀI TỪ DƯỚI LÊN TRÊN (OVERHAND SHUFFLE)
-          const elapsed = currentTime - shuffleStartTimeRef.current;
-          const packetIndex = Math.floor(i / 15);
-          const packetProgress = (elapsed - packetIndex * 350) / 350;
-
-          if (packetProgress < 0) {
-            targetX = 0;
-            targetY = -1.1;
-            targetZ = i * 0.005;
-            targetRotZ = 0;
-            targetRotX = 0.15;
-          } else if (packetProgress <= 1.0) {
-            const u = packetProgress;
-            const arc = Math.sin(u * Math.PI);
-            targetX = arc * 1.5;
-            targetY = -1.1 + arc * 1.1;
-            targetZ = 0.05 + u * 0.5 + (i % 15) * 0.006;
-            targetRotZ = arc * 0.22;
-            targetRotX = 0.15 + arc * 0.1;
-          } else {
-            targetX = 0;
-            targetY = -1.1;
-            targetZ = 0.3 + (i % 15) * 0.006;
-            targetRotZ = 0;
-            targetRotX = 0.15;
-          }
-        } else if (currentPhase === "WATERFALL") {
-          // 🌊 BƯỚC 4: THÁC NƯỚC RƠI TỰ DO TỪ TRÊN CAO (SPRING CASCADE WATERFALL)
-          const elapsed = currentTime - shuffleStartTimeRef.current;
-          const dropTime = i * 16; // Độ trễ rơi từng lá 16ms
-          const dropProgress = Math.max(0, Math.min(1, (elapsed - dropTime) / 380));
-
-          if (dropProgress === 0) {
-            targetX = -1.6 + (i * 0.004);
-            targetY = 0.7;
-            targetZ = 0.7 + (i * 0.005);
-            targetRotZ = 0.32;
-            targetRotX = 0.38;
-          } else {
-            const p = dropProgress;
-            targetX = THREE.MathUtils.lerp(-1.6, 0, p);
-            targetY = THREE.MathUtils.lerp(0.7, -1.1, p);
-            targetZ = THREE.MathUtils.lerp(0.7, i * 0.005, p);
-            targetRotZ = THREE.MathUtils.lerp(0.32, 0, p);
-            targetRotX = THREE.MathUtils.lerp(0.38, 0.15, p);
-          }
-        } else if (currentPhase === "SPLIT") {
-          // ✂️ BƯỚC 5: CẮT CỌC BÀI LÀM 2 NỬA BAY SANG HAI BÊN
-          const isLeft = i < total / 2;
-          const halfIdx = isLeft ? i : i - total / 2;
-          targetX = isLeft ? -1.7 : 1.7;
-          targetY = -0.8;
-          targetZ = halfIdx * 0.008;
-          targetRotZ = isLeft ? -0.22 : 0.22;
-          targetRotX = 0.2;
-        } else if (currentPhase === "RIFFLE") {
-          // 🌊 BƯỚC 5: CHẺ BÀI ĐAN XEN LƯỢN SÓNG 3D
-          const isLeft = i % 2 === 0;
-          targetX = isLeft ? -0.25 : 0.25;
-          targetY = -0.9 + Math.sin(i * 0.35) * 0.15;
-          targetZ = i * 0.005;
-          targetRotZ = isLeft ? -0.06 : 0.06;
-          targetRotX = 0.15;
-        } else if (isSpreadRef.current) {
-          // 🎴 BƯỚC 6: TRẢI BÀI HOÀN CHỈNH RA NỬA DƯỚI BÀN THẢM
-          if (currentMode === "RIBBON") {
-            targetX = normalized * 3.8;
-            targetY = -(normalized ** 2) * 0.38 - 1.05 + (isHover ? 0.45 : 0);
-            targetRotZ = -normalized * 0.2;
-            targetRotX = 0.25;
-            targetZ = isHover ? 0.6 : i * 0.005;
-          } else {
-            const angle = normalized * Math.PI * 0.32;
-            targetX = 0;
-            targetY = -2.2 + (isHover ? 0.35 : 0);
-            targetRotZ = -angle;
-            targetRotX = 0.05;
-            targetZ = isHover ? 0.6 : i * 0.005;
-          }
-        } else {
-          targetX = 0;
-          targetY = -1.1;
-          targetZ = i * 0.005;
-          targetRotZ = 0;
-          targetRotX = 0.15;
-        }
-
-        group.position.x = THREE.MathUtils.lerp(group.position.x, targetX, delta * 12);
-        group.position.y = THREE.MathUtils.lerp(group.position.y, targetY, delta * 12);
-        group.position.z = THREE.MathUtils.lerp(group.position.z, targetZ, delta * 15);
-        group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, targetRotZ, delta * 12);
-        group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, targetRotX, delta * 12);
-        group.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 15);
+        group.position.x = THREE.MathUtils.lerp(group.position.x, transform.targetX, delta * 12);
+        group.position.y = THREE.MathUtils.lerp(group.position.y, transform.targetY, delta * 12);
+        group.position.z = THREE.MathUtils.lerp(group.position.z, transform.targetZ, delta * 15);
+        group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, transform.targetRotZ, delta * 12);
+        group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, transform.targetRotX, delta * 12);
+        group.scale.lerp(new THREE.Vector3(transform.targetScale, transform.targetScale, transform.targetScale), delta * 15);
       });
 
       // ✨ CẬP NHẬT BỤI SAO VÀNG KHI LẬT MỞ BÀI
       if (isRevealingRef.current) {
-        particleMat.opacity = Math.min(0.95, particleMat.opacity + delta * 3);
+        particleHandle.material.opacity = Math.min(0.95, particleHandle.material.opacity + delta * 3);
         pointLight.intensity = THREE.MathUtils.lerp(pointLight.intensity, 4.5, delta * 4);
-
-        const posAttr = particleGeo.attributes.position as THREE.BufferAttribute;
-        const positions = posAttr.array as Float32Array;
-        for (let p = 0; p < particleCount; p++) {
-          positions[p * 3 + 1] += particleVelocities[p * 3 + 1] * delta;
-          positions[p * 3] += particleVelocities[p * 3] * delta;
-          if (positions[p * 3 + 1] > 3.2) {
-            positions[p * 3 + 1] = 1.2;
-            const sX = slotXPositions[p % 3];
-            positions[p * 3] = sX + (Math.random() - 0.5) * 1.2;
-          }
-        }
-        posAttr.needsUpdate = true;
+        updateParticleAnimation(particleHandle, delta, slotXPositions);
       }
 
       renderer.render(scene, camera);
@@ -863,6 +531,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       window.removeEventListener("resize", handleResize);
       renderer.domElement.removeEventListener("mousemove", onMouseMove);
       renderer.domElement.removeEventListener("click", onClick);
+      renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
+      renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);
       renderer.dispose();
     };
   }, [deckCards]);
@@ -900,7 +570,6 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       isRevealingRef.current = true;
       revealStartTimeRef.current = performance.now();
 
-      // Sau khi 3 lá bài lật mở hoàn chỉnh và phát sáng lung linh (~2.1s), chuyển tiếp sang AI Reader
       setTimeout(() => {
         onConfirmSelection(
           selectedCards.map((s) => ({
