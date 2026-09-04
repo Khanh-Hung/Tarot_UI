@@ -18,6 +18,9 @@ const ERROR_CODE_MAP: Record<string, string> = {
   UNAUTHORIZED: "Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.",
   FORBIDDEN: "Bạn không có quyền thực hiện hành động này.",
   TOKEN_EXPIRED: "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.",
+  RATE_LIMIT_EXCEEDED: "Bạn thao tác quá nhanh. Vui lòng đợi trong giây lát trước khi thử lại.",
+  ALREADY_VERIFIED: "Địa chỉ email này đã được kích hoạt thành công.",
+  INVALID_TOKEN: "Liên kết xác thực không hợp lệ hoặc đã hết hạn.",
 
   // Bốc bài & Luận giải Tarot (Tarot & Reading)
   ZODIAC_REQUIRED: "Vui lòng chọn Cung Hoàng Đạo để AI kết nối năng lượng chính xác nhất.",

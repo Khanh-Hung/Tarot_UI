@@ -37,8 +37,35 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
   const isInitialMount = useRef(true);
 
   useEffect(() => {
+    try {
+      const storedUntil = localStorage.getItem("email_verify_resend_until");
+      if (storedUntil) {
+        const diff = Math.ceil((parseInt(storedUntil, 10) - Date.now()) / 1000);
+        if (diff > 0) {
+          setResendCountdown(diff);
+          setIsLinkSent(true);
+        } else {
+          localStorage.removeItem("email_verify_resend_until");
+        }
+      }
+    } catch {
+      // ignore localStorage errors in private mode
+    }
+  }, []);
+
+  useEffect(() => {
     if (resendCountdown <= 0) return;
-    const timer = setInterval(() => setResendCountdown((c) => c - 1), 1000);
+    const timer = setInterval(() => {
+      setResendCountdown((c) => {
+        if (c <= 1) {
+          try {
+            localStorage.removeItem("email_verify_resend_until");
+          } catch {}
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
     return () => clearInterval(timer);
   }, [resendCountdown]);
 
@@ -49,6 +76,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
       await authService.sendVerificationEmail(user.email);
       setIsLinkSent(true);
       setResendCountdown(60);
+      try {
+        localStorage.setItem("email_verify_resend_until", (Date.now() + 60000).toString());
+      } catch {}
     } catch (e) {
       console.error("Failed to send verification link:", e);
     } finally {
@@ -120,10 +150,10 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
         id: Date.now() + 1,
         sender: "AI",
         message: isEmailErr
-          ? "✦ Đã gửi liên kết kích hoạt đến email của bạn! Vui lòng mở hòm thư và nhấn vào link để mở khóa trò chuyện nhé."
+          ? "Đã gửi liên kết kích hoạt đến email của bạn! Vui lòng kiểm tra Hộp thư đến (hoặc mục Spam/Thư rác nếu không thấy) và bấm vào link để mở khóa trò chuyện nhé."
           : "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
         content: isEmailErr
-          ? "✦ Đã gửi liên kết kích hoạt đến email của bạn! Vui lòng mở hòm thư và nhấn vào link để mở khóa trò chuyện nhé."
+          ? "Đã gửi liên kết kích hoạt đến email của bạn! Vui lòng kiểm tra Hộp thư đến (hoặc mục Spam/Thư rác nếu không thấy) và bấm vào link để mở khóa trò chuyện nhé."
           : "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
         createdAt: new Date().toISOString(),
       };
@@ -225,7 +255,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
               </h4>
               <p className="text-[11px] text-zinc-400 mt-0.5">
                 {isLinkSent
-                  ? "✦ Đã gửi liên kết kích hoạt đến email của bạn! Mở hòm thư và bấm link để kích hoạt."
+                  ? "Đã gửi link kích hoạt! Vui lòng kiểm tra Hộp thư đến (hoặc mục Spam / Thư rác nhé)."
                   : "Xác thực email tài khoản để mở khóa đối thoại chuyên sâu về quẻ bài của bạn."}
               </p>
             </div>

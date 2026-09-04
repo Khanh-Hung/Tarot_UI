@@ -15,6 +15,7 @@ import {
   Layers,
   ShieldCheck,
   AlertCircle,
+  Info,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ProfileSkeleton } from "@/components/ui/Skeleton";
@@ -70,8 +71,35 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    try {
+      const storedUntil = localStorage.getItem("email_verify_resend_until");
+      if (storedUntil) {
+        const diff = Math.ceil((parseInt(storedUntil, 10) - Date.now()) / 1000);
+        if (diff > 0) {
+          setResendCountdown(diff);
+          setIsLinkSent(true);
+        } else {
+          localStorage.removeItem("email_verify_resend_until");
+        }
+      }
+    } catch {
+      // ignore localStorage errors in private browsing
+    }
+  }, []);
+
+  useEffect(() => {
     if (resendCountdown <= 0) return;
-    const timer = setInterval(() => setResendCountdown((c) => c - 1), 1000);
+    const timer = setInterval(() => {
+      setResendCountdown((c) => {
+        if (c <= 1) {
+          try {
+            localStorage.removeItem("email_verify_resend_until");
+          } catch {}
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
     return () => clearInterval(timer);
   }, [resendCountdown]);
 
@@ -84,8 +112,11 @@ export default function ProfilePage() {
       await authService.sendVerificationEmail(emailToVerify);
       setIsLinkSent(true);
       setResendCountdown(60);
-      setSuccessMsg("✦ Đã gửi liên kết kích hoạt đến email của bạn! Hãy mở hòm thư để kích hoạt tài khoản.");
-      setTimeout(() => setSuccessMsg(""), 6000);
+      try {
+        localStorage.setItem("email_verify_resend_until", (Date.now() + 60000).toString());
+      } catch {}
+      setSuccessMsg("Đã gửi liên kết kích hoạt đến email của bạn! Vui lòng kiểm tra Hộp thư đến (hoặc mục Spam / Thư rác nếu không thấy thư).");
+      setTimeout(() => setSuccessMsg(""), 8000);
     } catch (err: unknown) {
       setErrorMsg(getFriendlyErrorMessage(err, "Không thể gửi liên kết kích hoạt. Vui lòng thử lại."));
     } finally {
@@ -335,6 +366,14 @@ export default function ProfilePage() {
                   </button>
                 )}
               </div>
+              {isLinkSent && !(profile?.isEmailVerified ?? user?.isEmailVerified) && (
+                <div className="mt-2.5 text-[11px] text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 flex items-center justify-center sm:justify-start gap-1.5 animate-in fade-in">
+                  <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>
+                    <strong>Mẹo:</strong> Nếu không thấy email trong Hộp thư đến, bạn vui lòng kiểm tra thêm mục <em>Spam (Thư rác)</em> hoặc <em>Quảng cáo</em> nhé.
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -346,8 +385,8 @@ export default function ProfilePage() {
           )}
 
           {successMsg && (
-            <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in">
-              <Check className="w-4 h-4 text-emerald-400" />
+            <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs flex items-start gap-2 animate-in fade-in">
+              <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
           )}
