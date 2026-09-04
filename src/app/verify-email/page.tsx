@@ -52,22 +52,21 @@ function VerifyEmailContent() {
     };
   }, [token]);
 
-  // Auto redirect countdown on success
+  // Đếm ngược từng giây khi xác thực thành công
   useEffect(() => {
-    if (status !== "success") return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.push("/reading");
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (status !== "success" || countdown <= 0) return;
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
     }, 1000);
+    return () => clearTimeout(timer);
+  }, [status, countdown]);
 
-    return () => clearInterval(timer);
-  }, [status, router]);
+  // Tự động chuyển hướng khi đếm ngược về 0
+  useEffect(() => {
+    if (status === "success" && countdown === 0) {
+      router.push("/reading");
+    }
+  }, [status, countdown, router]);
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
