@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Bot, Sparkles } from "lucide-react";
+import { Bot, Sparkles, Lock, ShieldCheck, Mail, Loader2 } from "lucide-react";
 import { ChatMessageDto } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { authService } from "@/features/auth/services/authService";
 import { Avatar } from "@/components/ui/Avatar";
 import {
   ChatBubble,
@@ -29,8 +30,31 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
   const [messages, setMessages] = useState<ChatMessageDto[]>(initialMessages);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingLink, setIsSendingLink] = useState(false);
+  const [isLinkSent, setIsLinkSent] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => setResendCountdown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  const handleSendVerificationLink = async () => {
+    if (!user?.email || isSendingLink || resendCountdown > 0) return;
+    setIsSendingLink(true);
+    try {
+      await authService.sendVerificationEmail(user.email);
+      setIsLinkSent(true);
+      setResendCountdown(60);
+    } catch (e) {
+      console.error("Failed to send verification link:", e);
+    } finally {
+      setIsSendingLink(false);
+    }
+  };
 
   // Đồng bộ lại danh sách tin nhắn khi initialMessages được nạp từ server
   useEffect(() => {
@@ -84,13 +108,23 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Failed to send message:", err);
+      const isEmailErr =
+        err?.response?.data?.code === "EMAIL_NOT_VERIFIED" ||
+        err?.response?.data?.message?.includes("verify your email");
+      if (isEmailErr) {
+        handleSendVerificationLink();
+      }
       const errorMsg: ChatMessageDto = {
         id: Date.now() + 1,
         sender: "AI",
-        message: "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
-        content: "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
+        message: isEmailErr
+          ? "✦ Đã gửi liên kết kích hoạt đến email của bạn! Vui lòng mở hòm thư và nhấn vào link để mở khóa trò chuyện nhé."
+          : "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
+        content: isEmailErr
+          ? "✦ Đã gửi liên kết kích hoạt đến email của bạn! Vui lòng mở hòm thư và nhấn vào link để mở khóa trò chuyện nhé."
+          : "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -177,14 +211,57 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
         )}
       </ChatMessageList>
 
-      {/* Ô nhập tin nhắn tự co giãn ChatInput */}
-      <ChatInput
-        value={inputMessage}
-        onChange={setInputMessage}
-        onSubmit={handleSendMessage}
-        disabled={isLoading}
-        placeholder="Nhập câu hỏi của bạn tại đây... (Enter để gửi, Shift+Enter xuống dòng)"
-      />
+      {/* Ô nhập tin nhắn hoặc Khóa Email Verification */}
+      {user && !user.isEmailVerified ? (
+        <div className="p-4 bg-gradient-to-r from-[#17181c] via-[#1c1d24] to-[#17181c] border-t border-[#31333a] flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-zinc-100 flex items-center gap-1.5 justify-center sm:justify-start">
+                <span>Trò chuyện trực tiếp cùng AI Reader</span>
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              </h4>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                {isLinkSent
+                  ? "✦ Đã gửi liên kết kích hoạt đến email của bạn! Mở hòm thư và bấm link để kích hoạt."
+                  : "Xác thực email tài khoản để mở khóa đối thoại chuyên sâu về quẻ bài của bạn."}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleSendVerificationLink}
+            disabled={isSendingLink || resendCountdown > 0}
+            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs rounded-xl shadow-lg transition-all shrink-0 flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSendingLink ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang gửi link...</span>
+              </>
+            ) : resendCountdown > 0 ? (
+              <>
+                <Mail className="w-4 h-4" />
+                <span>Gửi lại sau ({resendCountdown}s)</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-4 h-4" />
+                <span>{isLinkSent ? "Gửi lại link kích hoạt" : "Gửi link kích hoạt Email"}</span>
+              </>
+            )}
+          </button>
+        </div>
+      ) : (
+        <ChatInput
+          value={inputMessage}
+          onChange={setInputMessage}
+          onSubmit={handleSendMessage}
+          disabled={isLoading}
+          placeholder="Nhập câu hỏi của bạn tại đây... (Enter để gửi, Shift+Enter xuống dòng)"
+        />
+      )}
     </div>
   );
 };

@@ -13,6 +13,8 @@ interface AuthContextType {
   register: (command: RegisterCommand) => Promise<AuthResponse>;
   logout: () => void;
   updateUserZodiac: (zodiacSign: string) => void;
+  markEmailAsVerified: () => void;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,8 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userId: authData.userId,
       email: authData.email,
       username: authData.username,
+      displayName: authData.displayName,
+      avatarUrl: authData.avatarUrl,
       zodiacSign: authData.zodiacSign,
       role: authData.role,
+      isEmailVerified: authData.isEmailVerified,
     };
     setToken(authData.token);
     setUser(userProfile);
@@ -96,6 +101,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const markEmailAsVerified = () => {
+    if (user) {
+      const updated = { ...user, isEmailVerified: true };
+      setUser(updated);
+      localStorage.setItem("tarot_user", JSON.stringify(updated));
+    }
+  };
+
+  const updateUserProfile = (updates: Partial<UserProfile>) => {
+    if (user) {
+      const updated = { ...user, ...updates };
+      setUser(updated);
+      localStorage.setItem("tarot_user", JSON.stringify(updated));
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -107,6 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         updateUserZodiac,
+        markEmailAsVerified,
+        updateUserProfile,
       }}
     >
       {children}

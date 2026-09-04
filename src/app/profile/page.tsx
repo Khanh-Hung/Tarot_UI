@@ -13,6 +13,8 @@ import {
   Mail,
   Camera,
   Layers,
+  ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ProfileSkeleton } from "@/components/ui/Skeleton";
@@ -23,6 +25,7 @@ import { DeckDto, ZodiacSign } from "@/features/tarot/types/tarot.types";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
 import { Avatar } from "@/components/ui/Avatar";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
+import { authService } from "@/features/auth/services/authService";
 import { getFriendlyErrorMessage } from "@/lib/errorMapping";
 
 const ZODIAC_LIST: { code: ZodiacSign; name: string; symbol: string }[] = [
@@ -61,7 +64,34 @@ export default function ProfilePage() {
   const [rawAvatarImage, setRawAvatarImage] = useState<string | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isSendingLink, setIsSendingLink] = useState(false);
+  const [isLinkSent, setIsLinkSent] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => setResendCountdown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  const handleSendVerificationLink = async () => {
+    const emailToVerify = profile?.email || user?.email;
+    if (!emailToVerify || isSendingLink || resendCountdown > 0) return;
+    setIsSendingLink(true);
+    setErrorMsg("");
+    try {
+      await authService.sendVerificationEmail(emailToVerify);
+      setIsLinkSent(true);
+      setResendCountdown(60);
+      setSuccessMsg("✦ Đã gửi liên kết kích hoạt đến email của bạn! Hãy mở hòm thư để kích hoạt tài khoản.");
+      setTimeout(() => setSuccessMsg(""), 6000);
+    } catch (err: unknown) {
+      setErrorMsg(getFriendlyErrorMessage(err, "Không thể gửi liên kết kích hoạt. Vui lòng thử lại."));
+    } finally {
+      setIsSendingLink(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -271,10 +301,40 @@ export default function ProfilePage() {
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
                 {displayName || user?.username}
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 mt-1.5">
-                <Mail className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                <span className="truncate">{user?.email}</span>
-              </p>
+              <div className="text-xs sm:text-sm text-zinc-400 flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Mail className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                  <span className="truncate">{user?.email}</span>
+                </div>
+                {(profile?.isEmailVerified ?? user?.isEmailVerified) ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>Đã xác thực</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSendVerificationLink}
+                    disabled={isSendingLink || resendCountdown > 0}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isSendingLink ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <AlertCircle className="w-3 h-3" />
+                    )}
+                    <span>
+                      {isSendingLink
+                        ? "Đang gửi link..."
+                        : resendCountdown > 0
+                        ? `Gửi lại sau (${resendCountdown}s)`
+                        : isLinkSent
+                        ? "Gửi lại link kích hoạt"
+                        : "Chưa xác thực • Gửi link kích hoạt"}
+                    </span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

@@ -3,8 +3,10 @@ export interface UserProfile {
   email: string;
   username: string;
   displayName?: string;
+  avatarUrl?: string;
   zodiacSign: string;
   role: string;
+  isEmailVerified?: boolean;
 }
 
 export interface AuthResponse {
@@ -13,8 +15,10 @@ export interface AuthResponse {
   email: string;
   username: string;
   displayName?: string;
+  avatarUrl?: string;
   zodiacSign: string;
   role: string;
+  isEmailVerified: boolean;
 }
 
 export interface RegisterCommand {

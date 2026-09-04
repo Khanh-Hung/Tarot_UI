@@ -8,6 +8,7 @@ export interface ProfileDto {
   avatarUrl?: string | null;
   zodiacSign?: ZodiacSign | null;
   favoriteDeckId?: string | null;
+  isEmailVerified?: boolean;
 }
 
 export interface UpdateMyProfileCommand {
