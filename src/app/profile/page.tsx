@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -8,11 +8,8 @@ import {
   Sparkles,
   History,
   Star,
-  BookOpen,
   Check,
   Loader2,
-  ArrowRight,
-  Shield,
   Mail,
   Camera,
   Layers,
@@ -25,6 +22,7 @@ import { tarotService } from "@/features/tarot/services/tarotService";
 import { DeckDto, ZodiacSign } from "@/features/tarot/types/tarot.types";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
 import { Avatar } from "@/components/ui/Avatar";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import { getFriendlyErrorMessage } from "@/lib/errorMapping";
 
 const ZODIAC_LIST: { code: ZodiacSign; name: string; symbol: string }[] = [
@@ -59,6 +57,11 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [rawAvatarImage, setRawAvatarImage] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -107,7 +110,6 @@ export default function ProfilePage() {
     try {
       const updated = await profileService.updateMyProfile({
         displayName: displayName.trim() || undefined,
-        avatarUrl: avatarUrl.trim() || undefined,
         zodiacSign: selectedZodiac !== "UNKNOWN" ? selectedZodiac : undefined,
         favoriteDeckId: favoriteDeckId || undefined,
       });
@@ -122,6 +124,54 @@ export default function ProfilePage() {
       setErrorMsg(getFriendlyErrorMessage(err, "Có lỗi xảy ra khi cập nhật hồ sơ. Vui lòng thử lại sau."));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("Vui lòng chọn tệp hình ảnh hợp lệ (PNG, JPG, WEBP, GIF)!");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg("Dung lượng ảnh tối đa là 10MB!");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = reader.result as string;
+      setRawAvatarImage(src);
+      setIsCropperOpen(true);
+      setErrorMsg("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropSave = async (croppedDataUrl: string) => {
+    setIsCropperOpen(false);
+    setIsUploadingAvatar(true);
+    setErrorMsg("");
+
+    try {
+      const res = await fetch(croppedDataUrl);
+      const blob = await res.blob();
+
+      const uploadResult = await tarotService.uploadAvatar(blob);
+      setAvatarUrl(uploadResult.url);
+      setSuccessMsg("Cập nhật ảnh đại diện thành công!");
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err: unknown) {
+      console.error("Failed to upload avatar to server:", err);
+      // Nếu server upload có sự cố, vẫn gán preview để người dùng trải nghiệm
+      setAvatarUrl(croppedDataUrl);
+      setErrorMsg("Không thể lưu ảnh lên máy chủ lúc này. Vui lòng thử lại!");
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -141,16 +191,6 @@ export default function ProfilePage() {
       label: d.nameVi,
     })),
   ];
-
-  const currentZodiacSign = profile?.zodiacSign || selectedZodiac;
-  const currentZodiacObj = currentZodiacSign && currentZodiacSign !== "UNKNOWN"
-    ? ZODIAC_LIST.find((z) => z.code === currentZodiacSign)
-    : null;
-
-  const currentFavId = profile?.favoriteDeckId || favoriteDeckId;
-  const favoriteDeckObj = currentFavId
-    ? decks.find((d) => String(d.id) === String(currentFavId) || String(d.code) === String(currentFavId))
-    : null;
 
   if (isAuthLoading || (isLoading && isAuthenticated)) {
     return <ProfileSkeleton />;
@@ -188,50 +228,18 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* 🌟 STATS OVERVIEW CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-        <div className="rounded-2xl border border-[#2b2d35] bg-[#1a1b1f] p-4 flex items-center gap-3.5 shadow-sm">
-          <div className="w-11 h-11 rounded-xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-300 shrink-0">
-            <Sparkles className="w-5 h-5 text-amber-300" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Tổng quẻ đã xem</p>
-            <p className="text-xl font-bold text-white mt-0.5">{totalReadings}</p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[#2b2d35] bg-[#1a1b1f] p-4 flex items-center gap-3.5 shadow-sm">
-          <div className="w-11 h-11 rounded-xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-300 shrink-0">
-            <Star className="w-5 h-5 text-indigo-300" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Cung Hoàng Đạo</p>
-            <p className="text-sm font-bold text-white mt-0.5 truncate">
-              {currentZodiacObj ? `${currentZodiacObj.symbol} ${currentZodiacObj.name.split(" ")[0]}` : "Chưa thiết lập"}
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[#2b2d35] bg-[#1a1b1f] p-4 flex items-center gap-3.5 shadow-sm">
-          <div className="w-11 h-11 rounded-xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-300 shrink-0">
-            <BookOpen className="w-5 h-5 text-emerald-300" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Bộ bài ưa thích</p>
-            <p className="text-sm font-bold text-white mt-0.5 truncate">
-              {favoriteDeckObj ? favoriteDeckObj.nameVi : "Chưa thiết lập"}
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* 🌟 PROFILE FORM */}
       <div className="rounded-3xl border border-[#2b2d35] bg-[#191a1e] p-6 sm:p-8 shadow-xl">
         <form onSubmit={handleSave} className="space-y-6">
           {/* Avatar & Identifiers Section */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-[#2b2d35]">
-            <div className="relative group">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#3b3d46] bg-[#23242a] p-1 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6 pb-6 border-b border-[#2b2d35]">
+            <div
+              className="relative group cursor-pointer shrink-0"
+              onClick={() => fileInputRef.current?.click()}
+              title="Nhấp để chọn ảnh đại diện từ máy tính"
+            >
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#3b3d46] bg-[#23242a] p-1 flex items-center justify-center shadow-lg overflow-hidden group-hover:border-zinc-300 transition-colors">
                 <Avatar
                   src={avatarUrl}
                   alt={displayName || user?.username}
@@ -239,15 +247,33 @@ export default function ProfilePage() {
                   className="w-full h-full"
                 />
               </div>
+
+              {/* Hover Overlay with Camera Icon */}
+              <div className="absolute inset-0 rounded-full bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white">
+                <Camera className="w-6 h-6 mb-0.5 text-zinc-100 drop-shadow" />
+                <span className="text-[10px] font-semibold text-zinc-200">Đổi ảnh</span>
+              </div>
+
+              {/* Uploading Spinner */}
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 rounded-full bg-black/75 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+
+              {/* Camera Badge Icon on Avatar Corner */}
+              <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#25262c] border-2 border-[#191a1e] flex items-center justify-center text-zinc-300 group-hover:bg-zinc-100 group-hover:text-zinc-950 transition-colors shadow-md">
+                <Camera className="w-3.5 h-3.5" />
+              </div>
             </div>
 
-            <div className="flex-1 text-center sm:text-left space-y-1 min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold text-white truncate">
+            <div className="flex-1 text-center sm:text-left min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
                 {displayName || user?.username}
               </h2>
-              <p className="text-xs text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-zinc-500" />
-                <span>{user?.email}</span>
+              <p className="text-xs sm:text-sm text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 mt-1.5">
+                <Mail className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                <span className="truncate">{user?.email}</span>
               </p>
             </div>
           </div>
@@ -269,7 +295,7 @@ export default function ProfilePage() {
           {/* Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Display Name */}
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-zinc-300 mb-2">
                 Tên hiển thị (Display Name)
               </label>
@@ -283,24 +309,6 @@ export default function ProfilePage() {
               />
               <p className="text-[10px] text-zinc-500 mt-1">
                 AI Tarot Reader sẽ xưng hô với bạn bằng tên này khi luận giải
-              </p>
-            </div>
-
-            {/* Avatar URL */}
-            <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-zinc-400" />
-                <span>Đường dẫn ảnh đại diện (Avatar URL)</span>
-              </label>
-              <input
-                type="url"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="https://example.com/avatar.png"
-                className="w-full rounded-xl bg-[#212227] border border-[#31333a] focus:border-zinc-400 focus:outline-none px-4 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 transition font-mono"
-              />
-              <p className="text-[10px] text-zinc-500 mt-1">
-                Để trống nếu bạn muốn dùng chữ cái đầu mặc định
               </p>
             </div>
 
@@ -367,6 +375,26 @@ export default function ProfilePage() {
           </div>
         </form>
       </div>
+
+      {/* Hidden File Input for Avatar Selection */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+
+      {/* Image Cropper Modal */}
+      <ImageCropperModal
+        isOpen={isCropperOpen}
+        onClose={() => setIsCropperOpen(false)}
+        imageSrc={rawAvatarImage}
+        onSave={handleCropSave}
+        cropShape="round"
+        title="Cắt & Căn Chỉnh Ảnh Đại Diện"
+        outputSize={512}
+      />
     </div>
   );
 }

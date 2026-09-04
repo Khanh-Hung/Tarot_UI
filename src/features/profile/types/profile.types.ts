@@ -12,7 +12,6 @@ export interface ProfileDto {
 
 export interface UpdateMyProfileCommand {
   displayName?: string;
-  avatarUrl?: string;
   zodiacSign?: ZodiacSign;
   favoriteDeckId?: string | null;
 }

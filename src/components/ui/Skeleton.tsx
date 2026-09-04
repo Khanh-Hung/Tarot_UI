@@ -90,33 +90,57 @@ export function EnergyInsightsSkeleton() {
   );
 }
 
-// 🌟 SKELETON CHO DANH SÁCH LỊCH SỬ QUẺ BÀI
+// 🌟 SKELETON CHO DANH SÁCH LỊCH SỬ QUẺ BÀI (ĐỒNG NHẤT 1:1 VỚI GIAO DIỆN THỰC TẾ)
 export function HistoryListSkeleton() {
   return (
-    <div className="space-y-4">
-      {[1, 2, 3, 4].map((i) => (
-        <div
-          key={i}
-          className="rounded-2xl border border-[#31333a] bg-[#191a1e] p-5 sm:p-6 space-y-4"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
-            <div className="flex items-center gap-2">
-              <Skeleton className="w-28 h-6 rounded-full" />
-              <Skeleton className="w-24 h-6 rounded-full" />
-            </div>
-            <Skeleton className="w-32 h-4 rounded-md" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="w-3/4 h-5 rounded-md" />
-            <Skeleton className="w-full h-4 rounded-md" />
-          </div>
-          <div className="flex items-center gap-3 pt-2">
-            <Skeleton className="w-10 h-14 rounded-md" />
-            <Skeleton className="w-10 h-14 rounded-md" />
-            <Skeleton className="w-10 h-14 rounded-md" />
-          </div>
+    <div className="space-y-6">
+      {/* 🔍 Placeholder Thanh Tìm Kiếm & Dropdown Bộ Lọc */}
+      <div className="flex flex-col md:flex-row items-center gap-2.5 pb-2">
+        <Skeleton className="h-10 w-full rounded-xl bg-white/[0.04]" />
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Skeleton className="h-10 w-full sm:w-[170px] rounded-xl bg-white/[0.04] shrink-0" />
+          <Skeleton className="h-10 w-full sm:w-[190px] rounded-xl bg-white/[0.04] shrink-0" />
         </div>
-      ))}
+      </div>
+
+      {/* 📄 Placeholder Danh Sách Liền Mạch Dạng List (divide-y) */}
+      <div className="divide-y divide-white/[0.07] border-t border-b border-white/[0.08]">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="py-4 px-2 sm:px-3 flex items-center justify-between gap-4"
+          >
+            {/* Metadata & Câu hỏi */}
+            <div className="min-w-0 flex-1 space-y-2">
+              {/* Dòng 1: Icon, Chủ đề & Metadata */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Skeleton className="w-4 h-4 rounded-full bg-white/[0.06] shrink-0" />
+                <Skeleton className="w-28 sm:w-36 h-3.5 rounded-md bg-white/[0.06]" />
+                <span className="text-zinc-700 text-xs">•</span>
+                <Skeleton className="w-36 sm:w-48 h-3.5 rounded-md bg-white/[0.04]" />
+                <span className="text-zinc-700 text-xs hidden sm:inline">•</span>
+                <Skeleton className="w-20 h-3.5 rounded-md bg-white/[0.03] hidden sm:inline" />
+              </div>
+
+              {/* Dòng 2: Tiêu đề câu hỏi người dùng */}
+              <Skeleton
+                className={`h-4.5 sm:h-5 rounded-md bg-white/[0.06] ${
+                  i % 3 === 0
+                    ? "w-4/5 sm:w-3/5"
+                    : i % 2 === 0
+                    ? "w-3/4 sm:w-1/2"
+                    : "w-2/3 sm:w-2/5"
+                }`}
+              />
+            </div>
+
+            {/* Mũi tên góc phải */}
+            <div className="shrink-0 flex items-center pl-2">
+              <Skeleton className="w-4 h-4 rounded-full bg-white/[0.04]" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
