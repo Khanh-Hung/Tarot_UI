@@ -9,61 +9,68 @@ interface MarkdownRendererProps {
 }
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
+  if (!content) return null;
+
+  // Chuẩn hóa icon Mục 2 thành cuộn thư 📜 để không bị trùng lặp với icon thẻ bài 🎴 ở mục con
+  const sanitizedContent = content.replace(/(^|\n)##\s*🎴\s*(2\.)/g, "$1## 📜 $2");
+
   return (
-    <div className="prose prose-invert max-w-none space-y-4 text-slate-200 leading-relaxed ">
+    <div className="prose prose-invert max-w-none space-y-5 text-zinc-200">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-xl sm:text-2xl  font-bold silver-gradient-text pb-2.5 border-b border-white/10 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-white pb-3 border-b border-white/10 flex items-center gap-2 tracking-tight">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-lg sm:text-xl  font-semibold text-slate-100 mt-6 mb-3 flex items-center gap-2">
-              {children}
-            </h2>
+            <div className="pt-6 pb-2 mb-3 border-b border-white/10 flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-amber-300 tracking-wide m-0">
+                {children}
+              </h2>
+            </div>
           ),
           h3: ({ children }) => (
-            <h3 className="text-base sm:text-lg  font-medium text-slate-200 mt-4 mb-2">
+            <h3 className="text-sm sm:text-base font-semibold text-zinc-200 mt-4 mb-2">
               {children}
             </h3>
           ),
           p: ({ children }) => (
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-3">
+            <p className="text-sm sm:text-base text-zinc-300 leading-relaxed sm:leading-loose mb-3.5">
               {children}
             </p>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="my-4 p-4.5 rounded-2xl bg-white/[0.03] border-l-4 border-slate-300 text-slate-200 italic shadow-inner">
+            <div className="my-2 text-sm sm:text-base text-zinc-300 leading-relaxed sm:leading-loose [&>p]:m-0">
               {children}
-            </blockquote>
+            </div>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc list-inside space-y-1.5 text-sm sm:text-base text-slate-300 my-2">
+            <ul className="list-disc pl-5 space-y-3.5 my-3 text-sm sm:text-base text-zinc-300 marker:text-zinc-500">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside space-y-1.5 text-sm sm:text-base text-slate-300 my-2">
+            <ol className="list-decimal pl-5 space-y-3.5 my-3 text-sm sm:text-base text-zinc-300 marker:text-zinc-500 marker:font-medium">
               {children}
             </ol>
           ),
           li: ({ children }) => (
-            <li className="text-slate-300 leading-normal">{children}</li>
+            <li className="text-zinc-300 leading-relaxed pl-1">{children}</li>
           ),
           strong: ({ children }) => (
-            <strong className="text-white font-semibold">{children}</strong>
+            <strong className="text-white font-bold tracking-wide">{children}</strong>
           ),
           code: ({ children }) => (
-            <code className="px-1.5 py-0.5 rounded bg-black/40 text-slate-200 text-xs  border border-white/15">
+            <code className="px-1.5 py-0.5 rounded bg-black/50 text-zinc-200 text-xs border border-white/10">
               {children}
             </code>
           ),
-          hr: () => <hr className="my-6 border-white/[0.08]" />,
+          hr: () => <hr className="my-6 border-white/10" />,
         }}
       >
-        {content}
+        {sanitizedContent}
       </ReactMarkdown>
     </div>
   );

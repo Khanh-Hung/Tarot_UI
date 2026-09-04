@@ -9,20 +9,37 @@ import { tarotService } from "@/features/tarot/services/tarotService";
 import { TarotCard3D } from "@/features/tarot/components/TarotCard3D";
 import { MarkdownRenderer } from "@/features/chat/components/MarkdownRenderer";
 import { ChatBox } from "@/features/chat/components/ChatBox";
+import { ReadingDetailSkeleton } from "@/components/ui/Skeleton";
+
+const getTopicLabel = (topic?: string) => {
+  switch (topic) {
+    case "LOVE_AND_RELATIONSHIP":
+    case "LOVE_RELATIONSHIP":
+      return "Tình Duyên & Mối Quan Hệ";
+    case "CAREER_AND_FINANCE":
+    case "CAREER_MONEY":
+      return "Sự Nghiệp & Tài Chính";
+    case "SELF_GROWTH_AND_HEALING":
+    case "SPIRITUAL_HEALING":
+      return "Chữa Lành & Nội Tâm";
+    default:
+      return "Định Hướng Cuộc Sống";
+  }
+};
 
 export default function HistoryDetailPage() {
   const params = useParams();
-  const readingId = Number(params?.id);
+  const readingId = params?.id ? String(params.id) : "";
 
   const [reading, setReading] = useState<ReadingDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadDetail = useCallback(async (id: number) => {
+  const loadDetail = useCallback(async (id: string) => {
     try {
       const data = await tarotService.getReadingById(id);
       setReading(data);
     } catch (e) {
-      console.error(e);
+      console.error("Failed to load reading detail:", e);
     } finally {
       setIsLoading(false);
     }
@@ -31,15 +48,13 @@ export default function HistoryDetailPage() {
   useEffect(() => {
     if (readingId) {
       loadDetail(readingId);
+    } else {
+      setIsLoading(false);
     }
   }, [readingId, loadDetail]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
-      </div>
-    );
+    return <ReadingDetailSkeleton />;
   }
 
   if (!reading) {
@@ -67,7 +82,7 @@ export default function HistoryDetailPage() {
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.04] border border-white/15 text-xs text-slate-200 mb-3">
-          <span>🔮 Chủ đề: {reading.topic}</span>
+          <span>🔮 Chủ đề: {getTopicLabel(reading.topic)}</span>
           <span>•</span>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />

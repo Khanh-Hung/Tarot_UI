@@ -7,6 +7,7 @@ import {
   PagedResponse,
   ReadingDetailResponse,
   ReadingSummaryResponse,
+  EnergyInsightsResponse,
 } from "../types/tarot.types";
 
 // In-memory cache cho dữ liệu tĩnh bài Tarot giúp tải tức thì (0ms)
@@ -80,5 +81,17 @@ export const tarotService = {
     );
     if (typeof response.data === "string") return response.data;
     return response.data?.content || response.data?.message || "";
+  },
+
+  async getSuggestedQuestions(topic?: string, zodiac?: string): Promise<string[]> {
+    const response = await apiClient.get<string[]>("/readings/suggestions", {
+      params: { topic, zodiac },
+    });
+    return response.data;
+  },
+
+  async getEnergyInsights(userId: string | number): Promise<EnergyInsightsResponse> {
+    const response = await apiClient.get<EnergyInsightsResponse>(`/readings/user/${userId}/insights`);
+    return response.data;
   },
 };

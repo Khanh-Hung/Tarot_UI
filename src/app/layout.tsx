@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/features/auth/hooks/useAuth";
 import { Navbar } from "@/components/layout/Navbar";
 
-const inter = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
   subsets: ["latin", "vietnamese"],
-  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin", "vietnamese"],
 });
 
 export const metadata: Metadata = {
@@ -23,9 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className="dark h-screen overflow-hidden antialiased">
+    <html
+      lang="vi"
+      className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} dark h-screen overflow-hidden antialiased`}
+    >
       <body
-        className={`${inter.className} h-screen overflow-hidden flex flex-col bg-[#18191c] text-zinc-100 selection:bg-zinc-200 selection:text-zinc-950`}
+        className="h-screen overflow-hidden flex flex-col bg-[#18191c] text-zinc-100 font-sans selection:bg-zinc-200 selection:text-zinc-950"
       >
         <AuthProvider>
           {/* Header luôn cố định ở trên cùng */}

@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { getFriendlyErrorMessage } from "@/lib/errorMapping";
+import { AuthFormSkeleton } from "@/components/ui/Skeleton";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, isLoading: isAuthLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,15 +39,15 @@ export default function RegisterPage() {
       await register({ email, password });
       router.push("/reading");
     } catch (err: unknown) {
-      console.error("Registration failed:", err);
-      const serverMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        "Đăng ký thất bại. Email có thể đã được sử dụng.";
-      setErrorMsg(serverMessage);
+      setErrorMsg(getFriendlyErrorMessage(err, "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin."));
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isAuthLoading) {
+    return <AuthFormSkeleton />;
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">

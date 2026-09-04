@@ -102,24 +102,28 @@ export const calculateCardShuffleTransform = ({
       targetRotX = 0.15;
     }
   } else if (currentPhase === "WATERFALL") {
-    // 🌊 BƯỚC 4: THÁC NƯỚC RƠI TỰ DO TỪ TRÊN CAO (SPRING CASCADE WATERFALL)
+    // 🌊 BƯỚC 4: THÁC NƯỚC UỐN CONG RƠI CASCADE TỰ NHIÊN XẾP VỀ CỌC TÂM
     const elapsed = currentTime - shuffleStartTime;
-    const dropTime = i * 16;
-    const dropProgress = Math.max(0, Math.min(1, (elapsed - dropTime) / 380));
+    const dropTime = i * 12;
+    const dropProgress = Math.max(0, Math.min(1, (elapsed - dropTime) / 320));
+    const isLeft = i % 2 === 0;
 
     if (dropProgress === 0) {
-      targetX = -1.6 + i * 0.004;
-      targetY = 0.7;
-      targetZ = 0.7 + i * 0.005;
-      targetRotZ = 0.32;
-      targetRotX = 0.38;
+      // Đang uốn vòm cầu chuẩn bị thả rơi
+      const arch = Math.sin((i / total) * Math.PI) * 0.45;
+      targetX = isLeft ? -0.4 : 0.4;
+      targetY = -0.9 + arch;
+      targetZ = 0.25 + (i % 10) * 0.006;
+      targetRotZ = isLeft ? -0.1 : 0.1;
+      targetRotX = 0.22;
     } else {
       const p = dropProgress;
-      targetX = THREE.MathUtils.lerp(-1.6, 0, p);
-      targetY = THREE.MathUtils.lerp(0.7, -1.1, p);
-      targetZ = THREE.MathUtils.lerp(0.7, i * 0.005, p);
-      targetRotZ = THREE.MathUtils.lerp(0.32, 0, p);
-      targetRotX = THREE.MathUtils.lerp(0.38, 0.15, p);
+      const startX = isLeft ? -0.4 : 0.4;
+      targetX = THREE.MathUtils.lerp(startX, 0, p);
+      targetY = THREE.MathUtils.lerp(-0.9, -1.1, p);
+      targetZ = THREE.MathUtils.lerp(0.25, i * 0.005, p);
+      targetRotZ = THREE.MathUtils.lerp(isLeft ? -0.1 : 0.1, 0, p);
+      targetRotX = THREE.MathUtils.lerp(0.22, 0.15, p);
     }
   } else if (currentPhase === "SPLIT") {
     // ✂️ BƯỚC 5: CẮT CỌC BÀI LÀM 2 NỬA BAY SANG HAI BÊN

@@ -1,32 +1,64 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, User, Bot, Loader2, Moon } from "lucide-react";
+import { Bot, Sparkles } from "lucide-react";
 import { ChatMessageDto } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { Avatar } from "@/components/ui/Avatar";
+import {
+  ChatBubble,
+  ChatBubbleMessage,
+  ChatBubbleCopyButton,
+  ChatInput,
+  ChatMessageList,
+  ChatTypingIndicator,
+} from "@/components/ui/chat";
 
 interface ChatBoxProps {
   readingId: string | number;
   initialMessages?: ChatMessageDto[];
 }
 
+const getMessageText = (msg: ChatMessageDto) => msg.content || msg.message || "";
+const isAi = (sender?: string) => sender === "AI" || sender === "AI_READER";
+
 export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [] }) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessageDto[]>(initialMessages);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
+
+  // Đồng bộ lại danh sách tin nhắn khi initialMessages được nạp từ server
+  useEffect(() => {
+    if (initialMessages && initialMessages.length > 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (messages.length > 0 || isLoading) {
+      scrollToBottom();
+    }
   }, [messages, isLoading]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
     const userText = inputMessage.trim();
@@ -36,6 +68,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
       id: Date.now(),
       sender: "USER",
       message: userText,
+      content: userText,
       createdAt: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, tempUserMsg]);
@@ -47,15 +80,17 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
         id: Date.now() + 1,
         sender: "AI",
         message: aiReplyText,
+        content: aiReplyText,
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-    } catch (error) {
-      console.error("Failed to send chat message:", error);
+    } catch (err: unknown) {
+      console.error("Failed to send message:", err);
       const errorMsg: ChatMessageDto = {
         id: Date.now() + 1,
         sender: "AI",
         message: "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
+        content: "Xin lỗi bạn, kết nối vũ trụ tạm thời bị gián đoạn. Vui lòng thử gửi lại câu hỏi nhé!",
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -65,107 +100,91 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
   };
 
   return (
-    <div className="w-full silver-card rounded-3xl overflow-hidden flex flex-col h-[520px]">
+    <div className="w-full rounded-2xl border border-[#31333a] bg-[#191a1e] shadow-xl overflow-hidden flex flex-col h-[520px]">
       {/* Header Chat */}
-      <div className="px-6 py-4 bg-[#090D18] border-b border-white/[0.08] flex items-center justify-between">
+      <div className="px-6 py-4 bg-[#202228] border-b border-[#31333a] flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-white to-slate-400 flex items-center justify-center text-slate-950 shadow-md">
-            <Moon className="w-4 h-4 text-slate-950 fill-slate-950" />
+          <div className="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-sm shrink-0">
+            <Bot className="w-4 h-4 text-amber-300" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Oracle AI Reader</h3>
-            <p className="text-[11px] text-slate-400">Tham vấn & Trò chuyện sâu bám sát 3 lá bài</p>
+            <h3 className="text-sm font-semibold text-zinc-100">Hỏi đáp về quẻ bài</h3>
+            <p className="text-[11px] text-zinc-400">Giải đáp mọi thắc mắc của bạn</p>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/[0.06] border border-white/15 text-slate-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"></span>
-          Trực tuyến
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-[#16171b] border border-[#31333a] text-zinc-300">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Sẵn sàng
         </span>
       </div>
 
-      {/* Danh sách tin nhắn */}
-      <div className="flex-1 p-5 overflow-y-auto space-y-4">
+      {/* Danh sách tin nhắn qua ChatMessageList component */}
+      <ChatMessageList ref={chatContainerRef}>
         {messages.length === 0 && (
-          <div className="text-center py-12 px-4">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-slate-300 mb-3">
-              <Bot className="w-6 h-6" />
+          <div className="text-center py-14 px-4">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-[#22242a] border border-[#353740] flex items-center justify-center text-amber-300 mb-3.5 shadow-sm">
+              <Bot className="w-6 h-6 text-amber-300" />
             </div>
-            <p className="text-sm text-slate-200 font-medium">Bạn có thắc mắc gì về 3 lá bài trên bàn không?</p>
-            <p className="text-xs text-slate-400 mt-1">
-              Hãy tâm sự hoặc hỏi sâu hơn về công việc, tình cảm, hướng đi tiếp theo nhé!
+            <p className="text-sm text-zinc-200 font-semibold">Bạn có câu hỏi nào khác không?</p>
+            <p className="text-xs text-zinc-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
+              Nhắn tin vào đây nếu bạn muốn hiểu rõ hơn về quẻ bài này nhé.
             </p>
           </div>
         )}
 
         {messages.map((msg) => (
-          <div
+          <ChatBubble
             key={msg.id}
-            className={`flex gap-3 ${msg.sender === "USER" ? "justify-end" : "justify-start"}`}
+            variant={msg.sender === "USER" ? "sent" : "received"}
           >
-            {msg.sender === "AI" && (
-              <div className="w-8 h-8 rounded-full bg-[#121829] border border-white/20 flex items-center justify-center flex-shrink-0 text-slate-200 mt-1">
-                <Bot className="w-4 h-4" />
+            {isAi(msg.sender) && (
+              <div className="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0 text-amber-300 mb-0.5 shadow-sm">
+                <Bot className="w-4 h-4 text-amber-300" />
               </div>
             )}
 
-            <div
-              className={`max-w-[82%] sm:max-w-[75%] p-4 rounded-2xl text-sm leading-relaxed ${
-                msg.sender === "USER"
-                  ? "bg-slate-200 text-slate-950 font-medium rounded-br-none shadow-md"
-                  : "bg-[#101524] border border-white/[0.08] text-slate-100 rounded-bl-none shadow-md"
-              }`}
-            >
-              {msg.sender === "AI" ? (
-                <MarkdownRenderer content={msg.message} />
+            <ChatBubbleMessage variant={msg.sender === "USER" ? "sent" : "received"}>
+              {isAi(msg.sender) ? (
+                <div>
+                  <MarkdownRenderer content={getMessageText(msg)} />
+                  <div className="flex justify-end mt-1 pt-1 border-t border-white/[0.04]">
+                    <ChatBubbleCopyButton content={getMessageText(msg)} />
+                  </div>
+                </div>
               ) : (
-                <p className="whitespace-pre-wrap">{msg.message}</p>
+                <p className="whitespace-pre-wrap">{getMessageText(msg)}</p>
               )}
-            </div>
+            </ChatBubbleMessage>
 
             {msg.sender === "USER" && (
-              <div className="w-8 h-8 rounded-full bg-slate-700 border border-slate-500 flex items-center justify-center flex-shrink-0 text-white mt-1">
-                <User className="w-4 h-4" />
-              </div>
+              <Avatar
+                src={(user as { avatarUrl?: string })?.avatarUrl}
+                alt={user?.username || "Bạn"}
+                size="sm"
+                className="!rounded-full !size-8 !h-8 !w-8 border border-[#3b3d46] shrink-0 mb-0.5"
+              />
             )}
-          </div>
+          </ChatBubble>
         ))}
 
         {isLoading && (
-          <div className="flex gap-3 justify-start items-center">
-            <div className="w-8 h-8 rounded-full bg-[#121829] border border-white/20 flex items-center justify-center flex-shrink-0 text-slate-200">
-              <Bot className="w-4 h-4" />
+          <ChatBubble variant="received">
+            <div className="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0 text-amber-300 mb-0.5 shadow-sm">
+              <Bot className="w-4 h-4 text-amber-300" />
             </div>
-            <div className="bg-[#101524] border border-white/[0.08] rounded-2xl rounded-bl-none p-3.5 flex items-center gap-2 text-xs text-slate-300">
-              <Loader2 className="w-4 h-4 animate-spin text-slate-200" />
-              <span>AI Reader đang kết nối năng lượng lá bài để hồi đáp...</span>
-            </div>
-          </div>
+            <ChatTypingIndicator message="Đang giải đáp câu hỏi của bạn..." />
+          </ChatBubble>
         )}
-        <div ref={messagesEndRef} />
-      </div>
+      </ChatMessageList>
 
-      {/* Ô nhập tin nhắn */}
-      <form
+      {/* Ô nhập tin nhắn tự co giãn ChatInput */}
+      <ChatInput
+        value={inputMessage}
+        onChange={setInputMessage}
         onSubmit={handleSendMessage}
-        className="p-3.5 bg-[#090D18] border-t border-white/[0.08] flex items-center gap-2.5"
-      >
-        <input
-          type="text"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Nhắn tin tâm sự hoặc hỏi sâu về 3 lá bài..."
-          disabled={isLoading}
-          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-white/30 transition"
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !inputMessage.trim()}
-          className="px-5 py-2.5 rounded-xl silver-gradient-btn font-semibold text-sm flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition"
-        >
-          <Send className="w-4 h-4 text-slate-950" />
-          <span className="hidden sm:inline">Gửi</span>
-        </button>
-      </form>
+        disabled={isLoading}
+        placeholder="Nhập câu hỏi của bạn tại đây... (Enter để gửi, Shift+Enter xuống dòng)"
+      />
     </div>
   );
 };

@@ -22,6 +22,8 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ReadingSummaryResponse } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
+import { EnergyInsightsView } from "@/features/tarot/components/EnergyInsightsView";
+import { Skeleton, HistoryListSkeleton } from "@/components/ui/Skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -92,6 +94,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
+  const [activeTab, setActiveTab] = useState<"HISTORY" | "INSIGHTS">("HISTORY");
   const [allHistory, setAllHistory] = useState<ReadingSummaryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,6 +106,23 @@ export default function HistoryPage() {
   const [isDeckDropdownOpen, setIsDeckDropdownOpen] = useState(false);
   const topicDropdownRef = useRef<HTMLDivElement>(null);
   const deckDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Lấy userId từ user context hoặc fallback trực tiếp từ localStorage
+  const resolvedUserId = useMemo(() => {
+    let id = user?.userId || (user as { id?: string | number })?.id;
+    if (!id && typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("tarot_user");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          id = parsed.userId || parsed.id;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return id;
+  }, [user]);
 
   // Đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -121,11 +141,12 @@ export default function HistoryPage() {
   const loadAllHistory = React.useCallback(async (userId: string | number) => {
     setIsLoading(true);
     try {
-      // Tải tối đa 100 quẻ để tìm kiếm và lọc tức thì
-      const data = await tarotService.getReadingHistory(userId, 0, 100);
-      setAllHistory(data.items || []);
+      // Tải tối đa 50 quẻ gần nhất để hiển thị và tìm kiếm tức thì
+      const data = await tarotService.getReadingHistory(userId, 0, 50);
+      setAllHistory(data?.items || []);
     } catch (e) {
       console.error("Failed to load history:", e);
+      setAllHistory([]);
     } finally {
       setIsLoading(false);
     }
@@ -137,11 +158,12 @@ export default function HistoryPage() {
       return;
     }
 
-    const currentUserId = user?.userId || (user as { id?: string | number })?.id;
-    if (currentUserId) {
-      loadAllHistory(currentUserId);
+    if (resolvedUserId) {
+      loadAllHistory(resolvedUserId);
+    } else if (!isAuthLoading) {
+      setIsLoading(false);
     }
-  }, [user, isAuthenticated, isAuthLoading, router, loadAllHistory]);
+  }, [resolvedUserId, isAuthenticated, isAuthLoading, router, loadAllHistory]);
 
   // 🔍 TÌM KIẾM & LỌC DỮ LIỆU
   const filteredHistory = useMemo(() => {
@@ -214,28 +236,37 @@ export default function HistoryPage() {
   const activeTopicObj = TOPIC_OPTIONS.find((t) => t.key === selectedTopicFilter) || TOPIC_OPTIONS[0];
   const activeDeckObj = DECK_OPTIONS.find((d) => d.key === selectedDeckFilter) || DECK_OPTIONS[0];
 
-  if (isAuthLoading || (isLoading && allHistory.length === 0)) {
+  if (isAuthLoading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-300" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-8">
+        <div className="space-y-3 pb-6 border-b border-white/[0.08]">
+          <Skeleton className="w-32 h-7 rounded-lg" />
+          <Skeleton className="w-64 h-4 rounded-md" />
+        </div>
+        <HistoryListSkeleton />
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-      {/* 🌟 HEADER LỊCH SỬ XEM BÀI RÕ RÀNG, DỄ HIỂU */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-6 border-b border-white/[0.08]">
+      {/* 🌟 HEADER TRANG: TIÊU ĐỀ ĐỘNG THEO TAB */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase text-zinc-400 mb-2">
-            <History className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Lịch Sử Bốc Bài</span>
+          <div className="flex items-center gap-2.5">
+            {activeTab === "HISTORY" ? (
+              <History className="h-6 w-6 text-zinc-300" />
+            ) : (
+              <Sparkles className="h-6 w-6 text-amber-400" />
+            )}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100">
+              {activeTab === "HISTORY" ? "Lịch Sử Quẻ Bài" : "Bản Đồ Năng Lượng"}
+            </h1>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
-            Lịch Sử Xem Bài
-          </h1>
-          <p className="mt-1.5 text-xs sm:text-sm text-zinc-400">
-            Xem lại toàn bộ câu hỏi và kết quả luận giải bài Tarot của bạn.
+          <p className="mt-1 text-xs sm:text-sm text-zinc-400 font-normal">
+            {activeTab === "HISTORY"
+              ? "Xem lại toàn bộ câu hỏi và kết quả luận giải bài Tarot của bạn"
+              : "Thống kê chiêm tinh về 4 nguyên tố và các lá bài định mệnh gắn liền với bạn"}
           </p>
         </div>
 
@@ -248,20 +279,52 @@ export default function HistoryPage() {
         </Link>
       </div>
 
-      {allHistory.length === 0 ? (
-        <div className="text-center py-20 rounded-3xl border border-white/10 bg-[#151619] p-8 sm:p-12 shadow-2xl">
-          <div className="w-16 h-16 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center mx-auto mb-5 text-zinc-400">
-            <Sparkles className="w-8 h-8" />
-          </div>
-          <h3 className="text-xl font-bold text-white">
+      {/* 🌟 TAB NAVIGATION PHẲNG GẮN LIỀN ĐƯỜNG KẺ HEADER */}
+      <div className="flex items-center gap-8 border-b border-white/[0.08] mb-8">
+        <button
+          onClick={() => setActiveTab("HISTORY")}
+          className={`pb-3.5 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer -mb-px ${
+            activeTab === "HISTORY"
+              ? "border-amber-400 text-white font-bold"
+              : "border-transparent text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          <History className={`w-4 h-4 ${activeTab === "HISTORY" ? "text-amber-400" : "text-zinc-400"}`} />
+          <span>Lịch Sử Quẻ Bài</span>
+          {allHistory.length > 0 && (
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/[0.08] text-zinc-300 font-normal">
+              {allHistory.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("INSIGHTS")}
+          className={`pb-3.5 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer -mb-px ${
+            activeTab === "INSIGHTS"
+              ? "border-amber-400 text-amber-300 font-bold"
+              : "border-transparent text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          <Sparkles className={`w-4 h-4 ${activeTab === "INSIGHTS" ? "text-amber-400" : "text-zinc-400"}`} />
+          <span>Bản Đồ Năng Lượng</span>
+        </button>
+      </div>
+
+      {activeTab === "INSIGHTS" ? (
+        <EnergyInsightsView userId={resolvedUserId || ""} />
+      ) : allHistory.length === 0 ? (
+        <div className="flex min-h-[380px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#31333a] bg-[#212227]/40 p-10 text-center">
+          <Sparkles className="h-10 w-10 text-zinc-500 mb-3" />
+          <h3 className="text-base font-bold text-zinc-200">
             Bạn chưa có lần bốc bài nào
           </h3>
-          <p className="text-sm text-zinc-400 mt-2 max-w-md mx-auto leading-relaxed">
+          <p className="mt-1 text-xs text-zinc-400 max-w-sm leading-relaxed">
             Hãy đặt câu hỏi và rút những lá bài đầu tiên để nhận lời giải đáp chi tiết từ Nyxoris AI.
           </p>
           <Link
             href="/reading"
-            className="mt-7 inline-flex items-center gap-2 px-7 py-3.5 rounded-full silver-gradient-btn text-zinc-950 font-bold text-sm shadow-xl transition hover:scale-105 cursor-pointer"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 py-2.5 px-5 text-xs sm:text-sm font-bold shadow-md shadow-white/5 transition-all cursor-pointer active:scale-98"
           >
             <span>Bốc Bài Ngay</span>
             <ArrowRight className="w-4 h-4" />
@@ -321,7 +384,7 @@ export default function HistoryPage() {
 
                   {/* Menu Popup Chủ Đề Kính Mờ */}
                   {isTopicDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-white/12 bg-[#1b1c20]/95 backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-[#383a44] bg-[#1a1b20] backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                       {TOPIC_OPTIONS.map((opt) => {
                         const isSelected = selectedTopicFilter === opt.key;
                         return (
@@ -335,8 +398,8 @@ export default function HistoryPage() {
                             }}
                             className={`w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
                               isSelected
-                                ? "bg-white text-zinc-950 shadow-md font-bold"
-                                : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
+                                ? "bg-[#2b2c34] text-white font-semibold border border-zinc-700/60 shadow-sm"
+                                : "text-zinc-300 hover:text-white hover:bg-[#25262c]"
                             }`}
                           >
                             <span className="flex items-center gap-2 whitespace-nowrap">
@@ -371,7 +434,7 @@ export default function HistoryPage() {
 
                   {/* Menu Popup Bộ Bài Kính Mờ */}
                   {isDeckDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-white/12 bg-[#1b1c20]/95 backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-[#383a44] bg-[#1a1b20] backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                       {DECK_OPTIONS.map((opt) => {
                         const isSelected = selectedDeckFilter === opt.key;
                         return (
@@ -385,8 +448,8 @@ export default function HistoryPage() {
                             }}
                             className={`w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
                               isSelected
-                                ? "bg-white text-zinc-950 shadow-md font-bold"
-                                : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
+                                ? "bg-[#2b2c34] text-white font-semibold border border-zinc-700/60 shadow-sm"
+                                : "text-zinc-300 hover:text-white hover:bg-[#25262c]"
                             }`}
                           >
                             <span className="flex items-center gap-2 whitespace-nowrap">
@@ -415,17 +478,20 @@ export default function HistoryPage() {
           </div>
 
           {/* 🌟 DANH SÁCH LỊCH SỬ DẠNG LIST TINH GIẢN LIỀN MẠCH (KHÔNG LẠM DỤNG KHUNG) */}
-          {filteredHistory.length === 0 ? (
-            <div className="text-center py-14 rounded-2xl border border-white/10 bg-[#141518] p-6 shadow-lg">
-              <p className="text-sm font-semibold text-white">
+          {isLoading && allHistory.length === 0 ? (
+            <HistoryListSkeleton />
+          ) : filteredHistory.length === 0 ? (
+            <div className="flex min-h-[300px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#31333a] bg-[#212227]/40 p-8 text-center">
+              <Sparkles className="h-8 w-8 text-zinc-500 mb-2.5" />
+              <h3 className="text-sm sm:text-base font-bold text-zinc-200">
                 Không tìm thấy quẻ bói nào phù hợp
-              </p>
-              <p className="text-xs text-zinc-400 mt-1">
+              </h3>
+              <p className="mt-1 text-xs text-zinc-400 max-w-sm">
                 Hãy thử tìm với từ khóa khác hoặc đặt lại bộ lọc.
               </p>
               <button
                 onClick={resetFilters}
-                className="mt-4 px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-semibold text-zinc-200 border border-white/10 transition cursor-pointer"
+                className="mt-4 px-4 py-2 rounded-xl bg-[#2b2c34] hover:bg-[#353740] text-xs font-semibold text-zinc-200 border border-[#3b3d46] transition-colors cursor-pointer"
               >
                 Đặt Lại Bộ Lọc
               </button>

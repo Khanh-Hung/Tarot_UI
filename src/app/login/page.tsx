@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { getFriendlyErrorMessage } from "@/lib/errorMapping";
+import { AuthFormSkeleton } from "@/components/ui/Skeleton";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isLoading: isAuthLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,15 +27,15 @@ export default function LoginPage() {
       await login({ email, password });
       router.push("/reading");
     } catch (err: unknown) {
-      console.error("Login failed:", err);
-      const serverMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        "Email hoặc mật khẩu không chính xác.";
-      setErrorMsg(serverMessage);
+      setErrorMsg(getFriendlyErrorMessage(err, "Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại."));
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isAuthLoading) {
+    return <AuthFormSkeleton />;
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">

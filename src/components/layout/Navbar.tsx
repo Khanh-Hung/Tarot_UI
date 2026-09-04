@@ -10,8 +10,26 @@ import {
   LogOut,
   LogIn,
   Star,
+  User,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { Avatar } from "@/components/ui/Avatar";
+
+const ZODIAC_LABEL_MAP: Record<string, string> = {
+  ARIES: "Bạch Dương",
+  TAURUS: "Kim Ngưu",
+  GEMINI: "Song Tử",
+  CANCER: "Cự Giải",
+  LEO: "Sư Tử",
+  VIRGO: "Xử Nữ",
+  LIBRA: "Thiên Bình",
+  SCORPIO: "Bọ Cạp",
+  SAGITTARIUS: "Nhân Mã",
+  CAPRICORN: "Ma Kết",
+  AQUARIUS: "Bảo Bình",
+  PISCES: "Song Ngư",
+};
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -74,18 +92,18 @@ export const Navbar: React.FC = () => {
     {
       label: "Bốc Bài Tarot",
       href: "/reading",
-      icon: <Sparkles className="w-3.5 h-3.5" />,
+      icon: <Sparkles className="h-4 w-4" />,
     },
     {
-      label: "Lịch Sử Xem Bài",
+      label: "Lịch Sử",
       href: "/history",
-      icon: <History className="w-3.5 h-3.5" />,
+      icon: <History className="h-4 w-4" />,
       requireAuth: true,
     },
     {
       label: "Thư Viện Bài",
       href: "/decks",
-      icon: <BookOpen className="w-3.5 h-3.5" />,
+      icon: <BookOpen className="h-4 w-4" />,
     },
   ];
 
@@ -103,16 +121,16 @@ export const Navbar: React.FC = () => {
             scrolled ? "h-14" : "h-16"
           }`}
         >
-          {/* 🌟 LEFT: BRAND & LOGO (PURE WORDMARK) */}
+          {/* 🌟 LEFT: BRAND & LOGO */}
           <div className="flex-1 flex items-center justify-start">
-            <Link href="/" className="group select-none cursor-pointer flex items-center">
-              <span className="font-sans text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-zinc-200 transition-colors">
+            <Link href="/" className="flex items-center group cursor-pointer select-none">
+              <span className="font-sans text-xl font-black tracking-tighter text-zinc-100 transition-all duration-300 group-hover:text-white">
                 Nyxoris
               </span>
             </Link>
           </div>
 
-          {/* 🌟 CENTER: NAVIGATION (PURE CLEAN TEXT) */}
+          {/* 🌟 CENTER: NAVIGATION LINKS */}
           <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => {
               if (item.requireAuth && !isAuthenticated) return null;
@@ -121,13 +139,13 @@ export const Navbar: React.FC = () => {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-2 text-xs sm:text-sm font-medium transition-colors duration-150 select-none py-1 ${
+                  className={`flex items-center gap-2 text-xs font-semibold transition-colors py-2 px-1 ${
                     active
                       ? "text-white"
-                      : "text-zinc-400 hover:text-white"
+                      : "text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
-                  <span className="shrink-0">
+                  <span className="transition-transform group-hover:scale-110">
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
@@ -142,51 +160,77 @@ export const Navbar: React.FC = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`rounded-full border border-[#3b3d46] hover:border-[#525560] bg-[#23242a] flex items-center justify-center text-zinc-100 font-bold transition-all duration-300 cursor-pointer shadow-sm active:scale-95 select-none ${
-                    scrolled ? "w-8 h-8 text-xs" : "w-9 h-9 text-xs sm:text-sm"
-                  }`}
+                  className="relative flex items-center justify-center rounded-full p-0.5 border border-[#3b3d46] bg-[#23242a] hover:border-[#525560] transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 select-none"
                   title={`${user.username} (${user.zodiacSign || "Seeker"})`}
                 >
-                  {user.username.charAt(0).toUpperCase()}
+                  <Avatar
+                    src={(user as { avatarUrl?: string })?.avatarUrl}
+                    alt={user.username}
+                    size="sm"
+                    className="!rounded-full !size-8 !h-8 !w-8 border-none shrink-0"
+                  />
                 </button>
 
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2.5 w-64 overflow-hidden rounded-2xl border border-[#31333a] bg-[#212227] p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-2">
-                    <div className="p-3 border-b border-[#2c2e35] mb-1 rounded-xl bg-[#1a1b1f] flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-500 flex items-center justify-center text-zinc-950 font-bold text-sm shrink-0">
-                        {user.username.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-zinc-100 truncate">
-                          {user.username}
-                        </p>
-                        <p className="text-[10px] text-zinc-400 truncate">
-                          {user.email}
-                        </p>
-                        <div className="flex items-center gap-1 text-[10px] text-zinc-300 mt-1">
-                          <Star className="w-3 h-3 text-zinc-400" />
-                          <span>Cung: {user.zodiacSign || "Chưa đặt"}</span>
+                {isDropdownOpen && (() => {
+                  const displayName = (user as { displayName?: string; username?: string })?.displayName || user.username;
+                  const zodiacName = user.zodiacSign && user.zodiacSign !== "UNKNOWN"
+                    ? ZODIAC_LABEL_MAP[user.zodiacSign] || user.zodiacSign
+                    : "Chưa đặt";
+                  return (
+                    <div className="absolute right-0 mt-2.5 w-64 overflow-hidden rounded-2xl border border-[#31333a] bg-[#212227] p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-2">
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center justify-between gap-3 border-b border-[#2c2e35] p-2.5 mb-1 rounded-xl hover:bg-[#2b2c33] transition-colors cursor-pointer group"
+                        title="Xem và chỉnh sửa hồ sơ cá nhân"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <Avatar
+                            src={(user as { avatarUrl?: string })?.avatarUrl}
+                            alt={displayName}
+                            size="md"
+                            className="!rounded-full !h-10 !w-10 border border-[#3b3d46] text-xs font-bold shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-zinc-100 group-hover:text-white transition-colors truncate">
+                              {displayName}
+                            </p>
+                            <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-medium mt-0.5">
+                              <Star className="h-3 w-3 text-amber-400/90 shrink-0" />
+                              <span className="truncate">Cung: {zodiacName}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                        <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-200 transition-colors shrink-0" />
+                      </Link>
 
-                    <div className="py-1 space-y-0.5">
+                      <div className="py-1 space-y-0.5">
+
                       <Link
                         href="/reading"
                         onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
                       >
-                        <Sparkles className="w-4 h-4 text-zinc-400" />
+                        <Sparkles className="w-4 h-4 text-pink-400" />
                         <span>Bốc bài Tarot mới</span>
                       </Link>
 
                       <Link
                         href="/history"
                         onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
                       >
-                        <History className="w-4 h-4 text-zinc-400" />
-                        <span>Lịch sử xem bài</span>
+                        <History className="w-4 h-4 text-emerald-400" />
+                        <span>Lịch sử</span>
+                      </Link>
+
+                      <Link
+                        href="/decks"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
+                      >
+                        <BookOpen className="w-4 h-4 text-sky-400" />
+                        <span>Thư viện bài</span>
                       </Link>
                     </div>
 
@@ -196,14 +240,15 @@ export const Navbar: React.FC = () => {
                           logout();
                           setIsDropdownOpen(false);
                         }}
-                        className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-400 hover:bg-rose-950/30 transition cursor-pointer"
+                        className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>Đăng xuất tài khoản</span>
+                        <LogOut className="w-4 h-4 text-rose-400" />
+                        <span>Đăng xuất</span>
                       </button>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
               </div>
             ) : (
               <div className="flex items-center transition-all duration-500">

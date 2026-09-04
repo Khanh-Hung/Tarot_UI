@@ -26,6 +26,7 @@ import {
 import { CardDto, DeckCode, DeckDto } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { DECK_LORE_MAP } from "@/features/tarot/constants/deckLore";
+import { DeckCardsGridSkeleton, FullDeckPageSkeleton } from "@/components/ui/Skeleton";
 
 type CategoryFilter = "ALL" | "MAJOR" | "COURT" | "PIPS" | "WANDS" | "CUPS" | "SWORDS" | "PENTACLES";
 
@@ -183,7 +184,7 @@ function DecksContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in">
       {/* 🔮 HERO HEADER */}
       <div className="text-center max-w-3xl mx-auto space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-white">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100">
           Khám Phá Các Bộ Bài Tarot Kinh Điển
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -451,10 +452,7 @@ function DecksContent() {
 
       {/* 🎴 LƯỚI HIỂN THỊ 78 LÁ BÀI */}
       {isLoading ? (
-        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-300" />
-          <p className="text-xs text-zinc-400">Đang nạp 78 lá bài...</p>
-        </div>
+        <DeckCardsGridSkeleton />
       ) : filteredCards.length === 0 ? (
         <div className="text-center py-16 p-8 rounded-3xl border border-[#31333a] bg-[#191a1e]">
           <p className="text-sm text-zinc-400">Không tìm thấy lá bài nào khớp với từ khóa &ldquo;{searchQuery}&rdquo;</p>
@@ -779,13 +777,7 @@ function DecksContent() {
 
 export default function DecksPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[70vh] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-200" />
-        </div>
-      }
-    >
+    <Suspense fallback={<FullDeckPageSkeleton />}>
       <DecksContent />
     </Suspense>
   );

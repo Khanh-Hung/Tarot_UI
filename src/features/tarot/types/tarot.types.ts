@@ -103,8 +103,9 @@ export interface CreateReadingResponse {
 
 export interface ChatMessageDto {
   id: string | number;
-  sender: "USER" | "AI";
-  message: string;
+  sender: "USER" | "AI" | "AI_READER";
+  content?: string;
+  message?: string;
   createdAt: string;
 }
 
@@ -138,4 +139,28 @@ export interface PagedResponse<T> {
   totalElements: number;
   totalPages: number;
   last: boolean;
+}
+
+export interface FrequentCardDto {
+  cardCode: string;
+  nameVi: string;
+  nameEn: string;
+  imageUrl: string;
+  element: string;
+  count: number;
+  percentage: number;
+  uprightCount: number;
+  reversedCount: number;
+}
+
+export interface EnergyInsightsResponse {
+  totalReadings: number;
+  totalCardsDrawn: number;
+  elementCounts: Record<string, number>;
+  elementPercentages: Record<string, number>;
+  dominantElement: string;
+  dominantElementVi: string;
+  topCards: FrequentCardDto[];
+  topicDistribution: Record<string, number>;
+  energyAdvice: string;
 }
