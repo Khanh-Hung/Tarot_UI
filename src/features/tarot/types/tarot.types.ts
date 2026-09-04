@@ -164,3 +164,13 @@ export interface EnergyInsightsResponse {
   topicDistribution: Record<string, number>;
   energyAdvice: string;
 }
+
+export interface UserQuotaDto {
+  availableReadings: number;
+  dailyFreeRemaining: number;
+  dailyFreeLimit: number;
+  bonusReadings: number;
+  adsWatchedToday: number;
+  maxAdsPerDay: number;
+  canWatchAd: boolean;
+}

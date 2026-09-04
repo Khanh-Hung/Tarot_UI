@@ -8,6 +8,7 @@ import {
   ReadingDetailResponse,
   ReadingSummaryResponse,
   EnergyInsightsResponse,
+  UserQuotaDto,
 } from "../types/tarot.types";
 
 // In-memory cache cho dữ liệu tĩnh bài Tarot giúp tải tức thì (0ms)
@@ -92,6 +93,33 @@ export const tarotService = {
 
   async getEnergyInsights(userId: string | number): Promise<EnergyInsightsResponse> {
     const response = await apiClient.get<EnergyInsightsResponse>(`/readings/user/${userId}/insights`);
+    return response.data;
+  },
+
+  async getUserQuota(userId?: string | number): Promise<UserQuotaDto> {
+    const url = userId ? `/profile/${userId}/quota` : "/profile/quota";
+    const response = await apiClient.get<UserQuotaDto>(url, {
+      params: userId ? { userId } : undefined,
+    });
+    return response.data;
+  },
+
+  async claimAdReward(userId?: string | number): Promise<UserQuotaDto> {
+    const url = userId ? `/profile/${userId}/claim-ad-reward` : "/profile/claim-ad-reward";
+    const response = await apiClient.post<UserQuotaDto>(url, undefined, {
+      params: userId ? { userId } : undefined,
+    });
+    return response.data;
+  },
+
+  async uploadAvatar(file: File | Blob): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append("file", file, "avatar.png");
+    const response = await apiClient.post<{ url: string }>("/profile/avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   },
 };

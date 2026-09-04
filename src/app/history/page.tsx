@@ -313,6 +313,8 @@ export default function HistoryPage() {
 
       {activeTab === "INSIGHTS" ? (
         <EnergyInsightsView userId={resolvedUserId || ""} />
+      ) : isLoading ? (
+        <HistoryListSkeleton />
       ) : allHistory.length === 0 ? (
         <div className="flex min-h-[380px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#31333a] bg-[#212227]/40 p-10 text-center">
           <Sparkles className="h-10 w-10 text-zinc-500 mb-3" />
@@ -478,9 +480,7 @@ export default function HistoryPage() {
           </div>
 
           {/* 🌟 DANH SÁCH LỊCH SỬ DẠNG LIST TINH GIẢN LIỀN MẠCH (KHÔNG LẠM DỤNG KHUNG) */}
-          {isLoading && allHistory.length === 0 ? (
-            <HistoryListSkeleton />
-          ) : filteredHistory.length === 0 ? (
+          {filteredHistory.length === 0 ? (
             <div className="flex min-h-[300px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#31333a] bg-[#212227]/40 p-8 text-center">
               <Sparkles className="h-8 w-8 text-zinc-500 mb-2.5" />
               <h3 className="text-sm sm:text-base font-bold text-zinc-200">

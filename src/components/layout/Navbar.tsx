@@ -12,9 +12,13 @@ import {
   Star,
   User,
   ChevronRight,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Avatar } from "@/components/ui/Avatar";
+import { EnergyQuotaModal } from "@/features/ads/components/EnergyQuotaModal";
+import { tarotService } from "@/features/tarot/services/tarotService";
+import { UserQuotaDto } from "@/features/tarot/types/tarot.types";
 
 const ZODIAC_LABEL_MAP: Record<string, string> = {
   ARIES: "Bạch Dương",
@@ -37,7 +41,41 @@ export const Navbar: React.FC = () => {
 
   const [scrolled, setScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
+  const [quota, setQuota] = useState<UserQuotaDto | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Lấy hạn mức năng lượng và lắng nghe sự kiện cập nhật
+  useEffect(() => {
+    if (!isAuthenticated || !user?.userId) {
+      setQuota(null);
+      return;
+    }
+
+    const fetchQuota = async () => {
+      try {
+        const data = await tarotService.getUserQuota(user.userId);
+        setQuota(data);
+      } catch (err) {
+        // Silent catch in dev
+      }
+    };
+
+    fetchQuota();
+
+    const handleQuotaUpdated = (event: any) => {
+      if (event?.detail) {
+        setQuota(event.detail);
+      } else {
+        fetchQuota();
+      }
+    };
+
+    window.addEventListener("tarot_quota_updated", handleQuotaUpdated);
+    return () => {
+      window.removeEventListener("tarot_quota_updated", handleQuotaUpdated);
+    };
+  }, [isAuthenticated, user?.userId]);
 
   useEffect(() => {
     const container = document.getElementById("main-scroll-container");
@@ -157,12 +195,46 @@ export const Navbar: React.FC = () => {
           {/* 🌟 RIGHT: AUTH */}
           <div className="flex-1 flex items-center justify-end gap-2.5 sm:gap-3 transition-all duration-500">
             {isAuthenticated && user ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="relative flex items-center justify-center rounded-full p-0.5 border border-[#3b3d46] bg-[#23242a] hover:border-[#525560] transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 select-none"
-                  title={`${user.username} (${user.zodiacSign || "Seeker"})`}
-                >
+              <>
+                {/* 🔮 Energy HUD Chip */}
+                {quota === null ? (
+                  <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1 border border-zinc-700/40 bg-zinc-800/40 text-zinc-400 text-xs select-none">
+                    <Zap className="w-3.5 h-3.5 text-zinc-500 animate-pulse" />
+                    <span className="w-3 h-3 bg-zinc-700 rounded-full animate-pulse inline-block" />
+                    <span className="hidden sm:inline text-[11px] opacity-70">Lượt</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsQuotaModalOpen(true)}
+                    className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 border transition-all cursor-pointer select-none text-xs font-medium shadow-sm active:scale-95 ${
+                      quota.availableReadings > 0
+                        ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:border-amber-400/50"
+                        : "border-red-500/40 bg-red-500/15 text-red-300 animate-pulse hover:bg-red-500/25"
+                    }`}
+                    title="Bấm để xem hạn mức và nhận thêm lượt bói"
+                  >
+                    <Zap
+                      className={`w-3.5 h-3.5 ${
+                        quota.availableReadings > 0
+                          ? "text-amber-400 fill-amber-400/30"
+                          : "text-red-400 fill-red-400/30"
+                      }`}
+                    />
+                    <span className="font-semibold">
+                      {quota.availableReadings}
+                    </span>
+                    <span className="hidden sm:inline text-[11px] opacity-80">
+                      Lượt
+                    </span>
+                  </button>
+                )}
+
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="relative flex items-center justify-center rounded-full p-0.5 border border-[#3b3d46] bg-[#23242a] hover:border-[#525560] transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 select-none"
+                    title={`${user.username} (${user.zodiacSign || "Seeker"})`}
+                  >
                   <Avatar
                     src={(user as { avatarUrl?: string })?.avatarUrl}
                     alt={user.username}
@@ -250,6 +322,7 @@ export const Navbar: React.FC = () => {
                   );
                 })()}
               </div>
+            </>
             ) : (
               <div className="flex items-center transition-all duration-500">
                 <Link
@@ -266,6 +339,15 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal Hạn Mức Năng Lượng & Xem Quảng Cáo */}
+      <EnergyQuotaModal
+        isOpen={isQuotaModalOpen}
+        onClose={() => setIsQuotaModalOpen(false)}
+        quota={quota}
+        onQuotaUpdated={(newQuota) => setQuota(newQuota)}
+        userId={user?.userId}
+      />
     </header>
   );
 };

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, HelpCircle, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, ArrowLeft, Moon, BookOpen, Layers, CheckCircle2, Edit3 } from "lucide-react";
+import { Sparkles, HelpCircle, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, ArrowLeft, Moon, BookOpen, Layers, CheckCircle2, Edit3, Zap, Video } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   CreateReadingResponse,
@@ -10,6 +10,7 @@ import {
   DeckDto,
   SpreadType,
   ZodiacSign,
+  UserQuotaDto,
 } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { TarotCard3D } from "@/features/tarot/components/TarotCard3D";
@@ -17,6 +18,7 @@ import { MarkdownRenderer } from "@/features/chat/components/MarkdownRenderer";
 import { ChatBox } from "@/features/chat/components/ChatBox";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
 import { getFriendlyErrorMessage } from "@/lib/errorMapping";
+import { EnergyQuotaModal } from "@/features/ads/components/EnergyQuotaModal";
 
 import { ThreeTarotFan } from "@/features/tarot/components/ThreeTarotFan";
 import { ReadingFormSkeleton } from "@/components/ui/Skeleton";
@@ -130,6 +132,37 @@ function ReadingContent() {
   }, [stage]);
 
   const [step, setStep] = useState<1 | 2>(1);
+  const [quota, setQuota] = useState<UserQuotaDto | null>(null);
+  const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
+
+  // Lấy và đồng bộ hạn mức lượt bói của người dùng
+  useEffect(() => {
+    if (!isAuthenticated || !user?.userId) return;
+
+    const loadQuota = async () => {
+      try {
+        const q = await tarotService.getUserQuota(user.userId);
+        setQuota(q);
+      } catch (e) {
+        // Silent catch in dev
+      }
+    };
+
+    loadQuota();
+
+    const handleQuotaUpdated = (event: any) => {
+      if (event?.detail) {
+        setQuota(event.detail);
+      } else {
+        loadQuota();
+      }
+    };
+
+    window.addEventListener("tarot_quota_updated", handleQuotaUpdated);
+    return () => {
+      window.removeEventListener("tarot_quota_updated", handleQuotaUpdated);
+    };
+  }, [isAuthenticated, user?.userId]);
 
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([
     "Lời khuyên vũ trụ dành cho công việc và sự nghiệp sắp tới?",
@@ -207,6 +240,16 @@ function ReadingContent() {
       return;
     }
 
+    const isOracle = spreadType === "DAILY_ORACLE";
+    const canProceed = isOracle
+      ? (quota ? (quota.dailyFreeRemaining > 0 || quota.bonusReadings > 0) : true)
+      : (quota ? quota.bonusReadings > 0 : true);
+
+    if (quota && !canProceed) {
+      setIsQuotaModalOpen(true);
+      return;
+    }
+
     setErrorMsg("");
     setStage("PICKING");
   };
@@ -215,6 +258,16 @@ function ReadingContent() {
   const handleConfirmSelectedCards = async (
     picked: { cardId: string | number; isReversed: boolean }[]
   ) => {
+    const isOracle = spreadType === "DAILY_ORACLE";
+    const canRead = isOracle
+      ? (quota ? (quota.dailyFreeRemaining > 0 || quota.bonusReadings > 0) : true)
+      : (quota ? quota.bonusReadings > 0 : true);
+
+    if (quota && !canRead) {
+      setIsQuotaModalOpen(true);
+      return;
+    }
+
     setErrorMsg("");
     setIsReadingLoading(true);
     const startTimestamp = Date.now();
@@ -246,8 +299,17 @@ function ReadingContent() {
       if (selectedZodiac !== "UNKNOWN") {
         updateUserZodiac(selectedZodiac);
       }
-    } catch (err: unknown) {
-      setErrorMsg(getFriendlyErrorMessage(err, "Không thể thực hiện quẻ bói lúc này. Vui lòng thử lại sau."));
+
+      // Thông báo toàn app cập nhật lại số lượt bói (đã dùng 1 lượt)
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("tarot_quota_updated"));
+      }
+    } catch (err: any) {
+      const msg = getFriendlyErrorMessage(err, "Không thể thực hiện quẻ bói lúc này. Vui lòng thử lại sau.");
+      if (msg.includes("hết lượt") || err?.response?.data?.error?.code === "DAILY_QUOTA_EXCEEDED") {
+        setIsQuotaModalOpen(true);
+      }
+      setErrorMsg(msg);
     } finally {
       setIsReadingLoading(false);
     }
@@ -446,6 +508,8 @@ function ReadingContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {SPREAD_OPTIONS.map((opt) => {
                     const isSelected = spreadType === opt.type;
+                    const isOracle = opt.type === "DAILY_ORACLE";
+                    const is3CardLocked = !isOracle && quota && (quota.bonusReadings ?? 0) <= 0;
                     return (
                       <div key={opt.type} className="relative">
                         <button
@@ -464,12 +528,22 @@ function ReadingContent() {
                             <span className="text-base">{opt.icon}</span>
                             <span
                               className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                                isSelected
-                                  ? "bg-amber-400/20 text-amber-300 border border-amber-400/30"
-                                  : "bg-zinc-700/50 text-zinc-400"
+                                isOracle
+                                  ? (quota?.dailyFreeRemaining ?? 1) > 0
+                                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                    : "bg-zinc-700/50 text-zinc-400"
+                                  : is3CardLocked
+                                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                  : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                               }`}
                             >
-                              {opt.cards} lá
+                              {isOracle
+                                ? (quota?.dailyFreeRemaining ?? 1) > 0
+                                  ? "1 lá • Free"
+                                  : "1 lá"
+                                : is3CardLocked
+                                ? "3 lá • 🎬 QC"
+                                : "3 lá • Khả dụng"}
                             </span>
                           </div>
                           <h4 className="text-[11px] sm:text-xs font-bold leading-snug whitespace-nowrap tracking-tight text-zinc-100">
@@ -482,11 +556,22 @@ function ReadingContent() {
                 </div>
 
                 {/* Dòng mô tả tinh gọn cho thẻ đang chọn (Tối ưu hoàn hảo cho cả Mobile & Desktop) */}
-                <div className="mt-2 px-3 py-2 rounded-xl bg-[#1a1b20] border border-[#2b2d35] flex items-center gap-2 text-xs">
-                  <span className="text-amber-300 shrink-0 font-bold text-[10px] uppercase tracking-wider">Ý nghĩa:</span>
-                  <span className="text-[11px] text-zinc-300 truncate">
-                    {SPREAD_OPTIONS.find((s) => s.type === spreadType)?.subtitle}
-                  </span>
+                <div className="mt-2 px-3 py-2 rounded-xl bg-[#1a1b20] border border-[#2b2d35] flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="text-amber-300 shrink-0 font-bold text-[10px] uppercase tracking-wider">Ý nghĩa:</span>
+                    <span className="text-[11px] text-zinc-300 truncate">
+                      {SPREAD_OPTIONS.find((s) => s.type === spreadType)?.subtitle}
+                    </span>
+                  </div>
+                  {spreadType !== "DAILY_ORACLE" && (quota?.bonusReadings ?? 0) <= 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsQuotaModalOpen(true)}
+                      className="shrink-0 flex items-center gap-1 text-[10px] text-amber-300 font-bold bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full hover:bg-amber-500/25 transition cursor-pointer"
+                    >
+                      <span>🎬 Xem QC mở khóa</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -523,8 +608,24 @@ function ReadingContent() {
                 )}
               </div>
 
+              {/* NĂNG LƯỢNG TRẢI BÀI & HẠN MỨC */}
+              <div className="flex items-center justify-between text-xs px-1 text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                  <Zap className={`w-3.5 h-3.5 ${quota ? (quota.availableReadings > 0 ? "text-amber-400 fill-amber-400/30" : "text-red-400") : "text-zinc-500 animate-pulse"}`} />
+                  <span>Năng lượng trải bài:</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsQuotaModalOpen(true)}
+                  className="text-amber-300 hover:text-amber-200 font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer"
+                >
+                  {quota ? `${quota.availableReadings} lượt khả dụng` : "Đang kiểm tra..."}
+                  <span className="text-[10px] text-zinc-400 font-normal">(Xem thêm / Nhận thêm)</span>
+                </button>
+              </div>
+
               {/* ACTIONS: QUAY LẠI & TIẾN HÀNH TRẢI BÀI */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
@@ -534,14 +635,25 @@ function ReadingContent() {
                   <span>Quay lại</span>
                 </button>
 
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-2xl silver-gradient-btn font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01]"
-                >
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
-                  <span>Tiến Hành Xáo & Trải Bài Ra Bàn</span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
-                </button>
+                {quota && quota.availableReadings <= 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsQuotaModalOpen(true)}
+                    className="flex-1 py-3 rounded-2xl silver-gradient-btn text-zinc-950 font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] active:scale-95"
+                  >
+                    <Video className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
+                    <span>Xem Video Nhận Lượt Để Bốc Bài (5s)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-2xl silver-gradient-btn font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01]"
+                  >
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
+                    <span>Tiến Hành Xáo & Trải Bài Ra Bàn</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
+                  </button>
+                )}
               </div>
             </form>
           )}
@@ -635,6 +747,15 @@ function ReadingContent() {
           </div>
         </div>
       )}
+
+      {/* Modal Hạn Mức Năng Lượng & Xem Video Nhận Lượt */}
+      <EnergyQuotaModal
+        isOpen={isQuotaModalOpen}
+        onClose={() => setIsQuotaModalOpen(false)}
+        quota={quota}
+        onQuotaUpdated={(newQuota) => setQuota(newQuota)}
+        userId={user?.userId}
+      />
     </div>
   );
 }
