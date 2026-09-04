@@ -2,6 +2,7 @@ export interface UserProfile {
   userId: string | number;
   email: string;
   username: string;
+  displayName?: string;
   zodiacSign: string;
   role: string;
 }
@@ -11,6 +12,7 @@ export interface AuthResponse {
   userId: string | number;
   email: string;
   username: string;
+  displayName?: string;
   zodiacSign: string;
   role: string;
 }
