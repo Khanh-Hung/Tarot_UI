@@ -61,10 +61,10 @@ function VerifyEmailContent() {
     return () => clearTimeout(timer);
   }, [status, countdown]);
 
-  // Tự động chuyển hướng khi đếm ngược về 0
+  // Tự động chuyển hướng về trang cá nhân khi đếm ngược về 0
   useEffect(() => {
     if (status === "success" && countdown === 0) {
-      router.push("/reading");
+      router.push("/profile");
     }
   }, [status, countdown, router]);
 
@@ -103,10 +103,10 @@ function VerifyEmailContent() {
 
             <div className="w-full mt-7 flex flex-col gap-3">
               <Link
-                href="/reading"
+                href="/profile"
                 className="w-full py-3 px-5 rounded-xl font-bold text-sm silver-gradient-btn text-zinc-950 flex items-center justify-center gap-2 shadow-lg shadow-black/30 hover:opacity-95 active:scale-[0.99] transition"
               >
-                <span>Tiếp Tục</span>
+                <span>Về Trang Cá Nhân</span>
                 <ArrowRight className="w-4 h-4 text-zinc-950" />
               </Link>
 
