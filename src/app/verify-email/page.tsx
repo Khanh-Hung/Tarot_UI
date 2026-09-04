@@ -97,8 +97,8 @@ function VerifyEmailContent() {
               Xác Thực Thành Công
             </h2>
 
-            <p className="text-sm text-zinc-400 mt-2 max-w-xs leading-relaxed">
-              Email của bạn đã được xác thực thành công. Cảm ơn bạn!
+            <p className="text-sm text-zinc-400 mt-2.5 max-w-sm leading-relaxed">
+              Xác thực tài khoản hoàn tất! Mọi giới hạn đã được gỡ bỏ, giúp bạn kết nối và trải nghiệm liền mạch tất cả các nền tảng dịch vụ. Cảm ơn bạn đã đồng hành!
             </p>
 
             <div className="w-full mt-7 flex flex-col gap-3">
