@@ -1,4 +1,4 @@
-﻿# https://www.robotstxt.org/robotstxt.html
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 
@@ -6,4 +6,5 @@ Allow: /
 User-agent: Mediapartners-Google
 Allow: /
 
+Sitemap: https://nyxoris.com/sitemap.xml
 Sitemap: https://tarot.nyxoris.com/sitemap.xml
