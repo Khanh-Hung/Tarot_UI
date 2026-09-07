@@ -15,6 +15,9 @@ import {
   Zap,
   Shield,
   FileText,
+  Info,
+  HelpCircle,
+  Heart,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Avatar } from "@/components/ui/Avatar";
@@ -43,9 +46,12 @@ export const Navbar: React.FC = () => {
 
   const [scrolled, setScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isInfoDropdownOpen, setIsInfoDropdownOpen] = useState(false);
   const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
   const [quota, setQuota] = useState<UserQuotaDto | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const infoDropdownRef = useRef<HTMLButtonElement>(null);
+  const infoMenuRef = useRef<HTMLDivElement>(null);
 
   // Lấy hạn mức năng lượng và lắng nghe sự kiện cập nhật
   useEffect(() => {
@@ -123,6 +129,11 @@ export const Navbar: React.FC = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
+      const isClickInsideInfoButton = infoDropdownRef.current && infoDropdownRef.current.contains(event.target as Node);
+      const isClickInsideInfoMenu = infoMenuRef.current && infoMenuRef.current.contains(event.target as Node);
+      if (!isClickInsideInfoButton && !isClickInsideInfoMenu) {
+        setIsInfoDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -194,7 +205,7 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* 🌟 RIGHT: AUTH */}
+          {/* 🌟 RIGHT: AUTH & INFO */}
           <div className="flex-1 flex items-center justify-end gap-2.5 sm:gap-3 transition-all duration-500">
             {isAuthenticated && user ? (
               <>
@@ -231,19 +242,84 @@ export const Navbar: React.FC = () => {
                   </button>
                 )}
 
+                {/* 💡 NÚT TRÒN THÔNG TIN & TRỢ GIÚP (Ở GIỮA: Giữa Lượt bói và Avatar) */}
+                <div>
+                  <button
+                    ref={infoDropdownRef}
+                    type="button"
+                    onClick={() => setIsInfoDropdownOpen(!isInfoDropdownOpen)}
+                    className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm active:scale-95 shrink-0 select-none ${
+                      isInfoDropdownOpen
+                        ? "bg-[#282a32] border-amber-400/80 text-amber-300 ring-1 ring-amber-400/30"
+                        : "bg-[#1f2025] border-[#31333a] hover:border-[#4b4e58] hover:bg-[#25262c] text-zinc-300 hover:text-white"
+                    }`}
+                    title="Thông tin & Trợ giúp"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="relative flex items-center justify-center rounded-full p-0.5 border border-[#3b3d46] bg-[#23242a] hover:border-[#525560] transition-all cursor-pointer shadow-sm active:scale-95 shrink-0 select-none"
                     title={`${user.username} (${user.zodiacSign || "Seeker"})`}
                   >
-                  <Avatar
-                    src={(user as { avatarUrl?: string })?.avatarUrl}
-                    alt={user.username}
-                    size="sm"
-                    className="!rounded-full !size-8 !h-8 !w-8 border-none shrink-0"
-                  />
-                </button>
+                    <Avatar
+                      src={(user as { avatarUrl?: string })?.avatarUrl}
+                      alt={user.username}
+                      size="sm"
+                      className="!rounded-full !size-8 !h-8 !w-8 border-none shrink-0"
+                    />
+                  </button>
+
+                  {/* Menu thả xuống chia rõ 2 phần: Tâm tình & Pháp lý */}
+                  {isInfoDropdownOpen && (
+                    <div
+                      ref={infoMenuRef}
+                      className="absolute right-0 mt-2.5 w-64 overflow-hidden rounded-2xl border border-[#31333a] bg-[#212227] p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-2 select-none"
+                    >
+                      {/* Phần 1: Tâm tình / Lời nhắn */}
+                      <div className="p-1">
+                        <Link
+                          href="/about"
+                          onClick={() => setIsInfoDropdownOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-200 hover:bg-rose-500/15 hover:border-rose-400/40 transition-all group"
+                        >
+                          <Heart className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform fill-rose-400/30 shrink-0" />
+                          <span className="text-xs font-bold text-rose-200">Đôi lời gửi bạn</span>
+                        </Link>
+                      </div>
+
+                      {/* Đường phân cách tinh tế */}
+                      <div className="border-t border-[#2c2e35] my-1.5" />
+
+                      {/* Phần 2: Quy định & Pháp lý minh bạch */}
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        Điều Khoản & Bảo Mật
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <Link
+                          href="/privacy"
+                          onClick={() => setIsInfoDropdownOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
+                        >
+                          <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Chính sách bảo mật</span>
+                        </Link>
+
+                        <Link
+                          href="/terms"
+                          onClick={() => setIsInfoDropdownOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
+                        >
+                          <FileText className="w-4 h-4 text-violet-400 shrink-0" />
+                          <span>Điều khoản dịch vụ</span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
 
                 {isDropdownOpen && (() => {
                   const displayName = (user as { displayName?: string; username?: string })?.displayName || user.username;
@@ -308,24 +384,7 @@ export const Navbar: React.FC = () => {
                       </Link>
                     </div>
 
-                    <div className="border-t border-[#2c2e35] pt-1 mt-1 space-y-0.5">
-                      <Link
-                        href="/privacy"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
-                      >
-                        <Shield className="w-4 h-4 text-amber-400" />
-                        <span>Chính sách bảo mật</span>
-                      </Link>
-                      <Link
-                        href="/terms"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
-                      >
-                        <FileText className="w-4 h-4 text-violet-400" />
-                        <span>Điều khoản dịch vụ</span>
-                      </Link>
-                    </div>
+
 
                     <div className="border-t border-[#2c2e35] pt-1 mt-1">
                       <button
@@ -345,7 +404,72 @@ export const Navbar: React.FC = () => {
               </div>
             </>
             ) : (
-              <div className="flex items-center transition-all duration-500">
+              <div className="flex items-center gap-2.5 transition-all duration-500">
+                {/* 💡 NÚT TRÒN THÔNG TIN & TRỢ GIÚP DÀNH CHO KHÁCH */}
+                <div className="relative">
+                  <button
+                    ref={infoDropdownRef}
+                    type="button"
+                    onClick={() => setIsInfoDropdownOpen(!isInfoDropdownOpen)}
+                    className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm active:scale-95 shrink-0 select-none ${
+                      isInfoDropdownOpen
+                        ? "bg-[#282a32] border-amber-400/80 text-amber-300 ring-1 ring-amber-400/30"
+                        : "bg-[#1f2025] border-[#31333a] hover:border-[#4b4e58] hover:bg-[#25262c] text-zinc-300 hover:text-white"
+                    }`}
+                    title="Thông tin & Trợ giúp"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+
+                  {/* Menu thả xuống chia rõ 2 phần: Tâm tình & Pháp lý */}
+                  {isInfoDropdownOpen && (
+                    <div
+                      ref={infoMenuRef}
+                      className="absolute right-0 mt-2.5 w-64 overflow-hidden rounded-2xl border border-[#31333a] bg-[#212227] p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in slide-in-from-top-2 select-none"
+                    >
+                      {/* Phần 1: Tâm tình / Lời nhắn */}
+                      <div className="p-1">
+                        <Link
+                          href="/about"
+                          onClick={() => setIsInfoDropdownOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-200 hover:bg-rose-500/15 hover:border-rose-400/40 transition-all group"
+                        >
+                          <Heart className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform fill-rose-400/30 shrink-0" />
+                          <span className="text-xs font-bold text-rose-200">Đôi lời gửi bạn</span>
+                        </Link>
+                      </div>
+
+                      {/* Đường phân cách tinh tế */}
+                      <div className="border-t border-[#2c2e35] my-1.5" />
+
+                      {/* Phần 2: Quy định & Pháp lý minh bạch */}
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        Điều Khoản & Bảo Mật
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <Link
+                          href="/privacy"
+                          onClick={() => setIsInfoDropdownOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
+                        >
+                          <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Chính sách bảo mật</span>
+                        </Link>
+
+                        <Link
+                          href="/terms"
+                          onClick={() => setIsInfoDropdownOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
+                        >
+                          <FileText className="w-4 h-4 text-violet-400 shrink-0" />
+                          <span>Điều khoản dịch vụ</span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <Link
                   href="/login"
                   className={`rounded-xl font-bold silver-gradient-btn transition-all duration-300 shadow-md whitespace-nowrap flex items-center gap-1.5 ${

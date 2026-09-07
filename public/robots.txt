@@ -1,0 +1,9 @@
+﻿# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Google AdSense crawler
+User-agent: Mediapartners-Google
+Allow: /
+
+Sitemap: https://tarot.nyxoris.com/sitemap.xml

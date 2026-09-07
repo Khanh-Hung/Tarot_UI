@@ -71,7 +71,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center">
       {/* 🌙 CELESTIAL MOONLIT ORACLE HERO SECTION */}
-      <section className="relative w-full pt-20 pb-16 sm:pt-28 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto text-center flex flex-col items-center overflow-hidden">
+      <section className="relative w-full min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto text-center flex flex-col items-center justify-center overflow-hidden py-12 sm:py-16">
         {/* Vầng hào quang ánh trăng sâu thẳm */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] sm:w-[850px] h-[380px] bg-gradient-to-b from-white/[0.06] via-indigo-500/[0.03] to-transparent rounded-full blur-[130px] pointer-events-none" />
 
@@ -87,7 +87,7 @@ export default function HomePage() {
         <div className="absolute bottom-24 right-1/5 w-1 h-1 rounded-full bg-purple-200 animate-twinkle pointer-events-none shadow-[0_0_6px_purple] [animation-delay:0.8s]" />
 
         {/* 🎴 LÁ BÀI TRÁI BAY BỒNG BỀNH & TỰ ĐỔI 3D */}
-        <div className="hidden lg:block absolute left-2 xl:left-8 top-16 z-0 select-none">
+        <div className="hidden lg:block absolute left-2 xl:left-8 top-1/2 -translate-y-1/2 -mt-10 z-0 select-none">
           <div className="animate-float-slow">
             <AnimatePresence mode="wait">
               <motion.div
@@ -116,7 +116,7 @@ export default function HomePage() {
         </div>
 
         {/* 🎴 LÁ BÀI PHẢI BAY BỒNG BỀNH & TỰ ĐỔI 3D */}
-        <div className="hidden lg:block absolute right-2 xl:right-8 top-16 z-0 select-none">
+        <div className="hidden lg:block absolute right-2 xl:right-8 top-1/2 -translate-y-1/2 -mt-10 z-0 select-none">
           <div className="animate-float-reverse">
             <AnimatePresence mode="wait">
               <motion.div
@@ -144,11 +144,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Micro Pill Badge */}
-        <div className="relative z-10 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/12 text-xs font-medium text-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.04)] backdrop-blur-xl mb-6 hover:border-white/25 transition-all">
-          <Moon className="w-3.5 h-3.5 text-zinc-300" />
-          <span>✦ Nyxoris AI & Chiêm Tinh Học Tarot ✦</span>
-        </div>
 
         {/* Tiêu đề ngắn gọn, siêu sắc nét */}
         <h1 className="relative z-10 text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.12] max-w-3xl mx-auto">
