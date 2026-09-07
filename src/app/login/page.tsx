@@ -127,6 +127,17 @@ export default function LoginPage() {
             Đăng ký ngay
           </Link>
         </p>
+
+        <p className="mt-4 text-[11px] text-zinc-500 text-center">
+          Bằng việc tiếp tục, bạn đồng ý với{" "}
+          <Link href="/terms" className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2">
+            Điều khoản
+          </Link>{" "}
+          và{" "}
+          <Link href="/privacy" className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2">
+            Chính sách bảo mật
+          </Link>
+        </p>
       </div>
     </div>
   );

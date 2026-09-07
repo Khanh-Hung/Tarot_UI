@@ -13,6 +13,8 @@ import {
   User,
   ChevronRight,
   Zap,
+  Shield,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Avatar } from "@/components/ui/Avatar";
@@ -303,6 +305,25 @@ export const Navbar: React.FC = () => {
                       >
                         <BookOpen className="w-4 h-4 text-sky-400" />
                         <span>Thư viện bài</span>
+                      </Link>
+                    </div>
+
+                    <div className="border-t border-[#2c2e35] pt-1 mt-1 space-y-0.5">
+                      <Link
+                        href="/privacy"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
+                      >
+                        <Shield className="w-4 h-4 text-amber-400" />
+                        <span>Chính sách bảo mật</span>
+                      </Link>
+                      <Link
+                        href="/terms"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
+                      >
+                        <FileText className="w-4 h-4 text-violet-400" />
+                        <span>Điều khoản dịch vụ</span>
                       </Link>
                     </div>
 

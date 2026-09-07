@@ -171,6 +171,17 @@ export default function RegisterPage() {
             Đăng nhập
           </Link>
         </p>
+
+        <p className="mt-4 text-[11px] text-zinc-500 text-center">
+          Bằng việc đăng ký, bạn đồng ý với{" "}
+          <Link href="/terms" className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2">
+            Điều khoản
+          </Link>{" "}
+          và{" "}
+          <Link href="/privacy" className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2">
+            Chính sách bảo mật
+          </Link>
+        </p>
       </div>
     </div>
   );
