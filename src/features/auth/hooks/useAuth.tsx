@@ -3,6 +3,7 @@
 import { useEffect, useState, createContext, useContext, ReactNode } from "react";
 import { AuthResponse, LoginCommand, RegisterCommand, UserProfile } from "../types/auth.types";
 import { authService } from "../services/authService";
+import { API_BASE_URL, ACCOUNT_API_BASE_URL } from "@/lib/api";
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -54,6 +55,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Failed to restore auth session:", e);
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  // 🌟 Background pre-warming: Gửi tín hiệu đánh thức ngầm cả 2 cụm máy chủ Render khi người dùng mở web
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const timer = setTimeout(() => {
+        try {
+          fetch(`${ACCOUNT_API_BASE_URL}/`, { method: "GET", mode: "no-cors" }).catch(() => {});
+          fetch(`${API_BASE_URL}/decks`, { method: "GET", mode: "no-cors" }).catch(() => {});
+        } catch {}
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, []);
 

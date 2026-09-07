@@ -17,11 +17,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSlowLoading, setIsSlowLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
     setIsLoading(true);
+    setIsSlowLoading(false);
+
+    // Bật thông báo khởi động máy chủ nếu request kéo dài hơn 2.5 giây (Cold Start)
+    const slowTimer = setTimeout(() => {
+      setIsSlowLoading(true);
+    }, 2500);
 
     try {
       await login({ email, password });
@@ -29,7 +36,9 @@ export default function LoginPage() {
     } catch (err: unknown) {
       setErrorMsg(getFriendlyErrorMessage(err, "Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại."));
     } finally {
+      clearTimeout(slowTimer);
       setIsLoading(false);
+      setIsSlowLoading(false);
     }
   };
 
@@ -119,6 +128,13 @@ export default function LoginPage() {
               </>
             )}
           </button>
+
+          {isSlowLoading && (
+            <div className="w-full p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 text-center animate-in fade-in duration-300 flex items-center justify-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <span>Máy chủ đang khởi động sau thời gian nghỉ, xin bạn đợi giây lát nhé...</span>
+            </div>
+          )}
         </form>
 
         <p className="mt-6 text-xs text-zinc-400 text-center">
