@@ -93,10 +93,12 @@ export default function PrivacyPage() {
             <Mail className="w-4 h-4 text-amber-400" /> 4. Kết Nối & Hỗ Trợ
           </h2>
           <p className="text-zinc-300">
-            Nếu có bất kỳ câu hỏi, băn khoăn hay góp ý nào về quyền riêng tư, bạn cứ nhắn cho mình qua email:{" "}
+            Nếu có bất kỳ câu hỏi, băn khoăn hay góp ý nào về quyền riêng tư, bạn cứ nhắn cho mình qua
+            <br />
+            email:{" "}
             <a
               href="mailto:suzji.mailer@gmail.com"
-              className="text-amber-300 hover:underline font-medium font-mono text-xs"
+              className="text-amber-300 hover:underline font-medium text-sm"
             >
               suzji.mailer@gmail.com
             </a>.

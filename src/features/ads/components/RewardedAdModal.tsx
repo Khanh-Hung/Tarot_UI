@@ -198,7 +198,7 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
               ) : (
                 <div className="flex items-center gap-1.5 rounded-full bg-black/60 border border-zinc-700/60 px-3 py-1 text-xs font-medium text-zinc-300 shadow-md backdrop-blur-md">
                   <span>Có thể nhận thưởng sau:</span>
-                  <span className="font-bold text-zinc-100 font-mono text-sm">
+                  <span className="font-bold text-zinc-100 tabular-nums text-sm">
                     {secondsRemaining}s
                   </span>
                 </div>

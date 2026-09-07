@@ -412,7 +412,7 @@ function DecksContent() {
                               <span className="text-xs font-medium truncate">{cat.label}</span>
                             </div>
                             <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded-md border font-mono shrink-0 transition-colors ${
+                              className={`text-[10px] px-1.5 py-0.5 rounded-md border shrink-0 transition-colors ${
                                 isSelected
                                   ? "text-amber-300 bg-amber-400/20 border-amber-400/40 font-bold"
                                   : "text-zinc-400 bg-black/40 border-white/5"

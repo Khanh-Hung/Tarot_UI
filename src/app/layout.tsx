@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/features/auth/hooks/useAuth";
 import { Navbar } from "@/components/layout/Navbar";
@@ -8,11 +8,6 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
   subsets: ["latin", "vietnamese"],
   weight: ["400", "500", "600", "700", "800"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin", "vietnamese"],
 });
 
 export const metadata: Metadata = {
@@ -31,7 +26,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} dark h-screen overflow-hidden antialiased`}
+      className={`${plusJakartaSans.variable} dark h-screen overflow-hidden antialiased`}
     >
       <body
         className="h-screen overflow-hidden flex flex-col bg-[#18191c] text-zinc-100 font-sans selection:bg-zinc-200 selection:text-zinc-950"
