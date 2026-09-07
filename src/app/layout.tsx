@@ -28,6 +28,13 @@ export default function RootLayout({
       lang="vi"
       className={`${plusJakartaSans.variable} dark h-screen overflow-hidden antialiased`}
     >
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9966212611195303"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body
         className="h-screen overflow-hidden flex flex-col bg-[#18191c] text-zinc-100 font-sans selection:bg-zinc-200 selection:text-zinc-950"
       >
