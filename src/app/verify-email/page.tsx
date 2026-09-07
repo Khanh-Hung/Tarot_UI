@@ -13,27 +13,12 @@ function VerifyEmailContent() {
   const { markEmailAsVerified } = useAuth();
 
   const token = searchParams.get("token");
-  const preview = searchParams.get("preview");
-  const isPreview = Boolean(preview);
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [countdown, setCountdown] = useState<number>(4);
 
   useEffect(() => {
-    // Cho phép xem trước giao diện trực tiếp mà không cần token hay xác thực thật
-    if (preview) {
-      if (preview === "success") {
-        setStatus("success");
-      } else if (preview === "error") {
-        setStatus("error");
-        setErrorMessage("Liên kết xác thực không hợp lệ hoặc đã hết hạn (24 giờ). Vui lòng yêu cầu một liên kết mới.");
-      } else if (preview === "loading") {
-        setStatus("loading");
-      }
-      return;
-    }
-
     if (!token) {
       setStatus("error");
       setErrorMessage("Không tìm thấy liên kết hoặc mã kích hoạt hợp lệ trong đường dẫn.");
@@ -65,24 +50,23 @@ function VerifyEmailContent() {
     return () => {
       isMounted = false;
     };
-  }, [token, preview]);
+  }, [token]);
 
-  // Đếm ngược từng giây khi xác thực thành công (tạm dừng nếu đang bật chế độ preview)
+  // Đếm ngược từng giây khi xác thực thành công
   useEffect(() => {
-    if (isPreview || status !== "success" || countdown <= 0) return;
+    if (status !== "success" || countdown <= 0) return;
     const timer = setTimeout(() => {
       setCountdown((prev) => prev - 1);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [isPreview, status, countdown]);
+  }, [status, countdown]);
 
   // Tự động chuyển hướng về trang cá nhân khi đếm ngược về 0
   useEffect(() => {
-    if (isPreview) return;
     if (status === "success" && countdown === 0) {
       router.push("/profile");
     }
-  }, [isPreview, status, countdown, router]);
+  }, [status, countdown, router]);
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
@@ -114,7 +98,7 @@ function VerifyEmailContent() {
             </h2>
 
             <p className="text-sm text-zinc-400 mt-2.5 max-w-sm leading-relaxed">
-              Xác thực tài khoản hoàn tất! Mọi giới hạn đã được gỡ bỏ, giúp bạn kết nối và trải nghiệm liền mạch tất cả các nền tảng dịch vụ. Cảm ơn bạn đã đồng hành!
+              Tài khoản đã được xác thực thành công. Bạn có thể sử dụng đầy đủ mọi dịch vụ trên toàn hệ thống.
             </p>
 
             <div className="w-full mt-7 flex flex-col gap-3">
@@ -127,9 +111,7 @@ function VerifyEmailContent() {
               </Link>
 
               <p className="text-xs text-zinc-500 mt-1">
-                {isPreview
-                  ? "Chế độ xem trước (Không tự động chuyển trang)"
-                  : `Tự động chuyển tiếp sau ${countdown} giây...`}
+                Tự động chuyển tiếp sau {countdown} giây...
               </p>
             </div>
           </div>
