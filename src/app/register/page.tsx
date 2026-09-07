@@ -37,10 +37,10 @@ export default function RegisterPage() {
     setIsLoading(true);
     setIsSlowLoading(false);
 
-    // Bật thông báo khởi động máy chủ nếu request kéo dài hơn 2.5 giây (Cold Start)
+    // Bật thông báo khởi động máy chủ nếu request kéo dài hơn 3.5 giây (Cold Start)
     const slowTimer = setTimeout(() => {
       setIsSlowLoading(true);
-    }, 2500);
+    }, 3500);
 
     try {
       await register({ email, password });
