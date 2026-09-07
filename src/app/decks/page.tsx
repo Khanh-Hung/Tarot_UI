@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -209,12 +210,13 @@ function DecksContent() {
             >
               <div className="flex items-center gap-3 min-w-0">
                 {currentDeck?.coverImageUrl && (
-                  <div className="w-8 sm:w-9 aspect-[1/1.6] shrink-0 rounded-lg overflow-hidden bg-black/60 border border-white/15 shadow">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                  <div className="w-8 sm:w-9 aspect-[1/1.6] shrink-0 rounded-lg overflow-hidden bg-black/60 border border-white/15 shadow relative">
+                    <Image
                       src={currentDeck.coverImageUrl}
                       alt={currentDeck.nameVi}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="36px"
+                      className="object-cover"
                     />
                   </div>
                 )}
@@ -260,12 +262,13 @@ function DecksContent() {
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         {deck.coverImageUrl && (
-                          <div className="w-7 aspect-[1/1.6] shrink-0 rounded-md overflow-hidden bg-black/60 border border-white/10 shadow">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                          <div className="w-7 aspect-[1/1.6] shrink-0 rounded-md overflow-hidden bg-black/60 border border-white/10 shadow relative">
+                            <Image
                               src={deck.coverImageUrl}
                               alt={deck.nameVi}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="28px"
+                              className="object-cover"
                             />
                           </div>
                         )}
@@ -477,11 +480,12 @@ function DecksContent() {
               {/* Ảnh lá bài */}
               <div className="aspect-[1/1.7] w-full rounded-xl overflow-hidden bg-black/60 border border-[#31333a] mb-2.5 relative group-hover:border-amber-300/40 transition">
                 {card.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={card.imageUrl}
                     alt={card.nameVi}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
+                    fill
+                    sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 15vw"
+                    className="object-cover object-center group-hover:scale-105 transition duration-500"
                     loading="lazy"
                   />
                 ) : (
@@ -540,12 +544,13 @@ function DecksContent() {
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
                 {/* Cột trái: Ảnh lá bài */}
                 <div className="sm:col-span-5 flex flex-col items-center">
-                  <div className="w-full max-w-[150px] aspect-[1/1.65] rounded-xl overflow-hidden bg-black/80 shadow-lg">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                  <div className="w-full max-w-[150px] aspect-[1/1.65] rounded-xl overflow-hidden bg-black/80 shadow-lg relative">
+                    <Image
                       src={selectedCard.imageUrl || "/cards/card-back.jpg"}
                       alt={selectedCard.nameVi}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="150px"
+                      className="object-cover"
                     />
                   </div>
                   <div className="mt-2.5 text-center">

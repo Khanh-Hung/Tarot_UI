@@ -17,26 +17,68 @@ const cachedCardsByDeck = new Map<string, CardDto[]>();
 
 export const tarotService = {
   /**
-   * Lấy danh sách bộ bài Tarot (kèm in-memory cache)
+   * Lấy danh sách bộ bài Tarot (kèm in-memory & sessionStorage cache)
    */
   async getDecks(forceRefresh = false): Promise<DeckDto[]> {
     if (!forceRefresh && cachedDecks && cachedDecks.length > 0) {
       return cachedDecks;
     }
+    if (typeof window !== "undefined" && !forceRefresh) {
+      try {
+        const stored = sessionStorage.getItem("tarot_cached_decks");
+        if (stored) {
+          const parsed = JSON.parse(stored) as DeckDto[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            cachedDecks = parsed;
+            return parsed;
+          }
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
     const response = await apiClient.get<DeckDto[]>("/decks");
     cachedDecks = response.data;
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("tarot_cached_decks", JSON.stringify(response.data));
+      } catch {
+        // ignore storage error
+      }
+    }
     return response.data;
   },
 
   /**
-   * Lấy 78 lá bài của bộ bài (kèm in-memory cache theo deckCode)
+   * Lấy 78 lá bài của bộ bài (kèm in-memory & sessionStorage cache theo deckCode)
    */
   async getCardsByDeck(deckCode: string, forceRefresh = false): Promise<CardDto[]> {
     if (!forceRefresh && cachedCardsByDeck.has(deckCode)) {
       return cachedCardsByDeck.get(deckCode)!;
     }
+    if (typeof window !== "undefined" && !forceRefresh) {
+      try {
+        const stored = sessionStorage.getItem(`tarot_cards_${deckCode}`);
+        if (stored) {
+          const parsed = JSON.parse(stored) as CardDto[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            cachedCardsByDeck.set(deckCode, parsed);
+            return parsed;
+          }
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
     const response = await apiClient.get<CardDto[]>(`/decks/${deckCode}/cards`);
     cachedCardsByDeck.set(deckCode, response.data);
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(`tarot_cards_${deckCode}`, JSON.stringify(response.data));
+      } catch {
+        // ignore storage error
+      }
+    }
     return response.data;
   },
 
@@ -46,6 +88,16 @@ export const tarotService = {
   clearTarotCache() {
     cachedDecks = null;
     cachedCardsByDeck.clear();
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("tarot_cached_decks");
+        sessionStorage.removeItem("tarot_cards_RIDER_WAITE_CLASSIC");
+        sessionStorage.removeItem("tarot_cards_THOTH_ALEISTER");
+        sessionStorage.removeItem("tarot_cards_MARSEILLE_HERMETIC");
+      } catch {
+        // ignore
+      }
+    }
   },
 
   async createReading(command: CreateReadingCommand): Promise<CreateReadingResponse> {
