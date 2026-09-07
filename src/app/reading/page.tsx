@@ -179,15 +179,9 @@ function ReadingContent() {
   }, []);
 
   const handleRefreshAiSuggestions = async () => {
+    if (isGeneratingSuggestions) return;
     setIsGeneratingSuggestions(true);
 
-    // Lọc ra các câu hỏi không nằm trong 3 câu hiện tại (đảm bảo 100% đổi mới tức thì)
-    const candidates = QUESTION_POOLS.filter((q) => !aiSuggestions.includes(q));
-    const shuffled = [...candidates].sort(() => 0.5 - Math.random());
-    const nextThree = shuffled.slice(0, 3);
-    setAiSuggestions(nextThree);
-
-    // Đồng thời gọi Backend AI để lấy 3 câu mới do Gemini trực tiếp sáng tạo
     try {
       const data = await tarotService.getSuggestedQuestions(
         spreadType,
@@ -195,9 +189,15 @@ function ReadingContent() {
       );
       if (data && data.length >= 3) {
         setAiSuggestions(data.slice(0, 3));
+      } else {
+        const candidates = QUESTION_POOLS.filter((q) => !aiSuggestions.includes(q));
+        const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+        setAiSuggestions(shuffled.slice(0, 3));
       }
     } catch {
-      // Giữ nextThree tức thì
+      const candidates = QUESTION_POOLS.filter((q) => !aiSuggestions.includes(q));
+      const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+      setAiSuggestions(shuffled.slice(0, 3));
     } finally {
       setIsGeneratingSuggestions(false);
     }
