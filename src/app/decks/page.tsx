@@ -42,6 +42,7 @@ function DecksContent() {
   const [selectedCard, setSelectedCard] = useState<CardDto | null>(null);
   const [isDeckDropdownOpen, setIsDeckDropdownOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isCategoryOpenUpwards, setIsCategoryOpenUpwards] = useState(false);
   const [isDeckLoreModalOpen, setIsDeckLoreModalOpen] = useState(false);
   const deckDropdownRef = useRef<HTMLDivElement>(null);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
@@ -369,8 +370,16 @@ function DecksContent() {
                 <div ref={categoryDropdownRef} className="relative w-full sm:w-52 shrink-0">
                   <button
                     type="button"
-                    onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                    className={`w-full h-10 px-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 select-none text-left ${
+                    onClick={() => {
+                      if (!isCategoryDropdownOpen && categoryDropdownRef.current) {
+                        const rect = categoryDropdownRef.current.getBoundingClientRect();
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        // Nếu khoảng trống bên dưới còn ít hơn 250px và bên trên đủ chỗ thì lật lên trên
+                        setIsCategoryOpenUpwards(spaceBelow < 250 && rect.top > 250);
+                      }
+                      setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
+                    }}
+                    className={`w-full h-10 px-3 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 select-none text-left ${
                       isCategoryDropdownOpen
                         ? "bg-[#23242a] border-amber-400/80 shadow-lg ring-1 ring-amber-400/30 text-amber-200"
                         : activeCategory !== "ALL"
@@ -385,44 +394,52 @@ function DecksContent() {
                     <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 shrink-0 ${isCategoryDropdownOpen ? "rotate-180 text-amber-300" : ""}`} />
                   </button>
 
-                  {/* Menu danh mục thả xuống nhỏ gọn & chống tràn màn hình */}
+                  {/* Menu danh mục thả xuống: Gọn gàng, vừa khít nút bấm, cuộn mượt và tự xoay lên nếu thiếu chỗ */}
                   {isCategoryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1.5 w-full sm:w-60 max-h-[60vh] overflow-y-auto z-50 rounded-2xl bg-[#1c1d22]/95 backdrop-blur-xl border border-[#31333a] shadow-2xl p-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-2">
-                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 border-b border-[#2c2e35] mb-1 flex items-center justify-between">
+                    <div
+                      className={`absolute left-0 w-full z-50 rounded-2xl bg-[#1c1d22]/98 backdrop-blur-xl border border-[#31333a] shadow-2xl p-1.5 animate-in fade-in ${
+                        isCategoryOpenUpwards
+                          ? "bottom-full mb-1.5 slide-in-from-bottom-2"
+                          : "top-full mt-1.5 slide-in-from-top-2"
+                      }`}
+                    >
+                      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 border-b border-[#2c2e35] mb-1 flex items-center justify-between">
                         <span>Danh Mục</span>
                         <span>8 Nhóm</span>
                       </div>
-                      {CATEGORY_OPTIONS.map((cat) => {
-                        const isSelected = activeCategory === cat.key;
-                        return (
-                          <div
-                            key={cat.key}
-                            onClick={() => {
-                              setActiveCategory(cat.key);
-                              setIsCategoryDropdownOpen(false);
-                            }}
-                            className={`px-2.5 py-1.5 rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 select-none ${
-                              isSelected
-                                ? "bg-[#282a32] text-amber-200 border border-amber-400/30 font-semibold"
-                                : "hover:bg-[#23242a] text-zinc-200 hover:text-white"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="shrink-0">{cat.icon}</span>
-                              <span className="text-xs font-medium truncate">{cat.label}</span>
-                            </div>
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded-md border shrink-0 transition-colors ${
+                      <div className="max-h-52 overflow-y-auto space-y-0.5 pr-0.5 custom-scrollbar">
+                        {CATEGORY_OPTIONS.map((cat) => {
+                          const isSelected = activeCategory === cat.key;
+                          return (
+                            <div
+                              key={cat.key}
+                              onClick={() => {
+                                setActiveCategory(cat.key);
+                                setIsCategoryDropdownOpen(false);
+                              }}
+                              className={`px-2 py-1.5 rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 select-none ${
                                 isSelected
-                                  ? "text-amber-300 bg-amber-400/20 border-amber-400/40 font-bold"
-                                  : "text-zinc-400 bg-black/40 border-white/5"
+                                  ? "bg-[#282a32] text-amber-200 border border-amber-400/30 font-semibold"
+                                  : "hover:bg-[#23242a] text-zinc-200 hover:text-white"
                               }`}
                             >
-                              {cat.countBadge}
-                            </span>
-                          </div>
-                        );
-                      })}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="shrink-0">{cat.icon}</span>
+                                <span className="text-xs font-medium truncate">{cat.label}</span>
+                              </div>
+                              <span
+                                className={`text-[9px] px-1.5 py-0.5 rounded-md border shrink-0 transition-colors ${
+                                  isSelected
+                                    ? "text-amber-300 bg-amber-400/20 border-amber-400/40 font-bold"
+                                    : "text-zinc-400 bg-black/40 border-white/5"
+                                }`}
+                              >
+                                {cat.countBadge}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
