@@ -183,10 +183,13 @@ function ReadingContent() {
     setIsGeneratingSuggestions(true);
 
     try {
-      const data = await tarotService.getSuggestedQuestions(
-        spreadType,
-        selectedZodiac && selectedZodiac !== "UNKNOWN" ? selectedZodiac : undefined
-      );
+      const [data] = await Promise.all([
+        tarotService.getSuggestedQuestions(
+          spreadType,
+          selectedZodiac && selectedZodiac !== "UNKNOWN" ? selectedZodiac : undefined
+        ),
+        new Promise((resolve) => setTimeout(resolve, 450)), // Đảm bảo skeleton hiển thị mượt mà, không bị chớp giật
+      ]);
       if (data && data.length >= 3) {
         setAiSuggestions(data.slice(0, 3));
       } else {
@@ -432,34 +435,52 @@ function ReadingContent() {
                   </button>
                 </div>
 
-                <div key={aiSuggestions.join("-")} className="space-y-1.5 animate-in fade-in duration-200">
-                  {aiSuggestions.map((preset, idx) => {
-                    const isSelected = question === preset;
-                    return (
-                      <button
+                {isGeneratingSuggestions ? (
+                  <div className="space-y-1.5 animate-in fade-in duration-150" aria-label="Đang tải gợi ý mới">
+                    {[
+                      "w-4/5 sm:w-3/4",
+                      "w-3/4 sm:w-2/3",
+                      "w-5/6 sm:w-4/5",
+                    ].map((widthClass, idx) => (
+                      <div
                         key={idx}
-                        type="button"
-                        onClick={() => setQuestion(preset)}
-                        className={`w-full text-left px-3.5 py-2.5 rounded-xl border text-xs transition-all cursor-pointer flex items-center justify-between gap-2 group active:scale-[0.99] ${
-                          isSelected
-                            ? "bg-amber-400/10 border-amber-400/70 text-amber-200 ring-1 ring-amber-400/30 shadow-sm"
-                            : "bg-[#212227] hover:bg-[#282a32] border-[#31333a] hover:border-zinc-500 text-zinc-300 hover:text-zinc-100"
-                        }`}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#31333a] bg-[#212227] flex items-center justify-between gap-2 animate-pulse"
                       >
-                        <span className="truncate">{preset}</span>
-                        <span
-                          className={`text-[10px] shrink-0 font-medium transition-opacity ${
+                        <div className={`h-3.5 ${widthClass} rounded-md bg-white/[0.08]`} />
+                        <div className="w-14 h-3 rounded-md bg-white/[0.04] shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div key={aiSuggestions.join("-")} className="space-y-1.5 animate-in fade-in duration-200">
+                    {aiSuggestions.map((preset, idx) => {
+                      const isSelected = question === preset;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setQuestion(preset)}
+                          className={`w-full text-left px-3.5 py-2.5 rounded-xl border text-xs transition-all cursor-pointer flex items-center justify-between gap-2 group active:scale-[0.99] ${
                             isSelected
-                              ? "text-amber-300 opacity-100 flex items-center gap-1 font-bold"
-                              : "text-zinc-500 group-hover:text-amber-300 opacity-0 group-hover:opacity-100"
+                              ? "bg-amber-400/10 border-amber-400/70 text-amber-200 ring-1 ring-amber-400/30 shadow-sm"
+                              : "bg-[#212227] hover:bg-[#282a32] border-[#31333a] hover:border-zinc-500 text-zinc-300 hover:text-zinc-100"
                           }`}
                         >
-                          {isSelected ? "✓ Đã chọn" : "Dùng câu này ➔"}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                          <span className="truncate">{preset}</span>
+                          <span
+                            className={`text-[10px] shrink-0 font-medium transition-opacity ${
+                              isSelected
+                                ? "text-amber-300 opacity-100 flex items-center gap-1 font-bold"
+                                : "text-zinc-500 group-hover:text-amber-300 opacity-0 group-hover:opacity-100"
+                            }`}
+                          >
+                            {isSelected ? "✓ Đã chọn" : "Dùng câu này ➔"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <button
