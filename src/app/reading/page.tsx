@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, HelpCircle, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, ArrowLeft, Moon, BookOpen, Layers, CheckCircle2, Edit3, Zap, Video, Gift } from "lucide-react";
+import { Sparkles, HelpCircle, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, ArrowLeft, Moon, BookOpen, Layers, CheckCircle2, Edit3, Zap, Video, Gift, Share2 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   CreateReadingResponse,
@@ -19,6 +19,7 @@ import { ChatBox } from "@/features/chat/components/ChatBox";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
 import { getFriendlyErrorMessage } from "@/lib/errorMapping";
 import { EnergyQuotaModal } from "@/features/ads/components/EnergyQuotaModal";
+import { ShareTarotStoryModal } from "@/features/tarot/components/ShareTarotStoryModal";
 
 import { ThreeTarotFan } from "@/features/tarot/components/ThreeTarotFan";
 import { ReadingFormSkeleton } from "@/components/ui/Skeleton";
@@ -134,6 +135,7 @@ function ReadingContent() {
   const [step, setStep] = useState<1 | 2>(1);
   const [quota, setQuota] = useState<UserQuotaDto | null>(null);
   const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Lấy và đồng bộ hạn mức lượt bói của người dùng
   useEffect(() => {
@@ -709,14 +711,34 @@ function ReadingContent() {
       {/* 📜 GIAI ĐOẠN 3: KHI ĐÃ CÓ KẾT QUẢ -> BÀN TRẢI BÀI 3D + BẢN LUẬN GIẢI + CHAT */}
       {stage === "RESULT" && readingResult && (
         <div className="space-y-6 sm:space-y-8 animate-fade-in">
-          {/* Header câu hỏi: Nhỏ gọn, tinh tế, tự ẩn khi không có câu hỏi */}
-          {readingResult.userQuestion?.trim() && (
-            <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-base sm:text-lg font-semibold text-amber-100/90 leading-snug">
-                &ldquo;{readingResult.userQuestion.trim()}&rdquo;
-              </h2>
+          {/* Header câu hỏi & Nút Xuất Ảnh Story */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+            <div className="text-center sm:text-left">
+              {readingResult.userQuestion?.trim() ? (
+                <h2 className="text-base sm:text-lg font-semibold text-amber-100/90 leading-snug">
+                  &ldquo;{readingResult.userQuestion.trim()}&rdquo;
+                </h2>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-zinc-300 font-medium">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>
+                    {readingResult.drawnCards.length === 1
+                      ? "Thông Điệp Quẻ Bài Ngày Mới (1 Lá)"
+                      : `Trải Bài 3 Lá (${SPREAD_OPTIONS.find((s) => s.type === spreadType)?.title || "Chuyên Sâu"})`}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-sky-500/20 hover:from-amber-500/30 hover:via-purple-500/30 hover:to-sky-500/30 border border-amber-500/40 hover:border-amber-400 text-amber-200 hover:text-amber-100 font-semibold text-xs flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-95 transition cursor-pointer shrink-0"
+            >
+              <Share2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Xuất Ảnh Story / Chia Sẻ ✨</span>
+            </button>
+          </div>
 
           {/* BÀN TRẢI BÀI */}
           <div className="py-6 px-4 rounded-2xl border border-[#31333a] bg-[#191a1e] shadow-xl">
@@ -746,7 +768,16 @@ function ReadingContent() {
             <ChatBox readingId={readingResult.id || readingResult.readingId || 0} />
           </div>
 
-          <div className="text-center pt-6">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-6">
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="px-6 py-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 hover:text-amber-100 font-semibold text-sm inline-flex items-center gap-2 transition cursor-pointer shadow-md hover:scale-[1.01] active:scale-95"
+            >
+              <Share2 className="w-4 h-4 text-amber-400" />
+              <span>Xuất Ảnh Story / Chia Sẻ</span>
+            </button>
+
             <button
               onClick={handleReset}
               className="px-6 py-3 rounded-2xl border border-[#3b3d46] bg-[#23242a] hover:bg-[#2b2c33] hover:border-[#525560] text-zinc-200 hover:text-white font-medium text-sm inline-flex items-center gap-2 transition cursor-pointer"
@@ -782,6 +813,16 @@ function ReadingContent() {
         onQuotaUpdated={(newQuota) => setQuota(newQuota)}
         userId={user?.userId}
       />
+
+      {/* Modal Xuất Ảnh Story Quẻ Bài */}
+      {readingResult && (
+        <ShareTarotStoryModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          reading={readingResult}
+          zodiacSign={selectedZodiac}
+        />
+      )}
     </div>
   );
 }

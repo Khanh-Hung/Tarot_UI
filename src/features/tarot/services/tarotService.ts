@@ -174,4 +174,14 @@ export const tarotService = {
     });
     return response.data;
   },
+
+  async generateConclusionQuote(readingId: string | number): Promise<string> {
+    try {
+      const response = await apiClient.post<{ conclusion?: string } | string>(`/readings/${readingId}/conclude`);
+      if (typeof response.data === "string") return response.data;
+      return response.data?.conclusion || "";
+    } catch {
+      return "";
+    }
+  },
 };

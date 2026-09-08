@@ -250,13 +250,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ readingId, initialMessages = [
             </div>
             <div>
               <h4 className="text-xs font-semibold text-zinc-100 flex items-center gap-1.5 justify-center sm:justify-start">
-                <span>Trò chuyện trực tiếp cùng AI Reader</span>
+                <span>Lắng nghe thông điệp sâu hơn</span>
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               </h4>
               <p className="text-[11px] text-zinc-400 mt-0.5">
                 {isLinkSent
-                  ? "Đã gửi link kích hoạt! Vui lòng kiểm tra Hộp thư đến (hoặc mục Spam / Thư rác nhé)."
-                  : "Xác thực email tài khoản để mở khóa đối thoại chuyên sâu về quẻ bài của bạn."}
+                  ? "Đã gửi link kích hoạt! Vui lòng kiểm tra Hộp thư đến (hoặc mục Thư rác / Spam)."
+                  : "Kích hoạt tài khoản để đặt câu hỏi và tìm kiếm câu trả lời trọn vẹn hơn."}
               </p>
             </div>
           </div>

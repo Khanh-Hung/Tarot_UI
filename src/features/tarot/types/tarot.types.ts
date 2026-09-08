@@ -96,6 +96,7 @@ export interface CreateReadingResponse {
   userQuestion: string;
   topic?: Topic;
   spreadType: SpreadType;
+  zodiacSign?: ZodiacSign;
   initialReading: string;
   createdAt: string;
   drawnCards: DrawnCardDto[];
@@ -115,6 +116,7 @@ export interface ReadingDetailResponse {
   userQuestion: string;
   topic?: Topic;
   spreadType: SpreadType;
+  zodiacSign?: ZodiacSign;
   deckCode: DeckCode;
   initialReading: string;
   createdAt: string;

@@ -3,13 +3,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, MessageSquare, Loader2, Share2 } from "lucide-react";
 import { ReadingDetailResponse } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { TarotCard3D } from "@/features/tarot/components/TarotCard3D";
 import { MarkdownRenderer } from "@/features/chat/components/MarkdownRenderer";
 import { ChatBox } from "@/features/chat/components/ChatBox";
 import { ReadingDetailSkeleton } from "@/components/ui/Skeleton";
+import { ShareTarotStoryModal } from "@/features/tarot/components/ShareTarotStoryModal";
 
 const getTopicLabel = (topic?: string) => {
   switch (topic) {
@@ -33,6 +34,7 @@ export default function HistoryDetailPage() {
 
   const [reading, setReading] = useState<ReadingDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const loadDetail = useCallback(async (id: string) => {
     try {
@@ -70,14 +72,25 @@ export default function HistoryDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-      {/* Back button */}
-      <Link
-        href="/history"
-        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Quay lại Lịch Sử Quẻ Bói</span>
-      </Link>
+      {/* Top bar with back button & export button */}
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/history"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Quay lại Lịch Sử Quẻ Bói</span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => setIsShareModalOpen(true)}
+          className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-sky-500/20 border border-amber-500/35 hover:border-amber-400 text-amber-200 hover:text-amber-100 font-semibold text-xs flex items-center gap-1.5 shadow-sm transition hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          <Share2 className="w-3.5 h-3.5 text-amber-400" />
+          <span>Xuất Ảnh Story ✨</span>
+        </button>
+      </div>
 
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
@@ -124,6 +137,14 @@ export default function HistoryDetailPage() {
           initialMessages={reading.chatMessages || []}
         />
       </div>
+
+      {/* Modal Xuất Ảnh Story Quẻ Bài */}
+      <ShareTarotStoryModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        reading={reading}
+        zodiacSign={reading.zodiacSign}
+      />
     </div>
   );
 }

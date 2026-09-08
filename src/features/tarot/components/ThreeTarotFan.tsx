@@ -300,8 +300,6 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     textureLoaderRef.current.load(card.imageUrl, (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.anisotropy = 4;
-      tex.center.set(0.5, 0.5);
-      tex.repeat.set(-1, 1);
       const mesh = meshGroup.children[0] as THREE.Mesh;
       if (mesh && Array.isArray(mesh.material)) {
         const frontMat = mesh.material[5] as THREE.MeshStandardMaterial;
