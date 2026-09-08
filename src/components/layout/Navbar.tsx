@@ -18,12 +18,13 @@ import {
   Info,
   HelpCircle,
   Heart,
+  Flame,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Avatar } from "@/components/ui/Avatar";
 import { EnergyQuotaModal } from "@/features/ads/components/EnergyQuotaModal";
-import { tarotService } from "@/features/tarot/services/tarotService";
-import { UserQuotaDto } from "@/features/tarot/types/tarot.types";
+import { useQuota } from "@/features/tarot/hooks/useQuota";
+import { RealisticFlameIcon } from "@/features/tarot/components/RealisticFlameIcon";
 
 const ZODIAC_LABEL_MAP: Record<string, string> = {
   ARIES: "Bạch Dương",
@@ -43,47 +44,15 @@ const ZODIAC_LABEL_MAP: Record<string, string> = {
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
+  const { quota, updateQuotaLocal } = useQuota();
 
   const [scrolled, setScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isInfoDropdownOpen, setIsInfoDropdownOpen] = useState(false);
   const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
-  const [quota, setQuota] = useState<UserQuotaDto | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const infoDropdownRef = useRef<HTMLButtonElement>(null);
   const infoMenuRef = useRef<HTMLDivElement>(null);
-
-  // Lấy hạn mức năng lượng và lắng nghe sự kiện cập nhật
-  useEffect(() => {
-    if (!isAuthenticated || !user?.userId) {
-      setQuota(null);
-      return;
-    }
-
-    const fetchQuota = async () => {
-      try {
-        const data = await tarotService.getUserQuota(user.userId);
-        setQuota(data);
-      } catch (err) {
-        // Silent catch in dev
-      }
-    };
-
-    fetchQuota();
-
-    const handleQuotaUpdated = (event: any) => {
-      if (event?.detail) {
-        setQuota(event.detail);
-      } else {
-        fetchQuota();
-      }
-    };
-
-    window.addEventListener("tarot_quota_updated", handleQuotaUpdated);
-    return () => {
-      window.removeEventListener("tarot_quota_updated", handleQuotaUpdated);
-    };
-  }, [isAuthenticated, user?.userId]);
 
   useEffect(() => {
     const container = document.getElementById("main-scroll-container");
@@ -366,6 +335,26 @@ export const Navbar: React.FC = () => {
                       </Link>
 
                       <Link
+                        href="/streak"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center justify-between gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <RealisticFlameIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          <span>Chuỗi đồng hành</span>
+                        </div>
+                        {(quota?.currentStreak ?? 0) > 0 ? (
+                          <span className="text-xs font-semibold text-amber-400">
+                            {quota?.currentStreak} ngày
+                          </span>
+                        ) : (
+                          <span className="text-xs text-zinc-500">
+                            0 ngày
+                          </span>
+                        )}
+                      </Link>
+
+                      <Link
                         href="/history"
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-[#2b2c33] hover:text-zinc-100 transition-colors"
@@ -490,7 +479,7 @@ export const Navbar: React.FC = () => {
         isOpen={isQuotaModalOpen}
         onClose={() => setIsQuotaModalOpen(false)}
         quota={quota}
-        onQuotaUpdated={(newQuota) => setQuota(newQuota)}
+        onQuotaUpdated={updateQuotaLocal}
         userId={user?.userId}
       />
     </header>

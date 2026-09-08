@@ -9,6 +9,9 @@ export interface ProfileDto {
   zodiacSign?: ZodiacSign | null;
   favoriteDeckId?: string | null;
   isEmailVerified?: boolean;
+  currentStreak?: number;
+  longestStreak?: number;
+  isStreakActiveToday?: boolean;
 }
 
 export interface UpdateMyProfileCommand {

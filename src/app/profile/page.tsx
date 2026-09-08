@@ -289,7 +289,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-
       {/* 🌟 PROFILE FORM */}
       <div className="rounded-3xl border border-[#2b2d35] bg-[#191a1e] p-6 sm:p-8 shadow-xl">
         <form onSubmit={handleSave} className="space-y-6">

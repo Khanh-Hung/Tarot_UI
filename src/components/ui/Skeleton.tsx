@@ -341,3 +341,127 @@ export function AuthFormSkeleton() {
     </div>
   );
 }
+
+// 🌟 SKELETON CHO TRANG XÁC THỰC EMAIL (VERIFY EMAIL)
+export function VerifyEmailSkeleton() {
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 animate-in fade-in duration-300">
+      <div className="w-full max-w-md bg-[#1a1b1f] border border-white/[0.08] rounded-3xl p-8 sm:p-10 shadow-2xl shadow-black/80 text-center space-y-6">
+        <Skeleton className="w-16 h-16 rounded-full mx-auto" />
+        <div className="space-y-2">
+          <Skeleton className="w-48 h-6 rounded-lg mx-auto" />
+          <Skeleton className="w-64 h-4 rounded-md mx-auto" />
+        </div>
+        <Skeleton className="w-full h-11 rounded-xl bg-white/[0.04]" />
+        <Skeleton className="w-32 h-4 rounded-md mx-auto" />
+      </div>
+    </div>
+  );
+}
+
+// 🌟 SKELETON TOÀN DIỆN CHO TRANG CHUỖI TÂM THỨC (STREAK PAGE)
+export function StreakSkeleton() {
+  return (
+    <div className="min-h-screen py-8 sm:py-12 pb-36 sm:pb-44 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-7 animate-in fade-in duration-300">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between border-b border-[#2c2e35] pb-5">
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-9 h-9 rounded-xl" />
+          <div className="space-y-1.5">
+            <Skeleton className="w-36 h-6 rounded-lg" />
+            <Skeleton className="w-64 h-3.5 rounded-md" />
+          </div>
+        </div>
+        <Skeleton className="w-28 h-9 rounded-xl" />
+      </div>
+
+      {/* Giant Flame Showcase Card */}
+      <div className="rounded-3xl border border-[#2b2d35] bg-[#17181c] p-6 sm:p-8 shadow-2xl flex flex-col items-center text-center space-y-4">
+        {/* Flame Circle */}
+        <Skeleton className="w-24 h-24 rounded-full" />
+        {/* Streak title */}
+        <div className="flex items-baseline justify-center gap-2">
+          <Skeleton className="w-20 h-10 rounded-xl" />
+          <Skeleton className="w-24 h-4 rounded-md" />
+        </div>
+        {/* Description */}
+        <Skeleton className="w-48 h-3.5 rounded-md" />
+        {/* Action Button */}
+        <Skeleton className="w-full max-w-xs h-12 rounded-xl" />
+      </div>
+
+      {/* 7-Day Week Calendar */}
+      <div className="bg-[#191a1e] border border-[#2b2d35] rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <Skeleton className="w-44 h-4 rounded-md" />
+          <Skeleton className="w-28 h-3.5 rounded-md" />
+        </div>
+        <div className="grid grid-cols-7 gap-2 sm:gap-3">
+          {Array.from({ length: 7 }).map((_, idx) => (
+            <div key={idx} className="flex flex-col items-center justify-center py-3 px-1 rounded-2xl border border-[#24252d] bg-[#1a1b20]/60 space-y-2">
+              <Skeleton className="w-6 h-3 rounded-md" />
+              <Skeleton className="w-8 h-8 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+        <div className="p-4 rounded-2xl bg-[#191a1e] border border-[#2b2d35] space-y-2">
+          <Skeleton className="w-20 h-3 rounded-md" />
+          <Skeleton className="w-16 h-7 rounded-lg" />
+          <Skeleton className="w-28 h-3 rounded-md" />
+        </div>
+        <div className="p-4 rounded-2xl bg-[#191a1e] border border-[#2b2d35] space-y-2">
+          <Skeleton className="w-24 h-3 rounded-md" />
+          <Skeleton className="w-16 h-7 rounded-lg" />
+          <Skeleton className="w-32 h-3 rounded-md" />
+        </div>
+        <div className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-[#191a1e] border border-[#2b2d35] space-y-2">
+          <Skeleton className="w-24 h-3 rounded-md" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-6 h-6 rounded-full" />
+            <Skeleton className="w-24 h-4 rounded-md" />
+          </div>
+          <Skeleton className="w-32 h-3 rounded-md" />
+        </div>
+      </div>
+
+      {/* Milestone Rewards Detail List */}
+      <div className="bg-[#191a1e] border border-[#2b2d35] rounded-3xl p-5 sm:p-7 shadow-xl space-y-4">
+        <div className="flex items-center justify-between px-1 mb-2">
+          <Skeleton className="w-52 h-4 rounded-md" />
+          <Skeleton className="w-36 h-3.5 rounded-md" />
+        </div>
+
+        <div className="divide-y divide-[#272932]">
+          {Array.from({ length: 7 }).map((_, idx) => (
+            <div key={idx} className="flex items-center justify-between py-3.5 px-2.5 sm:px-3.5">
+              <div className="flex items-center gap-4 min-w-0">
+                <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-20 h-4 rounded-md" />
+                    <Skeleton className="w-24 h-3 rounded-md" />
+                  </div>
+                  <Skeleton className="w-36 h-3 rounded-md" />
+                </div>
+              </div>
+              <Skeleton className="w-16 h-5 rounded-md shrink-0" />
+            </div>
+          ))}
+        </div>
+
+        {/* Infinite Weekly Rewards Note */}
+        <div className="mt-4 p-3.5 sm:p-4 rounded-2xl bg-[#1d1f26] border border-[#2d303b] flex items-start gap-3">
+          <Skeleton className="w-4 h-4 rounded-full shrink-0 mt-0.5" />
+          <div className="space-y-1.5 flex-1">
+            <Skeleton className="w-44 h-4 rounded-md" />
+            <Skeleton className="w-full h-3.5 rounded-md" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

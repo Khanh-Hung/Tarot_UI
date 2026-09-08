@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MessageSquare, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, MessageSquare, Share2 } from "lucide-react";
 import { ReadingDetailResponse } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { TarotCard3D } from "@/features/tarot/components/TarotCard3D";
@@ -11,22 +11,7 @@ import { MarkdownRenderer } from "@/features/chat/components/MarkdownRenderer";
 import { ChatBox } from "@/features/chat/components/ChatBox";
 import { ReadingDetailSkeleton } from "@/components/ui/Skeleton";
 import { ShareTarotStoryModal } from "@/features/tarot/components/ShareTarotStoryModal";
-
-const getTopicLabel = (topic?: string) => {
-  switch (topic) {
-    case "LOVE_AND_RELATIONSHIP":
-    case "LOVE_RELATIONSHIP":
-      return "Tình Duyên & Mối Quan Hệ";
-    case "CAREER_AND_FINANCE":
-    case "CAREER_MONEY":
-      return "Sự Nghiệp & Tài Chính";
-    case "SELF_GROWTH_AND_HEALING":
-    case "SPIRITUAL_HEALING":
-      return "Chữa Lành & Nội Tâm";
-    default:
-      return "Định Hướng Cuộc Sống";
-  }
-};
+import { getTopicLabel } from "@/features/tarot/utils/topicHelpers";
 
 export default function HistoryDetailPage() {
   const params = useParams();

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Clock, X, Zap, CheckCircle, ShieldAlert, Award, AlertCircle } from "lucide-react";
+import { Sparkles, Clock, X, Zap, CheckCircle, ShieldAlert, Award, AlertCircle, Flame } from "lucide-react";
 import { UserQuotaDto } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 
@@ -175,13 +175,33 @@ export const EnergyQuotaModal: React.FC<EnergyQuotaModalProps> = ({
             </div>
 
             {/* Hàng 3: Lượt nhận hôm nay (Purple Violet Accent) */}
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-xs pb-2.5 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
                 <span className="text-zinc-300 font-medium">Lượt đã nhận hôm nay:</span>
               </div>
               <span className="font-semibold text-purple-300">
                 {watched} / {maxAds}
+              </span>
+            </div>
+
+            {/* Hàng 4: Chuỗi bốc bài liên tiếp (Amber Orange Accent) */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Flame className="w-4 h-4 text-orange-400 shrink-0" />
+                <span className="text-zinc-300 font-medium">Chuỗi liên tiếp:</span>
+              </div>
+              <span className="font-semibold text-orange-300 flex items-center gap-1.5">
+                {quota?.currentStreak ?? 0} ngày
+                {quota?.isStreakActiveToday ? (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-medium">
+                    Đã bốc hôm nay 🔥
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 font-medium">
+                    Chờ bốc bài
+                  </span>
+                )}
               </span>
             </div>
           </div>

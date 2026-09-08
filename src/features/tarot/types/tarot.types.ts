@@ -175,4 +175,7 @@ export interface UserQuotaDto {
   adsWatchedToday: number;
   maxAdsPerDay: number;
   canWatchAd: boolean;
+  currentStreak: number;
+  longestStreak: number;
+  isStreakActiveToday: boolean;
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Sparkles, CheckCircle2, AlertCircle, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 import { authService } from "@/features/auth/services/authService";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { VerifyEmailSkeleton } from "@/components/ui/Skeleton";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -34,12 +35,16 @@ function VerifyEmailContent() {
           markEmailAsVerified();
           setStatus("success");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isMounted) {
           setStatus("error");
-          const msg =
-            err?.response?.data?.message ||
-            "Liên kết xác thực không hợp lệ hoặc đã hết hạn (24 giờ). Vui lòng yêu cầu một liên kết mới.";
+          let msg = "Liên kết xác thực không hợp lệ hoặc đã hết hạn (24 giờ). Vui lòng yêu cầu một liên kết mới.";
+          if (err && typeof err === "object" && "response" in err) {
+            const res = (err as { response?: { data?: { message?: string } } }).response;
+            if (res?.data?.message) {
+              msg = res.data.message;
+            }
+          }
           setErrorMessage(msg);
         }
       }
@@ -157,13 +162,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[80vh] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-        </div>
-      }
-    >
+    <Suspense fallback={<VerifyEmailSkeleton />}>
       <VerifyEmailContent />
     </Suspense>
   );
