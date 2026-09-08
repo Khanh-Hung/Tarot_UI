@@ -27,9 +27,9 @@ const ERROR_CODE_MAP: Record<string, string> = {
   CARDS_EMPTY: "Hệ thống dữ liệu bài Tarot đang trống. Vui lòng tải lại trang.",
   READING_NOT_FOUND: "Không tìm thấy phiên xem bài tương ứng.",
   AI_SERVICE_UNAVAILABLE: "Hệ thống AI đang bận kết nối năng lượng. Vui lòng thử lại sau ít giây.",
-  DAILY_QUOTA_EXCEEDED: "Bạn đã dùng hết lượt bói bài hôm nay. Hãy xem một đoạn video ngắn để nhận thêm lượt nhé!",
-  AD_REQUIRED_FOR_SPREAD: "Trải bài 3 lá chuyên sâu yêu cầu 1 lượt thưởng từ video tài trợ. Vui lòng xem một đoạn quảng cáo ngắn để mở khóa.",
-  DAILY_AD_LIMIT_REACHED: "Bạn đã đạt giới hạn nhận thưởng tối đa 8 video/ngày. Hãy quay lại vào ngày mai nhé!",
+  DAILY_QUOTA_EXCEEDED: "Bạn đã dùng hết lượt bói bài hôm nay. Hãy nhận thêm lượt năng lượng để tiếp tục nhé!",
+  AD_REQUIRED_FOR_SPREAD: "Trải bài 3 lá chuyên sâu yêu cầu thêm 1 lượt năng lượng. Vui lòng nhận thêm lượt để mở khóa.",
+  DAILY_AD_LIMIT_REACHED: "Bạn đã đạt giới hạn nhận thưởng tối đa 8 lượt/ngày. Hãy quay lại vào ngày mai nhé!",
 
   // Lỗi hệ thống chung (General & System)
   INTERNAL_SERVER_ERROR: "Máy chủ đang gặp sự cố tạm thời. Vui lòng thử lại sau ít phút.",
@@ -48,9 +48,9 @@ const ENGLISH_PATTERNS: { pattern: RegExp; translation: string }[] = [
   { pattern: /unauthorized|401/i, translation: "Email hoặc mật khẩu không chính xác." },
   { pattern: /forbidden|403/i, translation: "Bạn không có quyền thực hiện hành động này." },
   { pattern: /not found|404/i, translation: "Không tìm thấy dữ liệu yêu cầu." },
-  { pattern: /watching a rewarded ad is required/i, translation: "Trải bài 3 lá chuyên sâu yêu cầu xem 1 video quảng cáo ngắn để mở khóa." },
-  { pattern: /daily.*reading.*quota.*exceeded/i, translation: "Bạn đã dùng hết lượt bói bài hôm nay. Hãy xem một đoạn video ngắn để nhận thêm lượt nhé!" },
-  { pattern: /daily.*rewarded.*ad.*limit/i, translation: "Bạn đã đạt giới hạn nhận thưởng tối đa trong ngày. Hãy quay lại vào ngày mai nhé!" },
+  { pattern: /watching a rewarded ad is required/i, translation: "Trải bài 3 lá chuyên sâu yêu cầu thêm 1 lượt năng lượng để mở khóa." },
+  { pattern: /daily.*reading.*quota.*exceeded/i, translation: "Bạn đã dùng hết lượt bói bài hôm nay. Hãy nhận thêm lượt để tiếp tục nhé!" },
+  { pattern: /daily.*rewarded.*ad.*limit/i, translation: "Bạn đã đạt giới hạn nhận tối đa trong ngày. Hãy quay lại vào ngày mai nhé!" },
   { pattern: /500|internal server/i, translation: "Máy chủ đang bận hoặc gặp sự cố. Vui lòng thử lại sau." },
 ];
 

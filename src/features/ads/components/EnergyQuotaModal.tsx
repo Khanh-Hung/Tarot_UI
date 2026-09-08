@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Video, Clock, X, Zap, CheckCircle, ShieldAlert, Award, AlertCircle } from "lucide-react";
+import { Sparkles, Clock, X, Zap, CheckCircle, ShieldAlert, Award, AlertCircle } from "lucide-react";
 import { UserQuotaDto } from "@/features/tarot/types/tarot.types";
+import { tarotService } from "@/features/tarot/services/tarotService";
 
 interface EnergyQuotaModalProps {
   isOpen: boolean;
@@ -49,18 +50,22 @@ export const EnergyQuotaModal: React.FC<EnergyQuotaModalProps> = ({
     }, 4000);
   };
 
-  const handleWatchAd = async () => {
+  const handleClaimReward = async () => {
     if (isLoadingAd) return;
     setIsLoadingAd(true);
     setAdNotice(null);
 
     try {
-      // Kiểm tra đối tác quảng cáo thật (Google AdSense / Rewarded Ads SDK)
-      // Nếu chưa có quảng cáo khả dụng từ đối tác, thông báo cho người dùng
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      setAdNotice("Hiện chưa có video quảng cáo khả dụng. Vui lòng quay lại sau!");
-    } catch {
-      setAdNotice("Không thể tải quảng cáo lúc này. Vui lòng quay lại sau!");
+      // 🎁 Tạm thời nhận trực tiếp lượt bốc bài trong lúc chờ Google duyệt AdSense
+      const updated = await tarotService.claimAdReward(userId);
+      handleRewardClaimed(updated);
+    } catch (err: any) {
+      console.error("Failed to claim reward:", err);
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể nhận lượt lúc này. Vui lòng thử lại sau!";
+      setAdNotice(errMsg);
     } finally {
       setIsLoadingAd(false);
     }
@@ -160,20 +165,20 @@ export const EnergyQuotaModal: React.FC<EnergyQuotaModalProps> = ({
               <span className="font-semibold text-zinc-100">{freeRemaining} / 1</span>
             </div>
 
-            {/* Hàng 2: Tích lũy từ video (Amber Gold Accent) */}
+            {/* Hàng 2: Tích lũy (Amber Gold Accent) */}
             <div className="flex items-center justify-between text-xs pb-2.5 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-amber-400 shrink-0" />
-                <span className="text-zinc-300 font-medium">Lượt tích lũy từ video:</span>
+                <span className="text-zinc-300 font-medium">Lượt tích lũy thêm:</span>
               </div>
               <span className="font-semibold text-amber-300">+{bonus}</span>
             </div>
 
-            {/* Hàng 3: Video tài trợ hôm nay (Purple Violet Accent) */}
+            {/* Hàng 3: Lượt nhận hôm nay (Purple Violet Accent) */}
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <Video className="w-4 h-4 text-purple-400 shrink-0" />
-                <span className="text-zinc-300 font-medium">Video tài trợ hôm nay:</span>
+                <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+                <span className="text-zinc-300 font-medium">Lượt đã nhận hôm nay:</span>
               </div>
               <span className="font-semibold text-purple-300">
                 {watched} / {maxAds}
@@ -185,33 +190,33 @@ export const EnergyQuotaModal: React.FC<EnergyQuotaModalProps> = ({
           <div className="flex items-start gap-2 text-[11px] text-zinc-400 leading-relaxed mb-4 px-1">
             <Clock className="w-3.5 h-3.5 text-amber-400/80 shrink-0 mt-0.5" />
             <span>
-              Lượt miễn phí áp dụng cho quẻ 1 lá (làm mới lúc 00:00). Xem video để nhận thêm lượt bốc mọi trải bài.
+              Lượt miễn phí áp dụng cho quẻ 1 lá (làm mới lúc 00:00). Nhận thêm lượt để bốc mọi trải bài chuyên sâu.
             </span>
           </div>
 
           {/* Primary Action */}
           {canWatch ? (
             <button
-              onClick={handleWatchAd}
+              onClick={handleClaimReward}
               disabled={isLoadingAd}
               className="w-full py-3 px-4 rounded-2xl silver-gradient-btn font-bold text-xs sm:text-sm text-zinc-950 shadow-md hover:scale-[1.01] transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoadingAd ? (
                 <>
                   <div className="w-4 h-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
-                  <span>Đang tìm quảng cáo...</span>
+                  <span>Đang nhận lượt...</span>
                 </>
               ) : (
                 <>
-                  <Video className="w-4 h-4 text-zinc-950" />
-                  <span>Xem Video Nhận Ngay +1 Lượt</span>
+                  <Sparkles className="w-4 h-4 text-zinc-950" />
+                  <span>Nhận Ngay +1 Lượt Năng Lượng</span>
                 </>
               )}
             </button>
           ) : (
             <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/50 p-3 text-center text-xs text-zinc-400 flex items-center justify-center gap-2">
               <ShieldAlert className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span>Bạn đã đạt tối đa 8 video hôm nay. Hẹn gặp lại bạn vào ngày mai!</span>
+              <span>Bạn đã nhận tối đa 8 lượt hôm nay. Hẹn gặp lại bạn vào ngày mai!</span>
             </div>
           )}
           </motion.div>

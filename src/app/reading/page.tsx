@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, HelpCircle, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, ArrowLeft, Moon, BookOpen, Layers, CheckCircle2, Edit3, Zap, Video } from "lucide-react";
+import { Sparkles, HelpCircle, Star, RotateCcw, MessageSquare, Loader2, ArrowRight, ArrowLeft, Moon, BookOpen, Layers, CheckCircle2, Edit3, Zap, Video, Gift } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   CreateReadingResponse,
@@ -564,7 +564,7 @@ function ReadingContent() {
                                   ? "1 lá • Free"
                                   : "1 lá"
                                 : is3CardLocked
-                                ? "3 lá • 🎬 QC"
+                                ? "3 lá • 🎁 Nhận lượt"
                                 : "3 lá • Khả dụng"}
                             </span>
                           </div>
@@ -591,7 +591,7 @@ function ReadingContent() {
                       onClick={() => setIsQuotaModalOpen(true)}
                       className="shrink-0 flex items-center gap-1 text-[10px] text-amber-300 font-bold bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full hover:bg-amber-500/25 transition cursor-pointer"
                     >
-                      <span>🎬 Xem QC mở khóa</span>
+                      <span>🎁 Nhận lượt mở khóa</span>
                     </button>
                   )}
                 </div>
@@ -665,9 +665,9 @@ function ReadingContent() {
                     onClick={() => setIsQuotaModalOpen(true)}
                     className="flex-1 py-3 px-3 sm:px-5 rounded-2xl silver-gradient-btn text-zinc-950 font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] active:scale-95 whitespace-nowrap"
                   >
-                    <Video className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
-                    <span className="sm:hidden">Xem QC Nhận Lượt (5s)</span>
-                    <span className="hidden sm:inline">Xem Video Nhận Lượt Để Bốc Bài (5s)</span>
+                    <Gift className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
+                    <span className="sm:hidden">Nhận Thêm Lượt Bốc Bài</span>
+                    <span className="hidden sm:inline">Nhận Thêm Lượt Để Bốc Bài (Miễn Phí)</span>
                   </button>
                 ) : (
                   <button
