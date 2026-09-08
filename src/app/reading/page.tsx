@@ -485,10 +485,11 @@ function ReadingContent() {
 
               <button
                 type="submit"
-                className="w-full mt-2 py-3.5 rounded-2xl silver-gradient-btn font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01]"
+                className="w-full mt-2 py-3.5 rounded-2xl silver-gradient-btn font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] whitespace-nowrap"
               >
-                <span>Tiếp Tục Thiết Lập Trải Bài</span>
-                <ArrowRight className="w-4 h-4 text-zinc-950" />
+                <span className="sm:hidden">Tiếp Tục Thiết Lập</span>
+                <span className="hidden sm:inline">Tiếp Tục Thiết Lập Trải Bài</span>
+                <ArrowRight className="w-4 h-4 shrink-0 text-zinc-950" />
               </button>
             </form>
           )}
@@ -631,28 +632,30 @@ function ReadingContent() {
 
               {/* NĂNG LƯỢNG TRẢI BÀI & HẠN MỨC */}
               <div className="flex items-center justify-between text-xs px-1 text-zinc-400">
-                <span className="flex items-center gap-1.5">
-                  <Zap className={`w-3.5 h-3.5 ${quota ? (quota.availableReadings > 0 ? "text-amber-400 fill-amber-400/30" : "text-red-400") : "text-zinc-500 animate-pulse"}`} />
-                  <span>Năng lượng trải bài:</span>
+                <span className="flex items-center gap-1.5 shrink-0">
+                  <Zap className={`w-3.5 h-3.5 shrink-0 ${quota ? (quota.availableReadings > 0 ? "text-amber-400 fill-amber-400/30" : "text-red-400") : "text-zinc-500 animate-pulse"}`} />
+                  <span className="sm:hidden">Năng lượng:</span>
+                  <span className="hidden sm:inline">Năng lượng trải bài:</span>
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsQuotaModalOpen(true)}
-                  className="text-amber-300 hover:text-amber-200 font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer"
+                  className="text-amber-300 hover:text-amber-200 font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer whitespace-nowrap text-right"
                 >
-                  {quota ? `${quota.availableReadings} lượt khả dụng` : "Đang kiểm tra..."}
-                  <span className="text-[10px] text-zinc-400 font-normal">(Xem thêm / Nhận thêm)</span>
+                  <span>{quota ? `${quota.availableReadings} lượt khả dụng` : "Đang kiểm tra..."}</span>
+                  <span className="text-[10px] text-zinc-400 font-normal hidden sm:inline">(Xem thêm / Nhận thêm)</span>
+                  <span className="text-[10px] text-amber-400/80 font-normal sm:hidden">(+ Nhận thêm)</span>
                 </button>
               </div>
 
               {/* ACTIONS: QUAY LẠI & TIẾN HÀNH TRẢI BÀI */}
-              <div className="flex items-center gap-3 pt-1">
+              <div className="flex items-center gap-2.5 sm:gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-4 py-3 rounded-2xl bg-[#212227] hover:bg-[#2b2d35] border border-[#31333a] text-zinc-300 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3.5 sm:px-4 py-3 rounded-2xl bg-[#212227] hover:bg-[#2b2d35] border border-[#31333a] text-zinc-300 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer shrink-0 whitespace-nowrap"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-4 h-4 shrink-0" />
                   <span>Quay lại</span>
                 </button>
 
@@ -660,19 +663,21 @@ function ReadingContent() {
                   <button
                     type="button"
                     onClick={() => setIsQuotaModalOpen(true)}
-                    className="flex-1 py-3 rounded-2xl silver-gradient-btn text-zinc-950 font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] active:scale-95"
+                    className="flex-1 py-3 px-3 sm:px-5 rounded-2xl silver-gradient-btn text-zinc-950 font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] active:scale-95 whitespace-nowrap"
                   >
-                    <Video className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
-                    <span>Xem Video Nhận Lượt Để Bốc Bài (5s)</span>
+                    <Video className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
+                    <span className="sm:hidden">Xem QC Nhận Lượt (5s)</span>
+                    <span className="hidden sm:inline">Xem Video Nhận Lượt Để Bốc Bài (5s)</span>
                   </button>
                 ) : (
                   <button
                     type="submit"
-                    className="flex-1 py-3 rounded-2xl silver-gradient-btn font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01]"
+                    className="flex-1 py-3 px-3 sm:px-5 rounded-2xl silver-gradient-btn font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] whitespace-nowrap"
                   >
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
-                    <span>Tiến Hành Xáo & Trải Bài Ra Bàn</span>
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-950" />
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
+                    <span className="sm:hidden">Xáo & Trải Bài</span>
+                    <span className="hidden sm:inline">Tiến Hành Xáo & Trải Bài Ra Bàn</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
                   </button>
                 )}
               </div>

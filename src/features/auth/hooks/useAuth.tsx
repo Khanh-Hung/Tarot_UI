@@ -58,13 +58,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 🌟 Background pre-warming: Gửi tín hiệu đánh thức ngầm cả 2 cụm máy chủ Render khi người dùng mở web
+  // 🌟 Background pre-warming: Gửi tín hiệu đánh thức ngầm máy chủ Render khi ở production (bỏ qua localhost)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const timer = setTimeout(() => {
         try {
-          fetch(`${ACCOUNT_API_BASE_URL}/`, { method: "GET", mode: "no-cors" }).catch(() => {});
-          fetch(`${API_BASE_URL}/decks`, { method: "GET", mode: "no-cors" }).catch(() => {});
+          // Chỉ đánh thức khi kết nối máy chủ Cloud Render từ xa (không gửi khi chạy localhost trên máy)
+          if (ACCOUNT_API_BASE_URL && !ACCOUNT_API_BASE_URL.includes("localhost")) {
+            const rootUrl = ACCOUNT_API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+            fetch(rootUrl, { method: "GET", mode: "no-cors" }).catch(() => {});
+          }
+          if (API_BASE_URL && !API_BASE_URL.includes("localhost")) {
+            fetch(`${API_BASE_URL}/decks`, { method: "GET", mode: "no-cors" }).catch(() => {});
+          }
         } catch {}
       }, 1000);
       return () => clearTimeout(timer);

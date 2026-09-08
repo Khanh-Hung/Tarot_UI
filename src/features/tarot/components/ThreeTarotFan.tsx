@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { Sparkles, RotateCcw, ArrowRight, Moon, CheckCircle2, Eye, LayoutGrid, Maximize2, Minimize2 } from "lucide-react";
+import { Sparkles, RotateCcw, ArrowRight, Moon, CheckCircle2, Eye, LayoutGrid, Maximize2, Minimize2, RotateCw } from "lucide-react";
 import { CardDto, SpreadType } from "../types/tarot.types";
 import { tarotService } from "../services/tarotService";
 import { renderTarotCardBackCanvas } from "../three/cardCanvas";
@@ -48,20 +48,20 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   const slotNames = React.useMemo(() => {
     if (effectiveMaxCards === 1) {
       return [
-        { title: "Thông Điệp Ngày Mới", desc: "Năng lượng chủ đạo và lời chỉ dẫn cho ngày hôm nay", icon: "☀️" },
+        { title: "Thông Điệp Ngày Mới", shortTitle: "Thông Điệp", desc: "Năng lượng chủ đạo và lời chỉ dẫn cho ngày hôm nay", icon: "☀️" },
       ];
     }
     if (spreadType === "TWO_PATHS_CHOICE") {
       return [
-        { title: "Thực Tại Hiện Tại", desc: "Nguồn năng lượng và tình huống bạn đang đối diện", icon: "🧭" },
-        { title: "Ngả Rẽ / Phương Án A", desc: "Tiềm năng, chuyển biến và kết quả theo hướng A", icon: "🅰️" },
-        { title: "Ngả Rẽ / Phương Án B", desc: "Tiềm năng, chuyển biến và kết quả theo hướng B", icon: "🅱️" },
+        { title: "Thực Tại Hiện Tại", shortTitle: "Thực Tại", desc: "Nguồn năng lượng và tình huống bạn đang đối diện", icon: "🧭" },
+        { title: "Ngả Rẽ / Phương Án A", shortTitle: "Hướng A", desc: "Tiềm năng, chuyển biến và kết quả theo hướng A", icon: "🅰️" },
+        { title: "Ngả Rẽ / Phương Án B", shortTitle: "Hướng B", desc: "Tiềm năng, chuyển biến và kết quả theo hướng B", icon: "🅱️" },
       ];
     }
     return [
-      { title: "Quá Khứ và Nền Tảng", desc: "Nguồn gốc, nguyên nhân sâu xa tạo nên hoàn cảnh", icon: "🌒" },
-      { title: "Hiện Tại và Trở Ngại", desc: "Năng lượng thực tế và nút thắt bạn đang đối diện", icon: "🌕" },
-      { title: "Tương Lai và Xu Hướng", desc: "Kết quả và hướng đi phát triển tự nhiên", icon: "🌘" },
+      { title: "Quá Khứ và Nền Tảng", shortTitle: "Quá Khứ", desc: "Nguồn gốc, nguyên nhân sâu xa tạo nên hoàn cảnh", icon: "🌒" },
+      { title: "Hiện Tại và Trở Ngại", shortTitle: "Hiện Tại", desc: "Năng lượng thực tế và nút thắt bạn đang đối diện", icon: "🌕" },
+      { title: "Tương Lai và Xu Hướng", shortTitle: "Tương Lai", desc: "Kết quả và hướng đi phát triển tự nhiên", icon: "🌘" },
     ];
   }, [effectiveMaxCards, spreadType]);
 
@@ -85,6 +85,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   const isSpreadRef = useRef<boolean>(false);
   const spreadModeRef = useRef<SpreadMode>("RIBBON");
   const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
+  const isMobileRef = useRef<boolean>(false);
 
   useEffect(() => {
     isShufflingRef.current = isShuffling;
@@ -149,23 +150,90 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   }, [isLoading]);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const confirmAreaRef = useRef<HTMLDivElement>(null);
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      if (tableContainerRef.current?.requestFullscreen) {
-        tableContainerRef.current.requestFullscreen().catch(() => {
-          setIsFullscreen((prev) => !prev);
-        });
-      } else {
-        setIsFullscreen((prev) => !prev);
+  useEffect(() => {
+    const checkOrientation = () => {
+      if (typeof window !== "undefined") {
+        setIsPortrait(window.innerHeight > window.innerWidth);
+      }
+    };
+    checkOrientation();
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("orientationchange", checkOrientation);
+    return () => {
+      window.removeEventListener("resize", checkOrientation);
+      window.removeEventListener("orientationchange", checkOrientation);
+    };
+  }, []);
+
+  // 🔄 Khóa màn hình nằm ngang (Landscape) khi phóng to giống YouTube
+  const lockScreenLandscape = async () => {
+    try {
+      const orientation: any = screen.orientation || (screen as any).mozOrientation || (screen as any).msOrientation;
+      if (orientation && typeof orientation.lock === "function") {
+        await orientation.lock("landscape");
+      }
+    } catch (err) {
+      console.warn("Landscape orientation lock not supported or failed:", err);
+    }
+  };
+
+  const unlockScreenOrientation = () => {
+    try {
+      const orientation: any = screen.orientation || (screen as any).mozOrientation || (screen as any).msOrientation;
+      if (orientation && typeof orientation.unlock === "function") {
+        orientation.unlock();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const toggleFullscreen = async () => {
+    const isCurrentlyFs = Boolean(
+      document.fullscreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).mozFullScreenElement
+    );
+
+    if (!isCurrentlyFs && !isFullscreen) {
+      const el = tableContainerRef.current;
+      if (el) {
+        const reqFs =
+          el.requestFullscreen ||
+          (el as any).webkitRequestFullscreen ||
+          (el as any).mozRequestFullScreen;
+
+        if (reqFs) {
+          try {
+            await reqFs.call(el);
+            setIsFullscreen(true);
+            await lockScreenLandscape();
+          } catch {
+            setIsFullscreen(true);
+            await lockScreenLandscape();
+          }
+        } else {
+          setIsFullscreen(true);
+          await lockScreenLandscape();
+        }
       }
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {
+      unlockScreenOrientation();
+      const exitFs =
+        document.exitFullscreen ||
+        (document as any).webkitExitFullscreen ||
+        (document as any).mozCancelFullScreen;
+
+      if (exitFs && isCurrentlyFs) {
+        try {
+          await exitFs.call(document);
+        } catch {
           setIsFullscreen(false);
-        });
+        }
       } else {
         setIsFullscreen(false);
       }
@@ -173,9 +241,18 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   };
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      const active = Boolean(document.fullscreenElement);
+    const handleFullscreenChange = async () => {
+      const active = Boolean(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement
+      );
       setIsFullscreen(active);
+      if (active) {
+        await lockScreenLandscape();
+      } else {
+        unlockScreenOrientation();
+      }
       setTimeout(() => {
         window.dispatchEvent(new Event("resize"));
       }, 100);
@@ -183,6 +260,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isFullscreen) {
+        unlockScreenOrientation();
         if (document.fullscreenElement) {
           document.exitFullscreen().catch(() => {});
         } else {
@@ -196,11 +274,13 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isFullscreen]);
@@ -337,10 +417,41 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. CAMERA ĐƯỢC CĂN CHỈNH BAO QUÁT CẢ 3 VỊ TRÍ ĐÓN BÀI VÀ BÀN TRẢI 78 LÁ
+    // 2. CAMERA ĐƯỢC CĂN CHỈNH TỰ ĐỘNG THEO TỈ LỆ KHUNG NHÌN (RESPONSIVE FOV & DISTANCE)
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-    camera.position.set(0, 0.4, 8.8);
-    camera.lookAt(0, 0.2, 0);
+
+    const updateCamera = () => {
+      if (!mountRef.current || !rendererRef.current) return;
+      const w = mountRef.current.clientWidth || 1000;
+      const h = mountRef.current.clientHeight || 640;
+      if (w === 0 || h === 0) return;
+
+      const aspect = w / h;
+      camera.aspect = aspect;
+
+      const isMobileView = w < 768 || aspect < 1.15;
+      isMobileRef.current = isMobileView;
+
+      // Tính toán z để toàn bộ bộ bài 78 lá (boxWidth) và các ô đón bài luôn hiển thị trọn vẹn 100% với lề an toàn
+      const targetBoxWidth = isMobileView ? 8.4 : 9.2;
+      const targetBoxHeight = isMobileView ? 5.6 : 5.0;
+
+      const fovRad = THREE.MathUtils.degToRad(camera.fov / 2);
+      const tanFov = Math.tan(fovRad);
+
+      const zForWidth = (targetBoxWidth / aspect) / (2 * tanFov);
+      const zForHeight = targetBoxHeight / (2 * tanFov);
+
+      const idealZ = Math.max(8.8, Math.max(zForWidth, zForHeight));
+      const targetY = isMobileView ? 0.42 : 0.4;
+      const lookAtY = isMobileView ? 0.28 : 0.2;
+
+      camera.position.set(0, targetY, idealZ);
+      camera.lookAt(0, lookAtY, 0);
+      camera.updateProjectionMatrix();
+
+      rendererRef.current.setSize(w, h);
+    };
 
     // 3. RENDERER (Tối ưu pixelRatio & shadowMap trên mọi cấu hình)
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
@@ -353,8 +464,11 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     renderer.domElement.style.display = "block";
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
+    renderer.domElement.style.touchAction = "none";
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
+
+    updateCamera();
 
     // Lắng nghe phục hồi WebGL Context nếu trình duyệt giải phóng bộ nhớ
     const handleContextLost = (e: Event) => {
@@ -499,33 +613,34 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       isSpreadRef.current = true;
     }, 400);
 
-    // 7. BẮT CHUỘT VÀ TÍNH TOÁN HOVER MƯỢT MÀ
+    // 7. BẮT CHUỘT VÀ CẢM ỨNG (TOUCH) TÍNH TOÁN HOVER & CHỌN BÀI MƯỢT MÀ TRÊN CẢ MOBILE LẪN DESKTOP
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(-999, -999);
     let targetHoverIndex = -1;
+
+    const calculateHoverIndex = (normalizedX: number, normalizedY: number) => {
+      const isPickingFinished = selectedCardsRef.current.length >= effectiveMaxCards;
+      if (isShufflingRef.current || !isSpreadRef.current || isPickingFinished) return -1;
+      if (normalizedY <= -0.95 || normalizedY >= 0.25) return -1;
+
+      if (spreadModeRef.current === "RIBBON") {
+        const boundX = isMobileRef.current ? 0.72 : 0.90;
+        const clampedX = Math.max(-boundX, Math.min(boundX, normalizedX));
+        const norm = (clampedX + boundX) / (boundX * 2);
+        return Math.max(0, Math.min(deckCards.length - 1, Math.floor(norm * deckCards.length)));
+      } else {
+        const angle = Math.atan2(normalizedX, normalizedY + 0.9);
+        const maxAngle = isMobileRef.current ? Math.PI * 0.21 : Math.PI * 0.32;
+        const norm = (angle + maxAngle) / (maxAngle * 2);
+        return Math.max(0, Math.min(deckCards.length - 1, Math.floor(norm * deckCards.length)));
+      }
+    };
 
     const onMouseMove = (e: MouseEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-      const isPickingFinished = selectedCardsRef.current.length >= effectiveMaxCards;
-
-      if (!isShufflingRef.current && isSpreadRef.current && !isPickingFinished && mouse.y > -0.9 && mouse.y < 0.15) {
-        if (spreadModeRef.current === "RIBBON") {
-          const clampedX = Math.max(-0.88, Math.min(0.88, mouse.x));
-          const norm = (clampedX + 0.88) / (0.88 * 2);
-          targetHoverIndex = Math.floor(norm * deckCards.length);
-        } else {
-          const angle = Math.atan2(mouse.x, mouse.y + 0.9);
-          const maxAngle = Math.PI * 0.32;
-          const norm = (angle + maxAngle) / (maxAngle * 2);
-          targetHoverIndex = Math.floor(norm * deckCards.length);
-        }
-        targetHoverIndex = Math.max(0, Math.min(deckCards.length - 1, targetHoverIndex));
-      } else {
-        targetHoverIndex = -1;
-      }
+      targetHoverIndex = calculateHoverIndex(mouse.x, mouse.y);
     };
 
     const onClick = (e: MouseEvent) => {
@@ -561,8 +676,35 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       }
     };
 
+    // 📱 Cảm ứng vuốt ngón tay và chạm rút bài trên màn hình Mobile (Touch Events)
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      const touch = e.touches[0];
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+      targetHoverIndex = calculateHoverIndex(mouse.x, mouse.y);
+    };
+
+    const onTouchEnd = () => {
+      const isPickingFinished = selectedCardsRef.current.length >= effectiveMaxCards;
+      if (isShufflingRef.current || !isSpreadRef.current || isPickingFinished) return;
+
+      if (targetHoverIndex >= 0 && targetHoverIndex < cardGroups.length) {
+        const topHit = cardGroups[targetHoverIndex];
+        if (topHit && !topHit.userData.isDrawn) {
+          const cardData = topHit.userData.card as CardDto;
+          handleCardSelect3D(topHit, cardData);
+          targetHoverIndex = -1;
+        }
+      }
+    };
+
     renderer.domElement.addEventListener("mousemove", onMouseMove);
     renderer.domElement.addEventListener("click", onClick);
+    renderer.domElement.addEventListener("touchstart", onTouchMove, { passive: true });
+    renderer.domElement.addEventListener("touchmove", onTouchMove, { passive: true });
+    renderer.domElement.addEventListener("touchend", onTouchEnd, { passive: true });
 
     // 8. ANIMATION LOOP
     let lastTime = performance.now();
@@ -658,6 +800,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           currentTime,
           shuffleStartTime: shuffleStartTimeRef.current,
           isHover: currentHover === group,
+          isMobile: isMobileRef.current,
         });
 
         group.position.x = THREE.MathUtils.lerp(group.position.x, transform.targetX, dampPos);
@@ -682,13 +825,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     animate(performance.now());
 
     const handleResize = () => {
-      if (!mountRef.current || !rendererRef.current) return;
-      const w = mountRef.current.clientWidth;
-      const h = mountRef.current.clientHeight;
-      if (w === 0 || h === 0) return;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      rendererRef.current.setSize(w, h);
+      updateCamera();
     };
     window.addEventListener("resize", handleResize);
 
@@ -703,6 +840,9 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       resizeObserver.disconnect();
       renderer.domElement.removeEventListener("mousemove", onMouseMove);
       renderer.domElement.removeEventListener("click", onClick);
+      renderer.domElement.removeEventListener("touchstart", onTouchMove);
+      renderer.domElement.removeEventListener("touchmove", onTouchMove);
+      renderer.domElement.removeEventListener("touchend", onTouchEnd);
       renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
       renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);
       renderer.dispose();
@@ -801,72 +941,98 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
             : "silver-card rounded-3xl p-3 sm:p-4 bg-gradient-to-b from-[#0B132B] via-[#111C3D] to-[#080E20] border border-amber-400/20"
         }`}
       >
+        {/* Hướng dẫn xoay ngang trên Mobile nếu thiết bị đang ở chế độ dọc (VD: iOS Safari) */}
+        {isFullscreen && isPortrait && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[#111c3d]/90 border border-amber-400/50 text-amber-200 text-xs font-semibold flex items-center gap-2 backdrop-blur-md shadow-2xl animate-pulse pointer-events-none whitespace-nowrap">
+            <RotateCw className="w-4 h-4 text-amber-300 animate-spin" />
+            <span>Xoay ngang điện thoại để có góc nhìn rộng nhất 🔄</span>
+          </div>
+        )}
+
         {/* THANH ĐIỀU KHIỂN & TIÊU ĐỀ Ô ĐÓN BÀI TRÊN 3D */}
-        <div className={`relative z-20 flex flex-col sm:flex-row items-center justify-between gap-3 mb-2 ${isFullscreen ? "pt-4 px-4 sm:px-6" : ""}`}>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-amber-400/15 border border-amber-300/30 flex items-center justify-center text-amber-200 shadow-md">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-xs sm:text-sm font-semibold text-white">
+        <div className={`relative z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 mb-2 ${isFullscreen ? "pt-4 px-4 sm:px-6" : ""}`}>
+          {/* Hàng tiêu đề: Trái là Tên bàn bài, Phải là nút Toàn màn hình (trên Mobile) */}
+          <div className="flex items-center justify-between w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-amber-400/15 border border-amber-300/30 flex items-center justify-center text-amber-200 shadow-md shrink-0">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+              <h3 className="text-xs sm:text-sm font-semibold text-white whitespace-nowrap">
                 Bàn Trải Bài
               </h3>
             </div>
+
+            {/* Nút Toàn màn hình & Xoay ngang trên Mobile (căn góc phải trên cùng) */}
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "Thu nhỏ (Esc)" : "Toàn màn hình & Xoay ngang (Landscape)"}
+              className="sm:hidden p-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-200 hover:text-white transition flex items-center justify-center cursor-pointer shadow-md"
+            >
+              {isFullscreen ? (
+                <Minimize2 className="w-3.5 h-3.5 text-amber-300" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5 text-slate-200" />
+              )}
+            </button>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Hàng công cụ: Chuyển kiểu trải, Xáo lại, Rút nhanh (& Toàn màn hình trên Desktop) */}
+          <div className="flex items-center justify-center sm:justify-end gap-1.5 sm:gap-2">
             {/* Nút đổi kiểu trải bài */}
-            <div className="inline-flex rounded-xl bg-black/40 border border-white/15 p-0.5 text-xs">
+            <div className="inline-flex rounded-xl bg-black/40 border border-white/15 p-0.5 text-xs shrink-0">
               <button
                 onClick={() => setSpreadMode("RIBBON")}
                 disabled={isShuffling || isRevealing}
-                className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 whitespace-nowrap ${
                   spreadMode === "RIBBON"
                     ? "bg-amber-400/25 text-amber-200 border border-amber-300/40"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Trải Cung</span>
+                <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+                <span className="text-[11px] sm:text-xs hidden sm:inline">Trải Cung</span>
+                <span className="text-[11px] sm:hidden">Cung</span>
               </button>
               <button
                 onClick={() => setSpreadMode("FAN")}
                 disabled={isShuffling || isRevealing}
-                className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 cursor-pointer disabled:opacity-50 whitespace-nowrap ${
                   spreadMode === "FAN"
                     ? "bg-amber-400/25 text-amber-200 border border-amber-300/40"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                <Moon className="w-3.5 h-3.5" />
-                <span>Xòe Quạt</span>
+                <Moon className="w-3.5 h-3.5 shrink-0" />
+                <span className="text-[11px] sm:text-xs hidden sm:inline">Xòe Quạt</span>
+                <span className="text-[11px] sm:hidden">Quạt</span>
               </button>
             </div>
 
             <button
               onClick={() => handleReshuffle3D()}
               disabled={isShuffling || isLoading || isRevealing}
-              className="px-2.5 py-1 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-200 hover:text-white transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md"
+              className="px-2 sm:px-2.5 py-1 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-[11px] sm:text-xs font-semibold text-slate-200 hover:text-white transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md whitespace-nowrap shrink-0"
             >
-              <RotateCcw className={`w-3.5 h-3.5 ${isShuffling ? "animate-spin" : ""}`} />
+              <RotateCcw className={`w-3.5 h-3.5 shrink-0 ${isShuffling ? "animate-spin" : ""}`} />
               <span>Xáo lại</span>
             </button>
 
             <button
               onClick={handleQuickPick3D}
               disabled={isShuffling || isLoading || isRevealing || selectedCards.length >= effectiveMaxCards}
-              className="px-2.5 py-1 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-xs font-bold text-amber-200 transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md"
+              className="px-2 sm:px-2.5 py-1 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-[11px] sm:text-xs font-bold text-amber-200 transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-md whitespace-nowrap shrink-0"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
               <span>Rút nhanh</span>
             </button>
 
-            {/* Nút phóng to / thu nhỏ toàn màn hình */}
+            {/* Nút Toàn màn hình & Xoay ngang trên Desktop */}
             <button
               type="button"
               onClick={toggleFullscreen}
-              title={isFullscreen ? "Thu nhỏ (Esc)" : "Toàn màn hình"}
-              className="p-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-200 hover:text-white transition flex items-center justify-center cursor-pointer shadow-md"
+              title={isFullscreen ? "Thu nhỏ (Esc)" : "Toàn màn hình & Xoay ngang (Landscape)"}
+              className="hidden sm:flex p-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-semibold text-slate-200 hover:text-white transition items-center justify-center cursor-pointer shadow-md"
             >
               {isFullscreen ? (
                 <Minimize2 className="w-3.5 h-3.5 text-amber-300" />
@@ -893,8 +1059,15 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
                 }`}
               >
                 <span className="text-xs">{slot.icon}</span>
-                <span className="text-[11px] sm:text-xs font-bold whitespace-nowrap">
-                  {effectiveMaxCards === 1 ? slot.title : `Lá ${idx + 1}: ${slot.title}`}
+                <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap">
+                  {effectiveMaxCards === 1 ? (
+                    slot.title
+                  ) : (
+                    <>
+                      <span className="sm:hidden">{`Lá ${idx + 1}: ${slot.shortTitle}`}</span>
+                      <span className="hidden sm:inline">{`Lá ${idx + 1}: ${slot.title}`}</span>
+                    </>
+                  )}
                 </span>
               </div>
             );

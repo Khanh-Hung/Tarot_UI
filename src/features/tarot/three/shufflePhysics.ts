@@ -30,6 +30,7 @@ export interface ShuffleCalcParams {
   currentTime: number;
   shuffleStartTime: number;
   isHover: boolean;
+  isMobile?: boolean;
 }
 
 /**
@@ -45,6 +46,7 @@ export const calculateCardShuffleTransform = ({
   currentTime,
   shuffleStartTime,
   isHover,
+  isMobile = false,
 }: ShuffleCalcParams): CardTransform => {
   const normalized = (i - (total - 1) / 2) / ((total - 1) / 2); // -1 đến +1
 
@@ -129,7 +131,8 @@ export const calculateCardShuffleTransform = ({
     // ✂️ BƯỚC 5: CẮT CỌC BÀI LÀM 2 NỬA BAY SANG HAI BÊN
     const isLeft = i < total / 2;
     const halfIdx = isLeft ? i : i - total / 2;
-    targetX = isLeft ? -1.7 : 1.7;
+    const splitDist = isMobile ? 1.2 : 1.7;
+    targetX = isLeft ? -splitDist : splitDist;
     targetY = -0.8;
     targetZ = halfIdx * 0.008;
     targetRotZ = isLeft ? -0.22 : 0.22;
@@ -145,15 +148,17 @@ export const calculateCardShuffleTransform = ({
   } else if (isSpread) {
     // 🎴 BƯỚC 7: TRẢI BÀI HOÀN CHỈNH RA NỬA DƯỚI BÀN THẢM
     if (spreadMode === "RIBBON") {
-      targetX = normalized * 3.8;
-      targetY = -(normalized ** 2) * 0.38 - 1.05 + (isHover ? 0.45 : 0);
-      targetRotZ = -normalized * 0.2;
+      const spreadWidth = isMobile ? 2.45 : 3.8;
+      targetX = normalized * spreadWidth;
+      targetY = -(normalized ** 2) * (isMobile ? 0.22 : 0.38) - (isMobile ? 0.90 : 1.05) + (isHover ? 0.45 : 0);
+      targetRotZ = -normalized * (isMobile ? 0.13 : 0.2);
       targetRotX = 0.25;
       targetZ = isHover ? 0.6 : i * 0.005;
     } else {
-      const angle = normalized * Math.PI * 0.32;
+      const maxAngle = isMobile ? Math.PI * 0.21 : Math.PI * 0.32;
+      const angle = normalized * maxAngle;
       targetX = 0;
-      targetY = -2.2 + (isHover ? 0.35 : 0);
+      targetY = (isMobile ? -1.95 : -2.2) + (isHover ? 0.35 : 0);
       targetRotZ = -angle;
       targetRotX = 0.05;
       targetZ = isHover ? 0.6 : i * 0.005;
