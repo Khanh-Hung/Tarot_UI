@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import {
   Flame,
   Droplets,
@@ -19,6 +18,7 @@ import {
 import { tarotService } from "../services/tarotService";
 import { EnergyInsightsResponse } from "../types/tarot.types";
 import { EnergyInsightsSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface EnergyInsightsViewProps {
   userId: string | number;
@@ -58,22 +58,18 @@ export const EnergyInsightsView: React.FC<EnergyInsightsViewProps> = ({ userId }
 
   if (!data || data.totalReadings === 0) {
     return (
-      <div className="flex min-h-[380px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#31333a] bg-[#212227]/40 p-10 text-center">
-        <Sparkles className="h-10 w-10 text-amber-400 mb-3" />
-        <h3 className="text-base font-bold text-zinc-200">
-          Chưa có dữ liệu Bản đồ Năng lượng
-        </h3>
-        <p className="mt-1.5 text-xs sm:text-sm text-zinc-400 max-w-md leading-relaxed">
-          Hãy bốc những quẻ bài đầu tiên để hệ thống bắt đầu vẽ nên bức tranh năng lượng của các nguyên tố Đất, Nước, Lửa, Khí xoay quanh bạn nhé!
-        </p>
-        <Link
-          href="/reading"
-          className="mt-5 px-6 py-2.5 rounded-full bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg transition hover:scale-105 active:scale-95 cursor-pointer shrink-0"
-        >
-          <Sparkles className="w-4 h-4 text-zinc-950 fill-current" />
-          <span>Bốc Quẻ Bài Ngay</span>
-        </Link>
-      </div>
+      <EmptyState
+        className="min-h-[380px]"
+        icon={<Sparkles className="h-10 w-10 text-amber-400 mb-3" />}
+        title="Chưa có dữ liệu Bản đồ Năng lượng"
+        description="Hãy bốc những quẻ bài đầu tiên để hệ thống bắt đầu vẽ nên bức tranh năng lượng của các nguyên tố Đất, Nước, Lửa, Khí xoay quanh bạn nhé!"
+        action={{
+          label: "Bốc Quẻ Bài Ngay",
+          href: "/reading",
+          variant: "primary",
+          icon: <Sparkles className="w-4 h-4 text-zinc-950 fill-current" />,
+        }}
+      />
     );
   }
 

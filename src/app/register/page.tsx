@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Loader2, ArrowRight } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getFriendlyErrorMessage } from "@/lib/errorMapping";
 import { AuthFormSkeleton } from "@/components/ui/Skeleton";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { AlertBanner } from "@/components/ui/AlertBanner";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -15,8 +17,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSlowLoading, setIsSlowLoading] = useState(false);
@@ -69,9 +69,7 @@ export default function RegisterPage() {
         </p>
 
         {errorMsg && (
-          <div className="w-full mt-4 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 text-center">
-            {errorMsg}
-          </div>
+          <AlertBanner variant="error" message={errorMsg} className="w-full mt-4" />
         )}
 
         {/* Form */}
@@ -88,7 +86,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full bg-[#121316] border border-transparent rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:outline-none focus:border-white/40 transition-colors duration-200"
+                className="w-full bg-[#121316] border border-[#262830] focus:border-white/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors duration-200"
               />
             </div>
           </div>
@@ -97,62 +95,26 @@ export default function RegisterPage() {
             <label className="block text-xs font-medium text-zinc-300 mb-1.5">
               Mật khẩu
             </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[#121316] border border-transparent rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:outline-none focus:border-white/40 transition-colors duration-200"
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-100 transition p-1 cursor-pointer"
-                title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-              >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
+            <PasswordInput
+              required
+              minLength={6}
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••"
+            />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-zinc-300 mb-1.5">
               Nhập lại mật khẩu
             </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[#121316] border border-transparent rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:outline-none focus:border-white/40 transition-colors duration-200"
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-100 transition p-1 cursor-pointer"
-                title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
+            <PasswordInput
+              required
+              minLength={6}
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              placeholder="••••••••"
+            />
           </div>
 
           <button
@@ -174,10 +136,11 @@ export default function RegisterPage() {
           </button>
 
           {isSlowLoading && (
-            <div className="w-full p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 text-center animate-in fade-in duration-300 flex items-center justify-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
-              <span>Máy chủ đang khởi động sau thời gian nghỉ, xin bạn đợi giây lát nhé...</span>
-            </div>
+            <AlertBanner
+              variant="warning"
+              message="Máy chủ đang khởi động sau thời gian nghỉ, xin bạn đợi giây lát nhé..."
+              className="w-full"
+            />
           )}
         </form>
 

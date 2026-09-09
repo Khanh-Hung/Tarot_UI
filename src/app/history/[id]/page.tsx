@@ -12,6 +12,7 @@ import { ChatBox } from "@/features/chat/components/ChatBox";
 import { ReadingDetailSkeleton } from "@/components/ui/Skeleton";
 import { ShareTarotStoryModal } from "@/features/tarot/components/ShareTarotStoryModal";
 import { getTopicLabel } from "@/features/tarot/utils/topicHelpers";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function HistoryDetailPage() {
   const params = useParams();
@@ -46,11 +47,17 @@ export default function HistoryDetailPage() {
 
   if (!reading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-xl  text-white">Không tìm thấy quẻ bói này</h2>
-        <Link href="/history" className="mt-4 inline-block text-amber-300 text-sm hover:underline">
-          Quay lại danh sách lịch sử
-        </Link>
+      <div className="max-w-2xl mx-auto px-4 py-16">
+        <EmptyState
+          title="Không tìm thấy quẻ bói này"
+          description="Quẻ bài này có thể đã bị xóa hoặc đường dẫn liên kết không chính xác."
+          action={{
+            label: "Quay lại Lịch Sử Quẻ Bói",
+            href: "/history",
+            variant: "primary",
+            icon: <ArrowLeft className="w-4 h-4" />,
+          }}
+        />
       </div>
     );
   }

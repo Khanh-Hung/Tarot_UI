@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Sparkles,
-  Search,
   BookOpen,
   ArrowRight,
   Loader2,
@@ -30,8 +29,22 @@ import { DeckCardsGridSkeleton, FullDeckPageSkeleton } from "@/components/ui/Ske
 import { CardDetailModal } from "@/features/tarot/components/CardDetailModal";
 import { DeckLoreModal } from "@/features/tarot/components/DeckLoreModal";
 import { getElementBadge } from "@/features/tarot/utils/elementBadge";
+import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type CategoryFilter = "ALL" | "MAJOR" | "COURT" | "PIPS" | "WANDS" | "CUPS" | "SWORDS" | "PENTACLES";
+
+const CATEGORY_OPTIONS: OptionItem[] = [
+  { value: "ALL", label: "Tất Cả", sublabel: "78 lá", icon: <Layers className="w-3.5 h-3.5 text-zinc-400" /> },
+  { value: "MAJOR", label: "22 Ẩn Chính", sublabel: "22 lá", icon: <Crown className="w-3.5 h-3.5 text-amber-400" /> },
+  { value: "COURT", label: "16 Hoàng Gia", sublabel: "16 lá", icon: <Users className="w-3.5 h-3.5 text-purple-400" /> },
+  { value: "PIPS", label: "40 Lá Số", sublabel: "40 lá", icon: <Hash className="w-3.5 h-3.5 text-zinc-300" /> },
+  { value: "WANDS", label: "Gậy (Hỏa)", sublabel: "14 lá", icon: <Flame className="w-3.5 h-3.5 text-amber-400" /> },
+  { value: "CUPS", label: "Cốc (Thủy)", sublabel: "14 lá", icon: <Droplets className="w-3.5 h-3.5 text-sky-400" /> },
+  { value: "SWORDS", label: "Kiếm (Khí)", sublabel: "14 lá", icon: <Wind className="w-3.5 h-3.5 text-slate-300" /> },
+  { value: "PENTACLES", label: "Tiền/Đĩa (Đất)", sublabel: "14 lá", icon: <Globe2 className="w-3.5 h-3.5 text-emerald-400" /> },
+];
 
 function DecksContent() {
   const searchParams = useSearchParams();
@@ -43,20 +56,14 @@ function DecksContent() {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("ALL");
   const [selectedCard, setSelectedCard] = useState<CardDto | null>(null);
   const [isDeckDropdownOpen, setIsDeckDropdownOpen] = useState(false);
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
-  const [isCategoryOpenUpwards, setIsCategoryOpenUpwards] = useState(false);
   const [isDeckLoreModalOpen, setIsDeckLoreModalOpen] = useState(false);
   const deckDropdownRef = useRef<HTMLDivElement>(null);
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Đóng dropdown khi click ra ngoài
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (deckDropdownRef.current && !deckDropdownRef.current.contains(event.target as Node)) {
         setIsDeckDropdownOpen(false);
-      }
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
-        setIsCategoryDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -296,118 +303,21 @@ function DecksContent() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
             {/* Ô tìm kiếm lá bài */}
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm kiếm theo tên lá bài hoặc từ khóa..."
-                className="w-full h-10 pl-10 pr-8 rounded-xl bg-[#191a1e] border border-[#2c2e35] text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#525560] transition"
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Tìm kiếm theo tên lá bài hoặc từ khóa..."
+              className="w-full sm:w-80"
+            />
+
+            {/* 🎴 DROPDOWN BỘ LỌC DANH MỤC */}
+            <div className="w-full sm:w-52 shrink-0">
+              <CustomSelect
+                options={CATEGORY_OPTIONS}
+                value={activeCategory}
+                onChange={(val) => setActiveCategory(val as CategoryFilter)}
               />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
             </div>
-
-            {/* 🎴 DROPDOWN BỘ LỌC DANH MỤC COMPACT */}
-            {(() => {
-              const CATEGORY_OPTIONS: { key: CategoryFilter; label: string; countBadge: string; icon: React.ReactNode }[] = [
-                { key: "ALL", label: "Tất Cả", countBadge: "78 lá", icon: <Layers className="w-3.5 h-3.5 text-zinc-400" /> },
-                { key: "MAJOR", label: "22 Ẩn Chính", countBadge: "22 lá", icon: <Crown className="w-3.5 h-3.5 text-amber-400" /> },
-                { key: "COURT", label: "16 Hoàng Gia", countBadge: "16 lá", icon: <Users className="w-3.5 h-3.5 text-purple-400" /> },
-                { key: "PIPS", label: "40 Lá Số", countBadge: "40 lá", icon: <Hash className="w-3.5 h-3.5 text-zinc-300" /> },
-                { key: "WANDS", label: "Gậy (Hỏa)", countBadge: "14 lá", icon: <Flame className="w-3.5 h-3.5 text-amber-400" /> },
-                { key: "CUPS", label: "Cốc (Thủy)", countBadge: "14 lá", icon: <Droplets className="w-3.5 h-3.5 text-sky-400" /> },
-                { key: "SWORDS", label: "Kiếm (Khí)", countBadge: "14 lá", icon: <Wind className="w-3.5 h-3.5 text-slate-300" /> },
-                { key: "PENTACLES", label: "Tiền/Đĩa (Đất)", countBadge: "14 lá", icon: <Globe2 className="w-3.5 h-3.5 text-emerald-400" /> },
-              ];
-              const currentCat = CATEGORY_OPTIONS.find((c) => c.key === activeCategory) || CATEGORY_OPTIONS[0];
-
-              return (
-                <div ref={categoryDropdownRef} className="relative w-full sm:w-52 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isCategoryDropdownOpen && categoryDropdownRef.current) {
-                        const rect = categoryDropdownRef.current.getBoundingClientRect();
-                        const spaceBelow = window.innerHeight - rect.bottom;
-                        // Nếu khoảng trống bên dưới còn ít hơn 250px và bên trên đủ chỗ thì lật lên trên
-                        setIsCategoryOpenUpwards(spaceBelow < 250 && rect.top > 250);
-                      }
-                      setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
-                    }}
-                    className={`w-full h-10 px-3 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 select-none text-left ${
-                      isCategoryDropdownOpen
-                        ? "bg-[#23242a] border-amber-400/80 shadow-lg ring-1 ring-amber-400/30 text-amber-200"
-                        : activeCategory !== "ALL"
-                        ? "bg-[#23242a] border-amber-400/50 text-amber-200 font-semibold"
-                        : "bg-[#191a1e] border-[#2c2e35] hover:border-[#42454e] hover:bg-[#1e1f24] text-zinc-200"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="shrink-0">{currentCat.icon}</span>
-                      <span className="text-xs font-bold truncate">{currentCat.label}</span>
-                    </div>
-                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 shrink-0 ${isCategoryDropdownOpen ? "rotate-180 text-amber-300" : ""}`} />
-                  </button>
-
-                  {/* Menu danh mục thả xuống: Gọn gàng, vừa khít nút bấm, cuộn mượt và tự xoay lên nếu thiếu chỗ */}
-                  {isCategoryDropdownOpen && (
-                    <div
-                      className={`absolute left-0 w-full z-50 rounded-2xl bg-[#1c1d22]/98 backdrop-blur-xl border border-[#31333a] shadow-2xl p-1.5 animate-in fade-in ${
-                        isCategoryOpenUpwards
-                          ? "bottom-full mb-1.5 slide-in-from-bottom-2"
-                          : "top-full mt-1.5 slide-in-from-top-2"
-                      }`}
-                    >
-                      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 border-b border-[#2c2e35] mb-1 flex items-center justify-between">
-                        <span>Danh Mục</span>
-                        <span>8 Nhóm</span>
-                      </div>
-                      <div className="max-h-52 overflow-y-auto space-y-0.5 pr-0.5 custom-scrollbar">
-                        {CATEGORY_OPTIONS.map((cat) => {
-                          const isSelected = activeCategory === cat.key;
-                          return (
-                            <div
-                              key={cat.key}
-                              onClick={() => {
-                                setActiveCategory(cat.key);
-                                setIsCategoryDropdownOpen(false);
-                              }}
-                              className={`px-2 py-1.5 rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 select-none ${
-                                isSelected
-                                  ? "bg-[#282a32] text-amber-200 border border-amber-400/30 font-semibold"
-                                  : "hover:bg-[#23242a] text-zinc-200 hover:text-white"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="shrink-0">{cat.icon}</span>
-                                <span className="text-xs font-medium truncate">{cat.label}</span>
-                              </div>
-                              <span
-                                className={`text-[9px] px-1.5 py-0.5 rounded-md border shrink-0 transition-colors ${
-                                  isSelected
-                                    ? "text-amber-300 bg-amber-400/20 border-amber-400/40 font-bold"
-                                    : "text-zinc-400 bg-black/40 border-white/5"
-                                }`}
-                              >
-                                {cat.countBadge}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
 
             {/* Nút xóa bộ lọc & tìm kiếm */}
             {(activeCategory !== "ALL" || searchQuery) && (
@@ -437,18 +347,17 @@ function DecksContent() {
       {isLoading ? (
         <DeckCardsGridSkeleton />
       ) : filteredCards.length === 0 ? (
-        <div className="text-center py-16 p-8 rounded-3xl border border-[#31333a] bg-[#191a1e]">
-          <p className="text-sm text-zinc-400">Không tìm thấy lá bài nào khớp với từ khóa &ldquo;{searchQuery}&rdquo;</p>
-          <button
-            onClick={() => {
+        <EmptyState
+          title="Không tìm thấy lá bài nào"
+          description={`Không có lá bài nào khớp với từ khóa "${searchQuery}" trong danh mục hiện tại.`}
+          action={{
+            label: "Xóa bộ lọc",
+            onClick: () => {
               setSearchQuery("");
               setActiveCategory("ALL");
-            }}
-            className="mt-3 text-xs text-amber-300 underline hover:text-amber-200 cursor-pointer"
-          >
-            Xóa bộ lọc
-          </button>
-        </div>
+            },
+          }}
+        />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {filteredCards.map((card) => (

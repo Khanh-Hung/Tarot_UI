@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -8,11 +8,7 @@ import {
   Sparkles,
   Loader2,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Search,
   X,
-  ChevronDown,
   RotateCcw,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -21,6 +17,10 @@ import { tarotService } from "@/features/tarot/services/tarotService";
 import { EnergyInsightsView } from "@/features/tarot/components/EnergyInsightsView";
 import { Skeleton, HistoryListSkeleton } from "@/components/ui/Skeleton";
 import { getTopicMeta, getSpreadLabel, getDeckName } from "@/features/tarot/utils/topicHelpers";
+import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Pagination } from "@/components/ui/Pagination";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -35,11 +35,6 @@ export default function HistoryPage() {
   const [selectedTopicFilter, setSelectedTopicFilter] = useState("ALL");
   const [selectedDeckFilter, setSelectedDeckFilter] = useState("ALL");
   const [page, setPage] = useState(0);
-
-  const [isTopicDropdownOpen, setIsTopicDropdownOpen] = useState(false);
-  const [isDeckDropdownOpen, setIsDeckDropdownOpen] = useState(false);
-  const topicDropdownRef = useRef<HTMLDivElement>(null);
-  const deckDropdownRef = useRef<HTMLDivElement>(null);
 
   // Lấy userId từ user context hoặc fallback trực tiếp từ localStorage
   const resolvedUserId = useMemo(() => {
@@ -57,20 +52,6 @@ export default function HistoryPage() {
     }
     return id;
   }, [user]);
-
-  // Đóng dropdown khi click ra ngoài
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (topicDropdownRef.current && !topicDropdownRef.current.contains(event.target as Node)) {
-        setIsTopicDropdownOpen(false);
-      }
-      if (deckDropdownRef.current && !deckDropdownRef.current.contains(event.target as Node)) {
-        setIsDeckDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const loadAllHistory = React.useCallback(async (userId: string | number) => {
     setIsLoading(true);
@@ -152,23 +133,20 @@ export default function HistoryPage() {
     setPage(0);
   };
 
-  const TOPIC_OPTIONS = [
-    { key: "ALL", label: "Tất Cả Chủ Đề", icon: "✨" },
-    { key: "LOVE", label: "Tình Duyên", icon: "💖" },
-    { key: "CAREER", label: "Sự Nghiệp", icon: "💼" },
-    { key: "HEALING", label: "Chữa Lành", icon: "🌿" },
-    { key: "GENERAL", label: "Định Hướng", icon: "🧭" },
+  const TOPIC_OPTIONS: OptionItem[] = [
+    { value: "ALL", label: "Tất Cả Chủ Đề" },
+    { value: "LOVE", label: "Tình Duyên" },
+    { value: "CAREER", label: "Sự Nghiệp" },
+    { value: "HEALING", label: "Chữa Lành" },
+    { value: "GENERAL", label: "Định Hướng" },
   ];
 
-  const DECK_OPTIONS = [
-    { key: "ALL", label: "Tất Cả Bộ Bài", icon: "🏛️" },
-    { key: "RIDER_WAITE_CLASSIC", label: "Rider-Waite 1909", icon: "🏛️" },
-    { key: "THOTH_ALEISTER", label: "Thoth Thelema", icon: "🔮" },
-    { key: "MARSEILLE_HERMETIC", label: "Marseille 1760", icon: "⚜️" },
+  const DECK_OPTIONS: OptionItem[] = [
+    { value: "ALL", label: "Tất Cả Bộ Bài" },
+    { value: "RIDER_WAITE_CLASSIC", label: "Rider-Waite 1909" },
+    { value: "THOTH_ALEISTER", label: "Thoth Thelema" },
+    { value: "MARSEILLE_HERMETIC", label: "Marseille 1760" },
   ];
-
-  const activeTopicObj = TOPIC_OPTIONS.find((t) => t.key === selectedTopicFilter) || TOPIC_OPTIONS[0];
-  const activeDeckObj = DECK_OPTIONS.find((d) => d.key === selectedDeckFilter) || DECK_OPTIONS[0];
 
   if (isAuthLoading) {
     return (
@@ -272,131 +250,41 @@ export default function HistoryPage() {
           <div className="relative z-20 pb-2">
             <div className="flex flex-col md:flex-row items-center gap-2.5">
               {/* Search Bar */}
-              <div className="relative flex-1 w-full">
-                <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setPage(0);
-                  }}
-                  placeholder="Tìm kiếm câu hỏi hoặc tên lá bài..."
-                  className="w-full bg-white/[0.04] hover:bg-white/[0.06] focus:bg-white/[0.08] rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-white placeholder:text-zinc-500 outline-none transition"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setPage(0);
-                    }}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+              <SearchInput
+                value={searchQuery}
+                onChange={(val) => {
+                  setSearchQuery(val);
+                  setPage(0);
+                }}
+                onClear={() => setPage(0)}
+                placeholder="Tìm kiếm câu hỏi hoặc tên lá bài..."
+                className="flex-1 w-full"
+              />
 
               {/* Cụm 2 Custom Floating Dropdowns Lọc Chủ Đề & Bộ Bài */}
               <div className="flex items-center gap-2 w-full md:w-auto">
                 {/* 🌟 Custom Dropdown 1: Lọc theo Chủ Đề */}
-                <div className="relative flex-1 sm:w-auto sm:min-w-[170px]" ref={topicDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsTopicDropdownOpen(!isTopicDropdownOpen);
-                      setIsDeckDropdownOpen(false);
+                <div className="w-full sm:w-[170px] shrink-0">
+                  <CustomSelect
+                    options={TOPIC_OPTIONS}
+                    value={selectedTopicFilter}
+                    onChange={(val) => {
+                      setSelectedTopicFilter(val);
+                      setPage(0);
                     }}
-                    className={`w-full ${
-                      isTopicDropdownOpen ? "bg-white/[0.09]" : "bg-white/[0.04] hover:bg-white/[0.07]"
-                    } rounded-xl px-4 py-2.5 text-xs font-semibold text-zinc-200 flex items-center justify-between gap-2.5 transition cursor-pointer select-none`}
-                  >
-                    <span className="flex items-center gap-1.5 whitespace-nowrap">
-                      <span>{activeTopicObj.icon}</span>
-                      <span>{activeTopicObj.label}</span>
-                    </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200 ${isTopicDropdownOpen ? "rotate-180 text-white" : ""}`} />
-                  </button>
-
-                  {/* Menu Popup Chủ Đề Kính Mờ */}
-                  {isTopicDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-[#383a44] bg-[#1a1b20] backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
-                      {TOPIC_OPTIONS.map((opt) => {
-                        const isSelected = selectedTopicFilter === opt.key;
-                        return (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => {
-                              setSelectedTopicFilter(opt.key);
-                              setIsTopicDropdownOpen(false);
-                              setPage(0);
-                            }}
-                            className={`w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
-                              isSelected
-                                ? "bg-[#2b2c34] text-white font-semibold border border-zinc-700/60 shadow-sm"
-                                : "text-zinc-300 hover:text-white hover:bg-[#25262c]"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2 whitespace-nowrap">
-                              <span>{opt.icon}</span>
-                              <span>{opt.label}</span>
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                  />
                 </div>
 
                 {/* 🌟 Custom Dropdown 2: Lọc theo Bộ Bài */}
-                <div className="relative flex-1 sm:w-auto sm:min-w-[190px]" ref={deckDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsDeckDropdownOpen(!isDeckDropdownOpen);
-                      setIsTopicDropdownOpen(false);
+                <div className="w-full sm:w-[190px] shrink-0">
+                  <CustomSelect
+                    options={DECK_OPTIONS}
+                    value={selectedDeckFilter}
+                    onChange={(val) => {
+                      setSelectedDeckFilter(val);
+                      setPage(0);
                     }}
-                    className={`w-full ${
-                      isDeckDropdownOpen ? "bg-white/[0.09]" : "bg-white/[0.04] hover:bg-white/[0.07]"
-                    } rounded-xl px-4 py-2.5 text-xs font-semibold text-zinc-200 flex items-center justify-between gap-2.5 transition cursor-pointer select-none`}
-                  >
-                    <span className="flex items-center gap-1.5 whitespace-nowrap">
-                      <span>{activeDeckObj.icon}</span>
-                      <span>{activeDeckObj.label}</span>
-                    </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200 ${isDeckDropdownOpen ? "rotate-180 text-white" : ""}`} />
-                  </button>
-
-                  {/* Menu Popup Bộ Bài Kính Mờ */}
-                  {isDeckDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-[#383a44] bg-[#1a1b20] backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
-                      {DECK_OPTIONS.map((opt) => {
-                        const isSelected = selectedDeckFilter === opt.key;
-                        return (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => {
-                              setSelectedDeckFilter(opt.key);
-                              setIsDeckDropdownOpen(false);
-                              setPage(0);
-                            }}
-                            className={`w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
-                              isSelected
-                                ? "bg-[#2b2c34] text-white font-semibold border border-zinc-700/60 shadow-sm"
-                                : "text-zinc-300 hover:text-white hover:bg-[#25262c]"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2 whitespace-nowrap">
-                              <span>{opt.icon}</span>
-                              <span>{opt.label}</span>
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                  />
                 </div>
 
                 {/* Nút Reset Lọc */}
@@ -404,9 +292,9 @@ export default function HistoryPage() {
                   <button
                     onClick={resetFilters}
                     title="Đặt lại toàn bộ bộ lọc"
-                    className="w-9 h-9 shrink-0 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition active:scale-95 cursor-pointer"
+                    className="w-10 h-10 shrink-0 rounded-xl bg-[#212227] hover:bg-[#25262c] text-zinc-400 hover:text-white flex items-center justify-center transition active:scale-95 cursor-pointer border border-[#31333a]"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -415,21 +303,14 @@ export default function HistoryPage() {
 
           {/* 🌟 DANH SÁCH LỊCH SỬ DẠNG LIST TINH GIẢN LIỀN MẠCH (KHÔNG LẠM DỤNG KHUNG) */}
           {filteredHistory.length === 0 ? (
-            <div className="flex min-h-[300px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#31333a] bg-[#212227]/40 p-8 text-center">
-              <Sparkles className="h-8 w-8 text-zinc-500 mb-2.5" />
-              <h3 className="text-sm sm:text-base font-bold text-zinc-200">
-                Không tìm thấy quẻ bói nào phù hợp
-              </h3>
-              <p className="mt-1 text-xs text-zinc-400 max-w-sm">
-                Hãy thử tìm với từ khóa khác hoặc đặt lại bộ lọc.
-              </p>
-              <button
-                onClick={resetFilters}
-                className="mt-4 px-4 py-2 rounded-xl bg-[#2b2c34] hover:bg-[#353740] text-xs font-semibold text-zinc-200 border border-[#3b3d46] transition-colors cursor-pointer"
-              >
-                Đặt Lại Bộ Lọc
-              </button>
-            </div>
+            <EmptyState
+              title="Không tìm thấy quẻ bói nào phù hợp"
+              description="Hãy thử tìm với từ khóa khác hoặc đặt lại bộ lọc."
+              action={{
+                label: "Đặt Lại Bộ Lọc",
+                onClick: resetFilters,
+              }}
+            />
           ) : (
             <div className="divide-y divide-white/[0.07] border-t border-b border-white/[0.08]">
               {paginatedItems.map((item) => {
@@ -487,50 +368,14 @@ export default function HistoryPage() {
           )}
 
           {/* 🌟 PHÂN TRANG TINH TẾ */}
-          {totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/[0.06]">
-              <span className="text-xs text-zinc-400 font-medium">
-                Hiển thị <span className="text-zinc-200 font-bold">{paginatedItems.length}</span> / <span className="text-white font-bold">{filteredHistory.length}</span> lượt xem bài
-              </span>
-
-              <div className="flex items-center gap-1.5">
-                {/* Nút Trước */}
-                <button
-                  disabled={currentPage === 0}
-                  onClick={() => setPage((prev) => Math.max(0, prev - 1))}
-                  className="w-9 h-9 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed text-zinc-400 flex items-center justify-center transition active:scale-95 cursor-pointer"
-                  title="Trang trước"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {/* Các nút số trang */}
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPage(i)}
-                    className={`w-9 h-9 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer ${
-                      i === currentPage
-                        ? "bg-white text-zinc-950 shadow-md font-extrabold"
-                        : "bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-
-                {/* Nút Sau */}
-                <button
-                  disabled={currentPage >= totalPages - 1}
-                  onClick={() => setPage((prev) => prev + 1)}
-                  className="w-9 h-9 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed text-zinc-400 flex items-center justify-center transition active:scale-95 cursor-pointer"
-                  title="Trang sau"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalItems={filteredHistory.length}
+            currentCount={paginatedItems.length}
+            itemLabel="lượt xem bài"
+          />
         </div>
       )}
     </div>
