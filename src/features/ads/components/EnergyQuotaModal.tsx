@@ -234,9 +234,9 @@ export const EnergyQuotaModal: React.FC<EnergyQuotaModalProps> = ({
               )}
             </button>
           ) : (
-            <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/50 p-3 text-center text-xs text-zinc-400 flex items-center justify-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span>Bạn đã nhận tối đa 8 lượt hôm nay. Hẹn gặp lại bạn vào ngày mai!</span>
+            <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/50 py-2.5 px-3 text-center text-[11px] sm:text-xs text-zinc-400 flex items-center justify-center gap-1.5 whitespace-nowrap tracking-tight">
+              <ShieldAlert className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span>Bạn đã nhận tối đa 8 lượt hôm nay. Hẹn gặp lại bạn ngày mai!</span>
             </div>
           )}
           </motion.div>

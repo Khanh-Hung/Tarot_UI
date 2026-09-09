@@ -11,35 +11,51 @@ import {
   Gift,
   ArrowLeft,
   ArrowRight,
+  SlidersHorizontal,
+  ChevronDown,
+  Calendar,
 } from "lucide-react";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { AlertBanner } from "@/components/ui/AlertBanner";
 import { DeckCode, DeckDto, SpreadType, UserQuotaDto, ZodiacSign } from "../types/tarot.types";
+import { RelationshipStatus } from "@/features/profile/types/profile.types";
+import { detectTopicFromQuestion } from "../utils/topicDetector";
 import { tarotService } from "../services/tarotService";
+import {
+  calculateZodiacFromDate,
+  ZODIAC_DISPLAY_INFO,
+} from "../utils/birthCalculations";
+
+const RELATIONSHIP_OPTIONS: { code: RelationshipStatus; label: string; icon: string }[] = [
+  { code: "SINGLE", label: "Độc thân", icon: "🌿" },
+  { code: "DATING", label: "Tìm hiểu / Mập mờ", icon: "✨" },
+  { code: "IN_RELATIONSHIP", label: "Đang yêu", icon: "❤️" },
+  { code: "COMPLICATED", label: "Phức tạp / Trục trặc", icon: "🌀" },
+  { code: "MARRIED", label: "Đã kết hôn", icon: "💍" },
+];
 
 export const QUESTION_POOLS = [
-  "Nguồn năng lượng nào đang dẫn lối cho tôi hôm nay?",
-  "Tôi nên lưu tâm điều gì trong công việc và định hướng sắp tới?",
-  "Mối quan hệ hiện tại đang mang lại bài học quý giá nào cho tôi?",
-  "Làm thế nào để tôi kết nối sâu sắc hơn với trực giác bản thân?",
-  "Tôi có thể mở lòng đón nhận cơ hội mới nào trong tuần này?",
-  "Thông điệp chữa lành nào mà tâm hồn tôi đang cần lắng nghe?",
-  "Điều gì đang ngăn cản tôi tiến bước và cách để tôi vượt qua?",
-  "Năng lượng tài chính và vận may của tôi đang biến chuyển ra sao?",
-  "Làm sao để tôi đưa ra quyết định sáng suốt và bình tâm nhất?",
-  "Bài học vũ trụ quan trọng nhất mà tôi đang trải qua là gì?",
-  "Người ấy đang có cảm xúc và suy nghĩ gì về mối liên kết này?",
-  "Lộ trình tài chính nào giúp tôi đạt được sự tự chủ và vững vàng?",
-  "Điều bất ngờ tích cực nào đang trên đường đến với cuộc sống của tôi?",
-  "Làm thế nào để tôi cân bằng giữa công việc bận rộn và bình yên nội tại?",
-  "Bài học lớn nhất mà giai đoạn này đang dạy cho tôi là gì?",
-  "Tôi nên chuẩn bị tinh thần ra sao trước bước ngoặt mới?",
-  "Xu hướng tình cảm của tôi trong thời gian tới sẽ biến chuyển thế nào?",
-  "Có ngả rẽ tiềm năng nào mà tôi chưa nhận ra hay chưa dám thử?",
-  "Tôi cần làm gì để vượt qua cảm giác mông lung và tìm lại đam mê?",
-  "Làm sao để giải tỏa những lo âu vô cớ và tìm lại sự tự tin vốn có?",
-  "Nguồn năng lượng nào đang ủng hộ và bảo bọc tôi lúc này?",
-  "Làm thế nào để tôi tha thứ cho quá khứ và vững bước về phía trước?",
-  "Tôi nên lắng nghe trực giác hay lý trí trong tình huống hiện tại?",
+  "Công việc hiện tại của tôi sắp tới có cơ hội thăng tiến hay tăng lương không?",
+  "Tôi có nên chuyển việc hoặc tìm hướng đi mới vào thời điểm này không?",
+  "Người ấy có thực sự nghiêm túc và có tình cảm thật lòng với tôi không?",
+  "Mối quan hệ hiện tại giữa hai chúng tôi có tương lai đi đường dài không?",
+  "Tài chính và thu nhập của tôi trong vài tháng tới sẽ biến chuyển thế nào?",
+  "Tôi có nên đầu tư hoặc góp vốn làm ăn trong giai đoạn này không?",
+  "Tôi đang phân vân giữa hai lựa chọn, hướng đi nào sẽ mang lại kết quả tốt hơn?",
+  "Tôi nên làm gì để giải tỏa áp lực công việc và lấy lại động lực phát triển?",
+  "Người ấy có đang giấu giếm điều gì hoặc có hình bóng ai khác không?",
+  "Dự án hoặc kế hoạch kinh doanh sắp tới của tôi có gặp trở ngại gì không?",
+  "Tôi cần thay đổi điều gì ở bản thân để công việc và tình duyên suôn sẻ hơn?",
+  "Mối quan hệ này tôi nên tiếp tục kiên nhẫn hay đã đến lúc buông tay?",
+  "Làm thế nào để tôi cải thiện tài chính và quản lý chi tiêu hiệu quả hơn?",
+  "Sắp tới tôi có gặp được quý nhân hoặc cơ hội hợp tác nào đáng giá không?",
+  "Bao giờ tôi mới gặp được người thực sự phù hợp để bắt đầu một mối quan hệ?",
+  "Tôi có nên chủ động mở lời hoặc nhắn tin làm lành với người ấy trước không?",
+  "Công ty hiện tại có phải là môi trường tốt để tôi gắn bó lâu dài?",
+  "Chuyện tình cảm sắp tới của tôi sẽ có chuyển biến tích cực nào không?",
+  "Tôi nên chuẩn bị những gì để hoàn thành tốt mục tiêu đề ra trong tháng này?",
+  "Tôi có nên bắt đầu học thêm kỹ năng mới hoặc đổi ngành nghề không?",
 ];
 
 const ZODIAC_LIST: { code: ZodiacSign; name: string; symbol: string }[] = [
@@ -61,21 +77,21 @@ export const SPREAD_OPTIONS: { type: SpreadType; title: string; subtitle: string
   {
     type: "DAILY_ORACLE",
     title: "Thông Điệp Ngày Mới",
-    subtitle: "Nguồn năng lượng chủ đạo và lời chỉ dẫn vũ trụ dành cho bạn hôm nay",
+    subtitle: "Xem nhanh lời khuyên và xu hướng cho ngày hôm nay",
     cards: 1,
     icon: "☀️",
   },
   {
     type: "PAST_PRESENT_FUTURE",
     title: "Quá Khứ - Hiện Tại - Tương Lai",
-    subtitle: "Thấu suốt gốc rễ quá khứ, nút thắt hiện tại và chiều hướng tương lai",
+    subtitle: "Xem diễn biến sự việc: từ nguyên nhân quá khứ, hiện tại đến kết quả tương lai",
     cards: 3,
     icon: "⏳",
   },
   {
     type: "TWO_PATHS_CHOICE",
     title: "Thực Tại & Hai Ngả Rẽ",
-    subtitle: "So sánh chuyển biến khi bạn đang phân vân giữa hai ngả đường lựa chọn",
+    subtitle: "So sánh 2 lựa chọn khi bạn đang phân vân chưa biết nên chọn hướng nào",
     cards: 3,
     icon: "⚖️",
   },
@@ -92,6 +108,10 @@ interface ReadingWizardStepProps {
   setSpreadType: (s: SpreadType) => void;
   selectedZodiac: ZodiacSign;
   setSelectedZodiac: (z: ZodiacSign) => void;
+  dateOfBirth?: string;
+  setDateOfBirth?: (dob: string) => void;
+  relationshipStatus?: RelationshipStatus;
+  setRelationshipStatus?: (s: RelationshipStatus) => void;
   decks: DeckDto[];
   quota: UserQuotaDto | null;
   errorMsg: string;
@@ -111,6 +131,10 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
   setSpreadType,
   selectedZodiac,
   setSelectedZodiac,
+  dateOfBirth = "",
+  setDateOfBirth,
+  relationshipStatus = "UNKNOWN",
+  setRelationshipStatus,
   decks,
   quota,
   errorMsg,
@@ -118,10 +142,36 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
   onStartReading,
   onOpenQuotaModal,
 }) => {
+  const [showAdvanced, setShowAdvanced] = useState(!dateOfBirth || selectedZodiac === "UNKNOWN");
+  const [showManualZodiac, setShowManualZodiac] = useState(false);
+  const detectedTopic = detectTopicFromQuestion(question);
+  const isLoveTopic = detectedTopic.topic === "LOVE_AND_RELATIONSHIP";
+  const birthZodiac = dateOfBirth ? calculateZodiacFromDate(dateOfBirth) : "UNKNOWN";
+
+  const handleDateOfBirthChange = (val: string) => {
+    setDateOfBirth?.(val);
+    if (val) {
+      const z = calculateZodiacFromDate(val);
+      if (z !== "UNKNOWN") {
+        setSelectedZodiac(z);
+      }
+    }
+  };
+
+  // Tự động cập nhật Cung Hoàng Đạo theo ngày sinh (nếu không mở chế độ chọn thủ công)
+  useEffect(() => {
+    if (dateOfBirth) {
+      const z = calculateZodiacFromDate(dateOfBirth);
+      if (z !== "UNKNOWN" && !showManualZodiac) {
+        setSelectedZodiac(z);
+      }
+    }
+  }, [dateOfBirth, showManualZodiac, setSelectedZodiac]);
+
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([
-    "Lời khuyên vũ trụ dành cho công việc và sự nghiệp sắp tới?",
-    "Mối quan hệ hiện tại đang cần tôi thấu hiểu điều gì?",
-    "Năng lượng và cơ hội mới nào đang chờ đón tôi trong thời gian này?",
+    "Công việc hiện tại của tôi sắp tới có cơ hội thăng tiến hay tăng lương không?",
+    "Người ấy có thực sự nghiêm túc và có tình cảm thật lòng với tôi không?",
+    "Tài chính và thu nhập của tôi trong vài tháng tới sẽ biến chuyển thế nào?",
   ]);
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
 
@@ -142,14 +192,22 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
         ),
         new Promise((resolve) => setTimeout(resolve, 450)),
       ]);
-      if (data && data.length >= 3) {
+
+      const isArrayValid = Array.isArray(data) && data.length >= 3;
+      const isDifferent = isArrayValid && data.some((q, idx) => q !== aiSuggestions[idx]);
+
+      if (isDifferent) {
         setAiSuggestions(data.slice(0, 3));
       } else {
-        const shuffled = [...QUESTION_POOLS].sort(() => 0.5 - Math.random());
+        const available = QUESTION_POOLS.filter((q) => !aiSuggestions.includes(q));
+        const pool = available.length >= 3 ? available : QUESTION_POOLS;
+        const shuffled = [...pool].sort(() => 0.5 - Math.random());
         setAiSuggestions(shuffled.slice(0, 3));
       }
     } catch {
-      const shuffled = [...QUESTION_POOLS].sort(() => 0.5 - Math.random());
+      const available = QUESTION_POOLS.filter((q) => !aiSuggestions.includes(q));
+      const pool = available.length >= 3 ? available : QUESTION_POOLS;
+      const shuffled = [...pool].sort(() => 0.5 - Math.random());
       setAiSuggestions(shuffled.slice(0, 3));
     } finally {
       setIsGeneratingSuggestions(false);
@@ -157,33 +215,52 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
   };
 
   const zodiacOptions: OptionItem[] = [
-    { value: "UNKNOWN", label: "-- Không áp dụng năng lượng Hoàng Đạo --" },
+    { value: "UNKNOWN", label: "Không áp dụng", icon: <span className="text-zinc-400 text-xs">✨</span> },
     ...ZODIAC_LIST.map((z) => ({
       value: z.code,
       label: z.name,
-      icon: z.symbol,
+      icon: <span className="text-amber-300 font-semibold text-sm">{z.symbol}</span>,
     })),
   ];
+
+  const relationshipOptions: OptionItem[] = [
+    { value: "UNKNOWN", label: "Không áp dụng" },
+    ...RELATIONSHIP_OPTIONS.map((opt) => ({
+      value: opt.code,
+      label: opt.label,
+    })),
+  ];
+
+  const spreadSelectOptions: OptionItem[] = SPREAD_OPTIONS.map((opt) => ({
+    value: opt.type,
+    label: opt.title,
+    sublabel: `${opt.cards} lá`,
+    icon: <span className="text-sm leading-none">{opt.icon}</span>,
+  }));
+  const currentSpread = SPREAD_OPTIONS.find((s) => s.type === spreadType) || SPREAD_OPTIONS[0];
 
   const deckOptions: OptionItem[] = decks.map((d) => ({
     value: d.code,
     label: d.nameVi,
-    icon: "🎴",
   }));
 
+  const selectedDeckName = decks.find((d) => d.code === deckCode)?.nameVi || "Rider-Waite";
+  const selectedZodiacItem = ZODIAC_LIST.find((z) => z.code === selectedZodiac);
+  const zodiacDisplay = selectedZodiacItem ? `${selectedZodiacItem.symbol} ${selectedZodiacItem.name}` : "Chưa chọn Cung";
+
   return (
-    <div className="max-w-2xl mx-auto p-6 sm:p-8 rounded-3xl border border-[#31333a] bg-[#191a1e] shadow-2xl transition-all">
+    <div className="max-w-2xl mx-auto p-4 sm:p-5 rounded-3xl border border-[#31333a] bg-[#191a1e] shadow-2xl transition-all">
       {/* STEP INDICATOR HEADER */}
-      <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#2c2e35]">
+      <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-[#2c2e35]">
         <div className="flex items-center gap-2">
           <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
               step === 1
                 ? "bg-zinc-100 text-zinc-950 shadow-md ring-2 ring-zinc-400/30"
                 : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
             }`}
           >
-            {step === 2 ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : "1"}
+            {step === 2 ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : "1"}
           </div>
           <span className={`text-xs font-semibold ${step === 1 ? "text-white" : "text-zinc-400"}`}>
             Tâm Niệm Câu Hỏi
@@ -194,7 +271,7 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
 
         <div className="flex items-center gap-2">
           <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
               step === 2
                 ? "bg-zinc-100 text-zinc-950 shadow-md ring-2 ring-zinc-400/30"
                 : "bg-[#25262c] text-zinc-500 border border-zinc-700/50"
@@ -209,9 +286,11 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
       </div>
 
       {errorMsg && (
-        <div className="mb-4 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-200 text-center animate-in fade-in">
-          {errorMsg}
-        </div>
+        <AlertBanner
+          variant="error"
+          message={errorMsg}
+          className="mb-4"
+        />
       )}
 
       {/* ====== BƯỚC 1: NHẬP CÂU HỎI ====== */}
@@ -232,7 +311,7 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
               rows={3}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ví dụ: Công việc sắp tới của tôi sẽ có cơ hội thăng tiến nào không? Hay: Mối quan hệ hiện tại giữa tôi và người ấy đang có chuyển biến gì?"
+              placeholder="Ví dụ: Công việc sắp tới của tôi sẽ có cơ hội thăng tiến nào không?"
               className="w-full bg-[#212227] border border-[#31333a] focus:border-zinc-400 rounded-2xl p-3.5 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none transition leading-relaxed resize-none shadow-inner"
             />
           </div>
@@ -278,19 +357,31 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => setQuestion(suggested)}
-                      className={`w-full text-left px-3.5 py-2 rounded-xl border text-xs leading-relaxed transition-all duration-200 flex items-center justify-between gap-2 cursor-pointer ${
+                      className={`group relative w-full text-left px-3.5 py-2.5 rounded-xl border text-xs leading-relaxed transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer overflow-hidden ${
                         isSelected
-                          ? "bg-amber-500/10 border-amber-400/40 text-amber-200 font-medium shadow-sm"
-                          : "bg-[#212227] hover:bg-[#282a30] border-[#31333a] text-zinc-300 hover:text-white"
+                          ? "bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-[#212227] border-amber-400/60 text-amber-200 font-medium shadow-[0_0_12px_rgba(245,158,11,0.12)] translate-x-0.5"
+                          : "bg-[#212227] hover:bg-[#282a30] hover:border-amber-400/40 border-[#31333a] text-zinc-300 hover:text-white hover:translate-x-0.5"
                       }`}
                     >
-                      <span className="flex items-center gap-2 min-w-0">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? "bg-amber-400" : "bg-zinc-600"}`} />
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200 ${
+                            isSelected
+                              ? "bg-amber-400 shadow-[0_0_8px_#f59e0b] scale-110"
+                              : "bg-zinc-600 group-hover:bg-amber-400/60"
+                          }`}
+                        />
                         <span className="truncate">{suggested}</span>
                       </span>
-                      <span className="text-[10px] text-zinc-500 shrink-0 uppercase tracking-wider font-semibold">
-                        Chọn
-                      </span>
+                      <div className="shrink-0 flex items-center">
+                        <ArrowRight
+                          className={`w-3.5 h-3.5 transition-all duration-200 ${
+                            isSelected
+                              ? "text-amber-400 opacity-100 translate-x-0"
+                              : "text-zinc-500 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-amber-300"
+                          }`}
+                        />
+                      </div>
                     </button>
                   );
                 })}
@@ -313,23 +404,21 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
 
       {/* ====== BƯỚC 2: CẤU HÌNH & BỐC BÀI ====== */}
       {step === 2 && (
-        <form onSubmit={onStartReading} className="space-y-4 animate-in fade-in slide-in-from-right-2">
-          <div className="text-center mb-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              Thiết Lập Trải Bài & Năng Lượng
+        <form onSubmit={onStartReading} className="space-y-2.5 sm:space-y-3 animate-in fade-in slide-in-from-right-2">
+          <div className="text-center mb-0.5">
+            <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              Thiết Lập Trải Bài
             </h1>
-            <p className="mt-0.5 text-xs text-zinc-400">
+            <p className="text-[11px] text-zinc-400">
               Lựa chọn phương thức kết nối trực giác phù hợp với tâm nguyện của bạn
             </p>
           </div>
 
-          {/* CÂU HỎI ĐÃ CHỌN */}
-          <div className="p-3 rounded-xl bg-[#212227] border border-[#31333a] flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block">
-                Câu hỏi của bạn:
-              </span>
-              <p className="text-xs text-zinc-200 font-medium truncate mt-0.5">
+          {/* CÂU HỎI ĐÃ CHỌN (Gọn gàng) */}
+          <div className="px-3 py-1.5 rounded-xl bg-[#212227]/70 border border-[#31333a] flex items-center justify-between gap-2.5">
+            <div className="min-w-0 flex-1 flex items-center gap-2 text-xs">
+              <span className="text-zinc-500 font-semibold shrink-0">❓ Câu hỏi:</span>
+              <p className="text-zinc-200 font-medium truncate italic text-xs">
                 &ldquo;{question}&rdquo;
               </p>
             </div>
@@ -343,95 +432,188 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
             </button>
           </div>
 
-          {/* CHỌN KIỂU TRẢI BÀI */}
-          <div>
-            <label className="text-xs font-semibold text-zinc-200 mb-2 block">
-              Kiểu Trải Bài Tarot
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {SPREAD_OPTIONS.map((opt) => {
-                const isSelected = spreadType === opt.type;
-                return (
-                  <button
-                    key={opt.type}
-                    type="button"
-                    onClick={() => setSpreadType(opt.type)}
-                    className={`p-3 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between gap-2 cursor-pointer ${
-                      isSelected
-                        ? "bg-amber-500/10 border-amber-400/50 shadow-md ring-1 ring-amber-400/30"
-                        : "bg-[#212227] hover:bg-[#282a30] border-[#31333a] text-zinc-400"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl">{opt.icon}</span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                          isSelected
-                            ? "bg-amber-400/20 border-amber-400/40 text-amber-300"
-                            : "bg-zinc-800 border-zinc-700 text-zinc-400"
-                        }`}
+          {/* CẤU HÌNH TRẢI BÀI & NGỮ CẢNH (DROPDOWN COMPACT) */}
+          {isLoveTopic ? (
+            <div className="space-y-1.5 animate-in fade-in duration-150">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* CỘT 1: KIỂU TRẢI BÀI TAROT */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between px-0.5">
+                    <label className="text-[11px] sm:text-xs font-semibold text-zinc-200">
+                      Kiểu Trải Bài Tarot
+                    </label>
+                  </div>
+                  <CustomSelect
+                    options={spreadSelectOptions}
+                    value={spreadType}
+                    onChange={(val) => setSpreadType(val as SpreadType)}
+                    placeholder="Chọn kiểu trải bài..."
+                  />
+                </div>
+
+                {/* CỘT 2: TÌNH TRẠNG MỐI QUAN HỆ */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between px-0.5">
+                    <label className="text-[11px] sm:text-xs font-semibold text-zinc-200">
+                      Tình trạng mối quan hệ
+                    </label>
+                    {relationshipStatus && relationshipStatus !== "UNKNOWN" && (
+                      <button
+                        type="button"
+                        onClick={() => setRelationshipStatus?.("UNKNOWN")}
+                        className="text-[10px] text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
                       >
-                        {opt.cards} lá bài
-                      </span>
-                    </div>
-                    <div>
-                      <div className={`text-xs font-bold ${isSelected ? "text-white" : "text-zinc-300"}`}>
-                        {opt.title}
-                      </div>
-                      <p className="text-[10px] text-zinc-400 line-clamp-2 mt-0.5 leading-snug">
-                        {opt.subtitle}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                        Bỏ chọn
+                      </button>
+                    )}
+                  </div>
+                  <CustomSelect
+                    options={relationshipOptions}
+                    value={relationshipStatus || "UNKNOWN"}
+                    onChange={(val) => setRelationshipStatus?.(val as RelationshipStatus)}
+                    placeholder="Chọn tình trạng mối quan hệ..."
+                  />
+                </div>
+              </div>
 
-          {/* CUNG HOÀNG ĐẠO & BỘ BÀI */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div>
-              <label className="text-xs font-semibold text-zinc-200 mb-1 flex items-center justify-between">
-                <span>Năng Lượng Cung Hoàng Đạo</span>
-                {selectedZodiac && selectedZodiac !== "UNKNOWN" && (
-                  <span className="text-[10px] font-bold text-amber-300">Đã chọn</span>
-                )}
-              </label>
-              <CustomSelect
-                options={zodiacOptions}
-                value={selectedZodiac}
-                onChange={(val) => setSelectedZodiac(val as ZodiacSign)}
-                placeholder="Chọn Cung Hoàng Đạo..."
-              />
+              {/* GIẢI THÍCH KIỂU TRẢI BÀI */}
+              <p className="text-[10px] sm:text-[11px] text-zinc-400 px-0.5 pt-0.5 leading-tight">
+                💡 <strong className="text-zinc-300 font-medium">{currentSpread.title}:</strong> {currentSpread.subtitle}
+              </p>
             </div>
-
-            {decks.length > 0 && (
-              <div>
-                <label className="text-xs font-semibold text-zinc-200 mb-1 flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Bộ Bài Tarot Muốn Dùng</span>
+          ) : (
+            /* KHI KHÔNG PHẢI CHỦ ĐỀ TÌNH CẢM -> KIỂU TRẢI BÀI DROPDOWN FULL WIDTH */
+            <div className="space-y-1 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between px-0.5">
+                <label className="text-[11px] sm:text-xs font-semibold text-zinc-200">
+                  Kiểu Trải Bài Tarot
                 </label>
-                <CustomSelect
-                  options={deckOptions}
-                  value={deckCode}
-                  onChange={(val) => setDeckCode(val as DeckCode)}
-                  placeholder="Chọn bộ bài Tarot..."
-                />
+              </div>
+              <CustomSelect
+                options={spreadSelectOptions}
+                value={spreadType}
+                onChange={(val) => setSpreadType(val as SpreadType)}
+                placeholder="Chọn kiểu trải bài..."
+              />
+              <p className="text-[10px] sm:text-[11px] text-zinc-400 px-0.5 pt-0.5 leading-tight">
+                💡 <strong className="text-zinc-300 font-medium">{currentSpread.title}:</strong> {currentSpread.subtitle}
+              </p>
+            </div>
+          )}
+
+          {/* TÙY CHỌN NĂNG LƯỢNG BẢN MỆNH & BỘ BÀI */}
+          <div className={`rounded-xl border border-[#31333a] bg-[#212227]/40 transition-all ${showAdvanced ? "relative z-20" : ""}`}>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`w-full px-3 py-2 flex items-center justify-between gap-3 text-xs text-zinc-300 hover:text-white transition cursor-pointer ${showAdvanced ? "rounded-t-xl" : "rounded-xl"}`}
+            >
+              <div className="flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="font-semibold text-[11px] sm:text-xs">Năng Lượng Bản Mệnh & Bộ Bài</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+                <span className="truncate max-w-[180px] sm:max-w-[280px] text-zinc-300 text-[10px] sm:text-[11px]">
+                  {zodiacDisplay} • {selectedDeckName}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 ${showAdvanced ? "rotate-180" : ""}`} />
+              </div>
+            </button>
+
+            {showAdvanced && (
+              <div className="p-2.5 pt-1.5 border-t border-[#31333a]/60 grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-in fade-in duration-150">
+                {/* CỘT 1: NGÀY SINH & BẢN MỆNH */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold text-zinc-200 flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3 text-amber-400" />
+                      <span>Ngày Sinh Của Bạn</span>
+                    </label>
+                  </div>
+
+                  <DatePicker
+                    value={dateOfBirth || ""}
+                    onChange={handleDateOfBirthChange}
+                    placeholder="dd/mm/yyyy (ngày sinh dương lịch)"
+                  />
+
+                  {/* THÔNG TIN CUNG HOÀNG ĐẠO */}
+                  <div className="flex items-center justify-between text-[11px] text-zinc-400 px-0.5 pt-0.5">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span>Cung:</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowManualZodiac(!showManualZodiac)}
+                        className="inline-flex items-center gap-1 text-amber-200 font-semibold hover:text-amber-300 transition cursor-pointer"
+                        title="Bấm để tự chọn cung hoàng đạo khác nếu muốn"
+                      >
+                        <span>{ZODIAC_DISPLAY_INFO[selectedZodiac]?.symbol}</span>
+                        <span className="underline decoration-amber-400/40 underline-offset-2">{ZODIAC_DISPLAY_INFO[selectedZodiac]?.nameVi}</span>
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowManualZodiac(!showManualZodiac)}
+                      className="text-[10px] text-amber-400/90 hover:text-amber-300 hover:underline cursor-pointer shrink-0 transition"
+                    >
+                      {showManualZodiac ? "Đóng chọn cung" : "Tự chọn cung"}
+                    </button>
+                  </div>
+
+                  {showManualZodiac && (
+                    <div className="pt-1 space-y-1 animate-in fade-in duration-150">
+                      <CustomSelect
+                        options={zodiacOptions}
+                        value={selectedZodiac}
+                        onChange={(val) => setSelectedZodiac(val as ZodiacSign)}
+                        placeholder="Chọn Cung Hoàng Đạo..."
+                      />
+                      {birthZodiac !== "UNKNOWN" && birthZodiac !== selectedZodiac && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedZodiac(birthZodiac)}
+                          className="text-[10px] text-amber-400/80 hover:text-amber-300 hover:underline cursor-pointer transition flex items-center gap-1"
+                        >
+                          <span>↺</span>
+                          <span>Khôi phục theo ngày sinh ({ZODIAC_DISPLAY_INFO[birthZodiac]?.nameVi})</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* CỘT 2: BỘ BÀI TAROT */}
+                {decks.length > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-zinc-200 flex items-center gap-1">
+                        <BookOpen className="w-3 h-3 text-zinc-400" />
+                        <span>Chọn Bộ Bài</span>
+                      </label>
+                    </div>
+                    <CustomSelect
+                      options={deckOptions}
+                      value={deckCode}
+                      onChange={(val) => setDeckCode(val as DeckCode)}
+                      placeholder="Chọn bộ bài Tarot..."
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* NĂNG LƯỢNG TRẢI BÀI & HẠN MỨC */}
           <div className="flex items-center justify-between text-xs px-1 text-zinc-400">
-            <span className="flex items-center gap-1.5 shrink-0">
+            <span className="flex items-center gap-1.5 shrink-0 text-[11px] sm:text-xs">
               <Zap className={`w-3.5 h-3.5 shrink-0 ${quota ? (quota.availableReadings > 0 ? "text-amber-400 fill-amber-400/30" : "text-red-400") : "text-zinc-500 animate-pulse"}`} />
-              <span className="sm:hidden">Năng lượng:</span>
-              <span className="hidden sm:inline">Năng lượng trải bài:</span>
+              <span>Năng lượng trải bài:</span>
             </span>
             <button
               type="button"
               onClick={onOpenQuotaModal}
-              className="text-amber-300 hover:text-amber-200 font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer whitespace-nowrap text-right"
+              className="text-amber-300 hover:text-amber-200 font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer whitespace-nowrap text-right text-[11px] sm:text-xs"
             >
               <span>{quota ? `${quota.availableReadings} lượt khả dụng` : "Đang kiểm tra..."}</span>
               <span className="text-[10px] text-zinc-400 font-normal hidden sm:inline">(Xem thêm / Nhận thêm)</span>
@@ -440,13 +622,13 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
           </div>
 
           {/* ACTIONS: QUAY LẠI & TIẾN HÀNH TRẢI BÀI */}
-          <div className="flex items-center gap-2.5 sm:gap-3 pt-1">
+          <div className="flex items-center gap-2 pt-0.5">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-3.5 sm:px-4 py-3 rounded-2xl bg-[#212227] hover:bg-[#2b2c33] border border-[#31333a] text-zinc-300 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer shrink-0 whitespace-nowrap"
+              className="px-3 py-2.5 rounded-xl bg-[#212227] hover:bg-[#2b2c33] border border-[#31333a] text-zinc-300 font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 whitespace-nowrap"
             >
-              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
               <span>Quay lại</span>
             </button>
 
@@ -454,21 +636,21 @@ export const ReadingWizardStep: React.FC<ReadingWizardStepProps> = ({
               <button
                 type="button"
                 onClick={onOpenQuotaModal}
-                className="flex-1 py-3 px-3 sm:px-5 rounded-2xl silver-gradient-btn text-zinc-950 font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] active:scale-95 whitespace-nowrap"
+                className="flex-1 py-2.5 px-3 sm:px-4 rounded-xl silver-gradient-btn text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition cursor-pointer shadow-lg hover:scale-[1.01] active:scale-95 whitespace-nowrap"
               >
-                <Gift className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
+                <Gift className="w-4 h-4 shrink-0 text-zinc-950" />
                 <span className="sm:hidden">Nhận Thêm Lượt Bốc Bài</span>
                 <span className="hidden sm:inline">Nhận Thêm Lượt Để Bốc Bài (Miễn Phí)</span>
               </button>
             ) : (
               <button
                 type="submit"
-                className="flex-1 py-3 px-3 sm:px-5 rounded-2xl silver-gradient-btn font-bold text-xs sm:text-sm sm:text-base flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer shadow-lg hover:scale-[1.01] whitespace-nowrap"
+                className="flex-1 py-2.5 px-3 sm:px-4 rounded-xl silver-gradient-btn font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition cursor-pointer shadow-lg hover:scale-[1.01] whitespace-nowrap"
               >
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
+                <Sparkles className="w-4 h-4 shrink-0 text-zinc-950" />
                 <span className="sm:hidden">Xáo & Trải Bài</span>
-                <span className="hidden sm:inline">Tiến Hành Xáo & Trải Bài Ra Bàn</span>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-zinc-950" />
+                <span className="hidden sm:inline">Tiến Hành Xáo & Trải Bài</span>
+                <ArrowRight className="w-4 h-4 shrink-0 text-zinc-950" />
               </button>
             )}
           </div>

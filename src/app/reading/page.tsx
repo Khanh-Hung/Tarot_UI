@@ -11,6 +11,8 @@ import {
   SpreadType,
   ZodiacSign,
 } from "@/features/tarot/types/tarot.types";
+import { RelationshipStatus } from "@/features/profile/types/profile.types";
+import { profileService } from "@/features/profile/services/profileService";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { getFriendlyErrorMessage } from "@/lib/errorMapping";
 import { EnergyQuotaModal } from "@/features/ads/components/EnergyQuotaModal";
@@ -19,6 +21,9 @@ import { ThreeTarotFan } from "@/features/tarot/components/ThreeTarotFan";
 import { ReadingFormSkeleton } from "@/components/ui/Skeleton";
 import { ReadingWizardStep } from "@/features/tarot/components/ReadingWizardStep";
 import { ReadingResultStep } from "@/features/tarot/components/ReadingResultStep";
+import { AlertBanner } from "@/components/ui/AlertBanner";
+import { detectTopicFromQuestion } from "@/features/tarot/utils/topicDetector";
+import { calculateZodiacFromDate, toIsoDateString } from "@/features/tarot/utils/birthCalculations";
 
 function ReadingContent() {
   const router = useRouter();
@@ -35,6 +40,8 @@ function ReadingContent() {
   const [selectedZodiac, setSelectedZodiac] = useState<ZodiacSign>(
     (user?.zodiacSign as ZodiacSign) || "UNKNOWN"
   );
+  const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus>("UNKNOWN");
+  const [dateOfBirth, setDateOfBirth] = useState<string>("");
   const [decks, setDecks] = useState<DeckDto[]>([]);
   const [isReadingLoading, setIsReadingLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -42,25 +49,48 @@ function ReadingContent() {
   const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  // Load danh sách bộ bài Tarot
+  // Load danh sách bộ bài Tarot & thông tin hồ sơ
   useEffect(() => {
-    async function loadDecks() {
+    async function loadData() {
       try {
         const data = await tarotService.getDecks();
         setDecks(data);
       } catch (e: unknown) {
         console.error("Failed to load decks:", e);
       }
-    }
-    loadDecks();
-  }, []);
 
-  // Tự động chọn Cung Hoàng Đạo từ user khi đã đăng nhập
+      if (isAuthenticated) {
+        try {
+          const myProfile = await profileService.getMyProfile();
+          if (myProfile?.relationshipStatus && myProfile.relationshipStatus !== "UNKNOWN") {
+            setRelationshipStatus(myProfile.relationshipStatus);
+          }
+          if (myProfile?.dateOfBirth) {
+            setDateOfBirth(myProfile.dateOfBirth);
+            // Ưu tiên tính Cung Hoàng Đạo chuẩn xác theo ngày sinh
+            const autoZodiac = calculateZodiacFromDate(myProfile.dateOfBirth);
+            if (autoZodiac !== "UNKNOWN") {
+              setSelectedZodiac(autoZodiac);
+            } else if (myProfile?.zodiacSign && myProfile.zodiacSign !== "UNKNOWN") {
+              setSelectedZodiac(myProfile.zodiacSign);
+            }
+          } else if (myProfile?.zodiacSign && myProfile.zodiacSign !== "UNKNOWN") {
+            setSelectedZodiac(myProfile.zodiacSign);
+          }
+        } catch {
+          // ignore profile load error
+        }
+      }
+    }
+    loadData();
+  }, [isAuthenticated]);
+
+  // Tự động chọn Cung Hoàng Đạo từ user khi chưa có ngày sinh
   useEffect(() => {
-    if (user?.zodiacSign && user.zodiacSign !== "UNKNOWN") {
+    if (!dateOfBirth && user?.zodiacSign && user.zodiacSign !== "UNKNOWN") {
       setSelectedZodiac(user.zodiacSign as ZodiacSign);
     }
-  }, [user?.zodiacSign]);
+  }, [user?.zodiacSign, dateOfBirth]);
 
   // Cuộn lên đỉnh trang khi có kết quả
   useEffect(() => {
@@ -76,8 +106,15 @@ function ReadingContent() {
       setErrorMsg("Vui lòng nhập hoặc chọn một câu hỏi bạn đang băn khoăn.");
       return;
     }
-    if (selectedZodiac === "UNKNOWN" && user?.zodiacSign && user.zodiacSign !== "UNKNOWN") {
-      setSelectedZodiac(user.zodiacSign as ZodiacSign);
+    if (selectedZodiac === "UNKNOWN") {
+      if (dateOfBirth) {
+        const autoZ = calculateZodiacFromDate(dateOfBirth);
+        if (autoZ !== "UNKNOWN") {
+          setSelectedZodiac(autoZ);
+        }
+      } else if (user?.zodiacSign && user.zodiacSign !== "UNKNOWN") {
+        setSelectedZodiac(user.zodiacSign as ZodiacSign);
+      }
     }
     setErrorMsg("");
     setStep(2);
@@ -97,8 +134,8 @@ function ReadingContent() {
     }
 
     const needsZodiac = !user?.zodiacSign || user.zodiacSign === "UNKNOWN";
-    if (needsZodiac && (!selectedZodiac || selectedZodiac === "UNKNOWN")) {
-      setErrorMsg("Vui lòng chọn Cung Hoàng Đạo để AI kết nối năng lượng chính xác nhất.");
+    if (needsZodiac && !dateOfBirth && (!selectedZodiac || selectedZodiac === "UNKNOWN")) {
+      setErrorMsg("Vui lòng nhập Ngày Sinh hoặc chọn Cung Hoàng Đạo để AI kết nối năng lượng chính xác nhất.");
       return;
     }
 
@@ -135,11 +172,19 @@ function ReadingContent() {
     const startTimestamp = Date.now();
 
     try {
+      const detectedTopic = detectTopicFromQuestion(question);
+      const isLoveTopic = detectedTopic.topic === "LOVE_AND_RELATIONSHIP";
+
+      // Chuẩn hóa dateOfBirth sang ISO (YYYY-MM-DD)
+      const isoDob = dateOfBirth ? (toIsoDateString(dateOfBirth) || undefined) : undefined;
+
       const resultPromise = tarotService.createReading({
         userId: user!.userId,
         userQuestion: question,
         deckCode,
         zodiacSign: selectedZodiac !== "UNKNOWN" ? selectedZodiac : undefined,
+        dateOfBirth: isoDob,
+        relationshipStatus: isLoveTopic && relationshipStatus !== "UNKNOWN" ? relationshipStatus : undefined,
         spreadType,
         selectedCardIds: picked.map((p) => p.cardId),
         isReversedList: picked.map((p) => p.isReversed),
@@ -189,7 +234,7 @@ function ReadingContent() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       {/* GIAI ĐOẠN 1: FORM WIZARD 2 BƯỚC */}
       {stage === "FORM" && (
         <ReadingWizardStep
@@ -203,6 +248,10 @@ function ReadingContent() {
           setSpreadType={setSpreadType}
           selectedZodiac={selectedZodiac}
           setSelectedZodiac={setSelectedZodiac}
+          dateOfBirth={dateOfBirth}
+          setDateOfBirth={setDateOfBirth}
+          relationshipStatus={relationshipStatus}
+          setRelationshipStatus={setRelationshipStatus}
           decks={decks}
           quota={quota}
           errorMsg={errorMsg}
@@ -216,9 +265,12 @@ function ReadingContent() {
       {stage === "PICKING" && (
         <div className="space-y-4">
           {errorMsg && (
-            <div className="max-w-md mx-auto p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs text-center animate-shake">
-              ⚠️ {errorMsg}
-            </div>
+            <AlertBanner
+              variant="error"
+              message={errorMsg}
+              className="max-w-md mx-auto"
+              onClose={() => setErrorMsg("")}
+            />
           )}
           <ThreeTarotFan
             deckCode={deckCode}
