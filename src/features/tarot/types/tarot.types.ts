@@ -79,11 +79,15 @@ export interface DrawnCardDto {
   card?: CardDto;
 }
 
+import { RelationshipStatus } from "@/features/profile/types/profile.types";
+
 export interface CreateReadingCommand {
   userId: string | number;
   userQuestion: string;
   topic?: Topic;
+  relationshipStatus?: RelationshipStatus;
   zodiacSign?: ZodiacSign;
+  dateOfBirth?: string;
   spreadType?: SpreadType;
   deckCode?: DeckCode;
   selectedCardIds?: (string | number)[];
@@ -95,6 +99,7 @@ export interface CreateReadingResponse {
   readingId?: string | number;
   userQuestion: string;
   topic?: Topic;
+  relationshipStatus?: RelationshipStatus;
   spreadType: SpreadType;
   zodiacSign?: ZodiacSign;
   initialReading: string;
@@ -115,6 +120,7 @@ export interface ReadingDetailResponse {
   userId: string | number;
   userQuestion: string;
   topic?: Topic;
+  relationshipStatus?: RelationshipStatus;
   spreadType: SpreadType;
   zodiacSign?: ZodiacSign;
   deckCode: DeckCode;

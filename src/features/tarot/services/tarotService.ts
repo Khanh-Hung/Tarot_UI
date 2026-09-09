@@ -138,7 +138,7 @@ export const tarotService = {
 
   async getSuggestedQuestions(topic?: string, zodiac?: string): Promise<string[]> {
     const response = await apiClient.get<string[]>("/readings/suggestions", {
-      params: { topic, zodiac },
+      params: { topic, zodiac, _t: Date.now() },
     });
     return response.data;
   },
