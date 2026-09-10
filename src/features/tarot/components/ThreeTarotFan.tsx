@@ -43,30 +43,263 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const effectiveMaxCards = maxCards === 1 ? 1 : 3;
+  const effectiveMaxCards = maxCards || 3;
 
   const slotNames = React.useMemo(() => {
-    if (effectiveMaxCards === 1) {
+    if (effectiveMaxCards === 1 || spreadType === "DAILY_ORACLE") {
       return [
-        { title: "Thông Điệp Ngày Mới", shortTitle: "Thông Điệp", desc: "Năng lượng chủ đạo và lời chỉ dẫn cho ngày hôm nay", icon: "☀️" },
+        {
+          title: "Thông Điệp Ngày Mới",
+          shortTitle: "Thông Điệp",
+          desc: "Năng lượng chủ đạo và lời chỉ dẫn cho ngày hôm nay",
+          icon: "☀️",
+        },
       ];
     }
     if (spreadType === "TWO_PATHS_CHOICE") {
       return [
-        { title: "Thực Tại Hiện Tại", shortTitle: "Thực Tại", desc: "Nguồn năng lượng và tình huống bạn đang đối diện", icon: "🧭" },
-        { title: "Ngả Rẽ / Phương Án A", shortTitle: "Hướng A", desc: "Tiềm năng, chuyển biến và kết quả theo hướng A", icon: "🅰️" },
-        { title: "Ngả Rẽ / Phương Án B", shortTitle: "Hướng B", desc: "Tiềm năng, chuyển biến và kết quả theo hướng B", icon: "🅱️" },
+        {
+          title: "Thực Tại Hiện Tại",
+          shortTitle: "Thực Tại",
+          desc: "Nguồn năng lượng và tình huống bạn đang đối diện",
+          icon: "🧭",
+        },
+        {
+          title: "Ngả Rẽ / Phương Án A",
+          shortTitle: "Hướng A",
+          desc: "Tiềm năng, chuyển biến và kết quả theo hướng A",
+          icon: "🅰️",
+        },
+        {
+          title: "Ngả Rẽ / Phương Án B",
+          shortTitle: "Hướng B",
+          desc: "Tiềm năng, chuyển biến và kết quả theo hướng B",
+          icon: "🅱️",
+        },
+      ];
+    }
+    if (spreadType === "LOVE_RELATIONSHIP") {
+      return [
+        {
+          title: "Năng Lượng Của Bạn",
+          shortTitle: "Bản Thân",
+          desc: "Tâm tư, cảm xúc và góc nhìn của bạn trong mối quan hệ",
+          icon: "💖",
+        },
+        {
+          title: "Tâm Ý Đối Phương",
+          shortTitle: "Đối Phương",
+          desc: "Cảm nhận, suy nghĩ và thái độ của người ấy",
+          icon: "💫",
+        },
+        {
+          title: "Sự Kết Nối & Tương Lai",
+          shortTitle: "Kết Nối",
+          desc: "Sợi dây liên kết, bài học chung và hướng phát triển",
+          icon: "💞",
+        },
+      ];
+    }
+    if (spreadType === "MIND_BODY_SPIRIT") {
+      return [
+        {
+          title: "Tâm Trí (Mind)",
+          shortTitle: "Tâm Trí",
+          desc: "Suy nghĩ, niềm tin cốt lõi và góc nhìn lý trí",
+          icon: "🧠",
+        },
+        {
+          title: "Thể Chất (Body)",
+          shortTitle: "Thể Chất",
+          desc: "Hành động thực tế, năng lượng thể chất và vật chất",
+          icon: "🌿",
+        },
+        {
+          title: "Tâm Hồn (Spirit)",
+          shortTitle: "Tâm Hồn",
+          desc: "Trực giác, sự thấu suốt và tiếng gọi linh hồn",
+          icon: "✨",
+        },
+      ];
+    }
+    if (spreadType === "SITUATION_OBSTACLE_ADVICE") {
+      return [
+        {
+          title: "Thực Trạng Vấn Đề",
+          shortTitle: "Thực Trạng",
+          desc: "Bối cảnh thực tế và điều đang thực sự diễn ra",
+          icon: "🔍",
+        },
+        {
+          title: "Rào Cản & Thách Thức",
+          shortTitle: "Trở Ngại",
+          desc: "Khó khăn cốt lõi cần phải vượt qua hoặc đối diện",
+          icon: "⚡",
+        },
+        {
+          title: "Lời Khuyên Hành Động",
+          shortTitle: "Lời Khuyên",
+          desc: "Hướng dẫn xử lý và giải pháp tối ưu cho bạn",
+          icon: "💡",
+        },
+      ];
+    }
+    if (spreadType === "HORSESHOE") {
+      return [
+        {
+          title: "Ảnh Hưởng Quá Khứ",
+          shortTitle: "Quá Khứ",
+          desc: "Nền tảng và sự kiện trong quá khứ dẫn đến hiện tại",
+          icon: "🕰️",
+        },
+        {
+          title: "Hiện Tại Cốt Lõi",
+          shortTitle: "Hiện Tại",
+          desc: "Tình trạng thực tế và cảm xúc ở thời điểm này",
+          icon: "📍",
+        },
+        {
+          title: "Ẩn Số Tiềm Tàng",
+          shortTitle: "Ẩn Số",
+          desc: "Yếu tố bí mật, nỗi sợ hoặc điều bạn chưa nhận thấy",
+          icon: "🔮",
+        },
+        {
+          title: "Hành Động Tối Ưu",
+          shortTitle: "Lời Khuyên",
+          desc: "Cách tiếp cận hoặc giải pháp hành động tốt nhất",
+          icon: "🗝️",
+        },
+        {
+          title: "Kết Quả Sau Cùng",
+          shortTitle: "Kết Quả",
+          desc: "Kết cục tiềm năng nếu đi theo hướng hành động này",
+          icon: "🏆",
+        },
+      ];
+    }
+    if (spreadType === "CELTIC_CROSS") {
+      return [
+        {
+          title: "Hiện Tại Cốt Lõi",
+          shortTitle: "1. Hiện Tại",
+          desc: "Bối cảnh và trạng thái tinh thần cốt lõi của bạn",
+          icon: "1️⃣",
+        },
+        {
+          title: "Thách Thức / Trở Ngại",
+          shortTitle: "2. Trở Ngại",
+          desc: "Lực cản hoặc yếu tố xung đột trực tiếp",
+          icon: "2️⃣",
+        },
+        {
+          title: "Tiềm Thức / Nền Tảng",
+          shortTitle: "3. Tiềm Thức",
+          desc: "Nguyên nhân sâu xa hoặc điều định hình vấn đề",
+          icon: "3️⃣",
+        },
+        {
+          title: "Quá Khứ Gần",
+          shortTitle: "4. Quá Khứ",
+          desc: "Sự kiện vừa xảy ra đang dần lùi xa",
+          icon: "4️⃣",
+        },
+        {
+          title: "Mục Tiêu / Tiềm Năng",
+          shortTitle: "5. Mục Tiêu",
+          desc: "Kết quả tốt nhất có thể đạt được hoặc lý tưởng",
+          icon: "5️⃣",
+        },
+        {
+          title: "Tương Lai Gần",
+          shortTitle: "6. Tương Lai",
+          desc: "Xu hướng biến chuyển trong thời gian ngắn sắp tới",
+          icon: "6️⃣",
+        },
+        {
+          title: "Thái Độ Bản Thân",
+          shortTitle: "7. Bản Thân",
+          desc: "Tâm lý, niềm tin và vị thế của bạn",
+          icon: "7️⃣",
+        },
+        {
+          title: "Môi Trường Xung Quanh",
+          shortTitle: "8. Môi Trường",
+          desc: "Tác động từ người khác hoặc hoàn cảnh bên ngoài",
+          icon: "8️⃣",
+        },
+        {
+          title: "Hy Vọng & Nỗi Sợ",
+          shortTitle: "9. Hy Vọng",
+          desc: "Mong muốn thầm kín hoặc sự bất an trong lòng",
+          icon: "9️⃣",
+        },
+        {
+          title: "Kết Quả Cuối Cùng",
+          shortTitle: "10. Kết Quả",
+          desc: "Lời giải đáp tổng kết và định hướng đường dài",
+          icon: "🔟",
+        },
       ];
     }
     return [
-      { title: "Quá Khứ và Nền Tảng", shortTitle: "Quá Khứ", desc: "Nguồn gốc, nguyên nhân sâu xa tạo nên hoàn cảnh", icon: "🌒" },
-      { title: "Hiện Tại và Trở Ngại", shortTitle: "Hiện Tại", desc: "Năng lượng thực tế và nút thắt bạn đang đối diện", icon: "🌕" },
-      { title: "Tương Lai và Xu Hướng", shortTitle: "Tương Lai", desc: "Kết quả và hướng đi phát triển tự nhiên", icon: "🌘" },
+      {
+        title: "Quá Khứ và Nền Tảng",
+        shortTitle: "Quá Khứ",
+        desc: "Nguồn gốc, nguyên nhân sâu xa tạo nên hoàn cảnh",
+        icon: "🌒",
+      },
+      {
+        title: "Hiện Tại và Trở Ngại",
+        shortTitle: "Hiện Tại",
+        desc: "Năng lượng thực tế và nút thắt bạn đang đối diện",
+        icon: "🌕",
+      },
+      {
+        title: "Tương Lai và Xu Hướng",
+        shortTitle: "Tương Lai",
+        desc: "Kết quả và hướng đi phát triển tự nhiên",
+        icon: "🌘",
+      },
     ];
   }, [effectiveMaxCards, spreadType]);
 
-  const slotXPositions = React.useMemo(() => {
-    return effectiveMaxCards === 1 ? [0] : [-2.1, 0, 2.1];
+  const slotPositions = React.useMemo((): { x: number; y: number; scale: number }[] => {
+    if (effectiveMaxCards === 1) {
+      return [{ x: 0, y: 1.65, scale: 1.0 }];
+    }
+    if (effectiveMaxCards === 3) {
+      return [
+        { x: -2.1, y: 1.65, scale: 1.0 },
+        { x: 0, y: 1.65, scale: 1.0 },
+        { x: 2.1, y: 1.65, scale: 1.0 },
+      ];
+    }
+    if (effectiveMaxCards === 5) {
+      // Vòng cung móng ngựa (Horseshoe arch)
+      return [
+        { x: -2.8, y: 1.5, scale: 0.88 },
+        { x: -1.4, y: 1.8, scale: 0.88 },
+        { x: 0, y: 1.95, scale: 0.88 },
+        { x: 1.4, y: 1.8, scale: 0.88 },
+        { x: 2.8, y: 1.5, scale: 0.88 },
+      ];
+    }
+    if (effectiveMaxCards === 10) {
+      // Celtic Cross: 2 tầng 5 lá cân xứng, tỉ lệ scale 0.72 vừa vặn
+      const xs = [-2.8, -1.4, 0, 1.4, 2.8];
+      const row1 = xs.map((x) => ({ x, y: 2.15, scale: 0.72 }));
+      const row2 = xs.map((x) => ({ x, y: 0.95, scale: 0.72 }));
+      return [...row1, ...row2];
+    }
+    const scale = effectiveMaxCards > 5 ? 0.72 : 0.9;
+    const spacing = Math.min(1.5, 6.0 / effectiveMaxCards);
+    const startX = -((effectiveMaxCards - 1) * spacing) / 2;
+    return Array.from({ length: effectiveMaxCards }, (_, i) => ({
+      x: startX + i * spacing,
+      y: 1.65,
+      scale,
+    }));
   }, [effectiveMaxCards]);
   const mountRef = useRef<HTMLDivElement>(null);
   const [deckCards, setDeckCards] = useState<CardDto[]>([]);
@@ -431,8 +664,12 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       isMobileRef.current = isMobileView;
 
       // Tính toán z để toàn bộ bộ bài 78 lá (boxWidth) và các ô đón bài luôn hiển thị trọn vẹn 100% với lề an toàn
-      const targetBoxWidth = isMobileView ? 8.4 : 9.2;
-      const targetBoxHeight = isMobileView ? 5.6 : 5.0;
+      const targetBoxWidth = isMobileView
+        ? effectiveMaxCards === 10 ? 9.2 : 8.4
+        : effectiveMaxCards === 10 ? 9.8 : 9.2;
+      const targetBoxHeight = isMobileView
+        ? effectiveMaxCards === 10 ? 6.6 : 5.6
+        : effectiveMaxCards === 10 ? 5.8 : 5.0;
 
       const fovRad = THREE.MathUtils.degToRad(camera.fov / 2);
       const tanFov = Math.tan(fovRad);
@@ -441,8 +678,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       const zForHeight = targetBoxHeight / (2 * tanFov);
 
       const idealZ = Math.max(8.8, Math.max(zForWidth, zForHeight));
-      const targetY = isMobileView ? 0.42 : 0.4;
-      const lookAtY = isMobileView ? 0.28 : 0.2;
+      const targetY = isMobileView ? (effectiveMaxCards === 10 ? 0.5 : 0.42) : (effectiveMaxCards === 10 ? 0.45 : 0.4);
+      const lookAtY = isMobileView ? (effectiveMaxCards === 10 ? 0.35 : 0.28) : (effectiveMaxCards === 10 ? 0.25 : 0.2);
 
       camera.position.set(0, targetY, idealZ);
       camera.lookAt(0, lookAtY, 0);
@@ -511,9 +748,9 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     tableMesh.receiveShadow = true;
     scene.add(tableMesh);
 
-    // 🌟 TẠO 3 Ô ĐÓN BÀI 3D (3 HOLOGRAPHIC GOLDEN SLOTS TRÊN MẶT BÀN)
-    slotXPositions.forEach((slotX) => {
-      const slotGeo = new THREE.PlaneGeometry(0.85, 1.45);
+    // 🌟 TẠO CÁC Ô ĐÓN BÀI 3D (HOLOGRAPHIC GOLDEN SLOTS TRÊN MẶT BÀN)
+    slotPositions.forEach((pos) => {
+      const slotGeo = new THREE.PlaneGeometry(0.85 * pos.scale, 1.45 * pos.scale);
       const slotEdges = new THREE.EdgesGeometry(slotGeo);
       const slotLineMat = new THREE.LineBasicMaterial({
         color: 0xf2d07c,
@@ -522,7 +759,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         opacity: 0.55,
       });
       const slotWireframe = new THREE.LineSegments(slotEdges, slotLineMat);
-      slotWireframe.position.set(slotX, slotYPos, 0.005);
+      slotWireframe.position.set(pos.x, pos.y, 0.005);
       scene.add(slotWireframe);
 
       const slotBackMat = new THREE.MeshBasicMaterial({
@@ -532,7 +769,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         side: THREE.DoubleSide,
       });
       const slotBackMesh = new THREE.Mesh(slotGeo, slotBackMat);
-      slotBackMesh.position.set(slotX, slotYPos, 0.002);
+      slotBackMesh.position.set(pos.x, pos.y, 0.002);
       scene.add(slotBackMesh);
     });
 
@@ -602,7 +839,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     });
 
     // ✨ HỆ THỐNG BỤI SAO VÀNG MA THUẬT KHI LẬT BÀI
-    const particleHandle: ParticleSystemHandle = createGoldenParticleSystem(slotXPositions, slotYPos, 180);
+    const particleHandle: ParticleSystemHandle = createGoldenParticleSystem(slotPositions, slotYPos, 180);
     scene.add(particleHandle.points);
 
     cardMeshesRef.current = cardGroups;
@@ -706,6 +943,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
     // 8. ANIMATION LOOP
     let lastTime = performance.now();
+    const vScalesNormal = slotPositions.map((p) => new THREE.Vector3(p.scale, p.scale, p.scale));
+    const vScalesDrawn = slotPositions.map((p) => new THREE.Vector3(p.scale * 1.04, p.scale * 1.04, p.scale * 1.04));
 
     const animate = (currentTime: number) => {
       animationFrameRef.current = requestAnimationFrame(animate);
@@ -735,15 +974,16 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         // 🚀 NẾU LÁ BÀI ĐÃ ĐƯỢC RÚT:
         if (group.userData.isDrawn) {
           const slotIdx = group.userData.slotIndex ?? 0;
-          const targetSlotX = slotXPositions[slotIdx] || 0;
-          const targetSlotY = slotYPos - 0.725;
+          const pos = slotPositions[slotIdx] || { x: 0, y: 1.65, scale: 1.0 };
+          const targetSlotX = pos.x;
+          const targetSlotY = pos.y - 0.725 * pos.scale;
           const cardData = selectedCardsRef.current[slotIdx];
           const isRev = cardData ? cardData.isReversed : false;
 
           if (isRevealingRef.current) {
             // ✨ HIỆU ỨNG 3D LẬT BÀI & PHÁT SÁNG BỤI SAO VÀNG KHI XÁC NHẬN
             const elapsed = currentTime - revealStartTimeRef.current;
-            const cardDelay = slotIdx * 400;
+            const cardDelay = slotIdx * 350;
             const flipProgress = Math.max(0, Math.min(1, (elapsed - cardDelay) / 550));
 
             const zArc = Math.sin(flipProgress * Math.PI) * 0.45;
@@ -764,7 +1004,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
               cardMesh.rotation.z = THREE.MathUtils.lerp(cardMesh.rotation.z, rotZ, dampRot);
             }
 
-            group.scale.lerp(vScaleDrawn, dampScale);
+            const targetScaleDrawn = vScalesDrawn[slotIdx] || vScaleDrawn;
+            group.scale.lerp(targetScaleDrawn, dampScale);
             return;
           }
 
@@ -780,7 +1021,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
             cardMesh.rotation.z = THREE.MathUtils.lerp(cardMesh.rotation.z, 0, dampRot);
           }
 
-          group.scale.lerp(vScaleOne, dampScale);
+          const targetScaleNormal = vScalesNormal[slotIdx] || vScaleOne;
+          group.scale.lerp(targetScaleNormal, dampScale);
           return;
         }
 
@@ -814,7 +1056,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       if (isRevealingRef.current) {
         particleHandle.material.opacity = Math.min(0.95, particleHandle.material.opacity + delta * 3);
         pointLight.intensity = THREE.MathUtils.lerp(pointLight.intensity, 4.5, delta * 4);
-        updateParticleAnimation(particleHandle, delta, slotXPositions);
+        updateParticleAnimation(particleHandle, delta, slotPositions, slotYPos);
       }
 
       renderer.render(scene, camera);
@@ -845,7 +1087,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);
       renderer.dispose();
     };
-  }, [deckCards.length, effectiveMaxCards, deckCode]);
+  }, [deckCards.length, effectiveMaxCards, deckCode, slotPositions]);
 
   const handleReshuffle3D = () => {
     if (isRevealing) return;
@@ -1042,13 +1284,23 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         </div>
 
         {/* 🌟 HUD TIÊU ĐỀ Ô VỊ TRÍ ĐÓN BÀI NẰM NGAY TRÊN 3D SLOTS (ĐÃ RÚT GỌN 1 HÀNG) */}
-        <div className={`grid ${effectiveMaxCards === 1 ? "grid-cols-1 max-w-xs" : "grid-cols-3 max-w-2xl"} gap-2 mx-auto pt-0.5 pb-0.5 relative z-20 pointer-events-none`}>
+        <div
+          className={`grid ${
+            effectiveMaxCards === 1
+              ? "grid-cols-1 max-w-xs"
+              : effectiveMaxCards === 5
+              ? "grid-cols-5 max-w-3xl"
+              : effectiveMaxCards === 10
+              ? "grid-cols-5 max-w-3xl"
+              : "grid-cols-3 max-w-2xl"
+          } gap-1.5 sm:gap-2 mx-auto pt-0.5 pb-0.5 relative z-20 pointer-events-none`}
+        >
           {slotNames.map((slot, idx) => {
             const isPicked = selectedCards.length > idx;
             return (
               <div
                 key={idx}
-                className={`text-center py-1.5 px-3 rounded-xl transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-1.5 ${
+                className={`text-center py-1 sm:py-1.5 px-1.5 sm:px-3 rounded-xl transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-1 sm:gap-1.5 ${
                   isPicked
                     ? "bg-amber-400/15 border border-amber-300/30 text-amber-200"
                     : currentSlotIndex === idx
@@ -1056,10 +1308,12 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
                     : "bg-white/[0.02] border border-white/5 opacity-50 text-slate-400"
                 }`}
               >
-                <span className="text-xs">{slot.icon}</span>
-                <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap">
+                <span className="text-[10px] sm:text-xs">{slot.icon}</span>
+                <span className="text-[9px] sm:text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis">
                   {effectiveMaxCards === 1 ? (
                     slot.title
+                  ) : effectiveMaxCards >= 5 ? (
+                    slot.shortTitle
                   ) : (
                     <>
                       <span className="sm:hidden">{`Lá ${idx + 1}: ${slot.shortTitle}`}</span>

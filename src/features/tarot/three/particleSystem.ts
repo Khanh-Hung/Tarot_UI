@@ -25,9 +25,11 @@ export interface ParticleSystemHandle {
   count: number;
 }
 
+export type SlotCoordinate = { x: number; y: number } | number;
+
 export const createGoldenParticleSystem = (
-  slotXPositions: number[],
-  slotYPos: number,
+  slots: SlotCoordinate[],
+  slotYPos = 1.65,
   particleCount = 180
 ): ParticleSystemHandle => {
   const particleGeo = new THREE.BufferGeometry();
@@ -35,9 +37,11 @@ export const createGoldenParticleSystem = (
   const particleVelocities = new Float32Array(particleCount * 3);
 
   for (let p = 0; p < particleCount; p++) {
-    const slotX = slotXPositions[p % slotXPositions.length];
-    particlePositions[p * 3] = slotX + (Math.random() - 0.5) * 1.4;
-    particlePositions[p * 3 + 1] = slotYPos + (Math.random() - 0.5) * 1.8;
+    const item = slots[p % slots.length];
+    const sX = typeof item === "number" ? item : item.x;
+    const sY = typeof item === "number" ? slotYPos : item.y;
+    particlePositions[p * 3] = sX + (Math.random() - 0.5) * 1.2;
+    particlePositions[p * 3 + 1] = sY + (Math.random() - 0.5) * 1.5;
     particlePositions[p * 3 + 2] = 0.05 + Math.random() * 0.4;
 
     particleVelocities[p * 3] = (Math.random() - 0.5) * 0.35;
@@ -69,7 +73,8 @@ export const createGoldenParticleSystem = (
 export const updateParticleAnimation = (
   handle: ParticleSystemHandle,
   delta: number,
-  slotXPositions: number[]
+  slots: SlotCoordinate[],
+  slotYPos = 1.65
 ) => {
   const posAttr = handle.geometry.attributes.position as THREE.BufferAttribute;
   const positions = posAttr.array as Float32Array;
@@ -78,10 +83,12 @@ export const updateParticleAnimation = (
   for (let p = 0; p < handle.count; p++) {
     positions[p * 3 + 1] += velocities[p * 3 + 1] * delta;
     positions[p * 3] += velocities[p * 3] * delta;
-    if (positions[p * 3 + 1] > 3.2) {
-      positions[p * 3 + 1] = 1.2;
-      const sX = slotXPositions[p % slotXPositions.length];
-      positions[p * 3] = sX + (Math.random() - 0.5) * 1.2;
+    const item = slots[p % slots.length];
+    const sX = typeof item === "number" ? item : item.x;
+    const sY = typeof item === "number" ? slotYPos : item.y;
+    if (positions[p * 3 + 1] > sY + 1.4) {
+      positions[p * 3 + 1] = sY - 0.5;
+      positions[p * 3] = sX + (Math.random() - 0.5) * 1.0;
     }
   }
   posAttr.needsUpdate = true;

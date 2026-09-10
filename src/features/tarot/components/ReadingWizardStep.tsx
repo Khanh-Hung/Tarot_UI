@@ -77,7 +77,7 @@ export const SPREAD_OPTIONS: { type: SpreadType; title: string; subtitle: string
   {
     type: "DAILY_ORACLE",
     title: "Thông Điệp Ngày Mới",
-    subtitle: "Xem nhanh lời khuyên và xu hướng cho ngày hôm nay",
+    subtitle: "Xem nhanh lời khuyên và xu hướng năng lượng cho ngày hôm nay",
     cards: 1,
     icon: "☀️",
   },
@@ -94,6 +94,41 @@ export const SPREAD_OPTIONS: { type: SpreadType; title: string; subtitle: string
     subtitle: "So sánh 2 lựa chọn khi bạn đang phân vân chưa biết nên chọn hướng nào",
     cards: 3,
     icon: "⚖️",
+  },
+  {
+    type: "LOVE_RELATIONSHIP",
+    title: "Tình Duyên & Mối Quan Hệ",
+    subtitle: "Thấu hiểu năng lượng của bạn, tâm ý người ấy và tương lai liên kết",
+    cards: 3,
+    icon: "❤️",
+  },
+  {
+    type: "MIND_BODY_SPIRIT",
+    title: "Thân - Tâm - Trí Chữa Lành",
+    subtitle: "Soi tỏ tâm trí suy nghĩ, thể chất hành động và tiếng nói tâm hồn",
+    cards: 3,
+    icon: "🌿",
+  },
+  {
+    type: "SITUATION_OBSTACLE_ADVICE",
+    title: "Sự Nghiệp & Giải Pháp",
+    subtitle: "Phân tích thực trạng công việc, trở ngại ngầm và lời khuyên đột phá",
+    cards: 3,
+    icon: "💼",
+  },
+  {
+    type: "HORSESHOE",
+    title: "Móng Ngựa May Mắn (5 Lá)",
+    subtitle: "Quá khứ, Hiện tại, Ẩn số tiềm tàng, Lời khuyên hành động và Kết quả sau cùng",
+    cards: 5,
+    icon: "🧲",
+  },
+  {
+    type: "CELTIC_CROSS",
+    title: "Thập Tự Celtic Toàn Cảnh (10 Lá)",
+    subtitle: "Trải bài kinh điển 10 lá phân tích trọn vẹn mọi góc khuất và đại vận số mệnh",
+    cards: 10,
+    icon: "⚔️",
   },
 ];
 

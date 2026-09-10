@@ -22,14 +22,14 @@ export const TarotCard3D: React.FC<TarotCard3DProps> = ({
 
   const formatPositionName = (name?: string, idx?: number) => {
     if (!name) return `Lá số ${(idx ?? 0) + 1}`;
-    const lower = name.toLowerCase();
-    if (lower.includes("daily") || lower.includes("guidance")) return "Thông Điệp Ngày Mới";
-    if (lower.includes("past") || lower.includes("quá khứ")) return "Quá Khứ";
-    if (lower.includes("present") || lower.includes("hiện tại")) return "Hiện Tại";
-    if (lower.includes("future") || lower.includes("tương lai")) return "Tương Lai";
-    if (lower.includes("current reality") || lower.includes("thực tại")) return "Thực Tại";
-    if (lower.includes("path a") || lower.includes("ngả rẽ a") || lower.includes("lựa chọn 1")) return "Ngả Rẽ A";
-    if (lower.includes("path b") || lower.includes("ngả rẽ b") || lower.includes("lựa chọn 2")) return "Ngả Rẽ B";
+    const lower = name.trim().toLowerCase();
+    if (lower === "daily" || lower === "guidance" || lower === "daily_oracle") return "Thông Điệp Ngày Mới";
+    if (lower === "past") return "Quá Khứ";
+    if (lower === "present") return "Hiện Tại";
+    if (lower === "future") return "Tương Lai";
+    if (lower === "current reality") return "Thực Tại";
+    if (lower === "path a" || lower === "choice 1") return "Ngả Rẽ A";
+    if (lower === "path b" || lower === "choice 2") return "Ngả Rẽ B";
     return name;
   };
 

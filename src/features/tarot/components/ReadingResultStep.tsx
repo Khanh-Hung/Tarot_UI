@@ -36,7 +36,7 @@ export const ReadingResultStep: React.FC<ReadingResultStepProps> = ({
               <span>
                 {readingResult.drawnCards.length === 1
                   ? "Thông Điệp Quẻ Bài Ngày Mới (1 Lá)"
-                  : `Trải Bài 3 Lá (${SPREAD_OPTIONS.find((s) => s.type === spreadType)?.title || "Chuyên Sâu"})`}
+                  : `Trải Bài ${readingResult.drawnCards.length} Lá (${SPREAD_OPTIONS.find((s) => s.type === spreadType)?.title || "Chuyên Sâu"})`}
               </span>
             </div>
           )}

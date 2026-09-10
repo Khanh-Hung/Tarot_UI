@@ -19,12 +19,16 @@ export type Topic =
   | "GENERAL_QUESTION";
 
 export type SpreadType = 
+  | "DAILY_ORACLE"
   | "PAST_PRESENT_FUTURE"
   | "TWO_PATHS_CHOICE"
-  | "DAILY_ORACLE"
+  | "LOVE_RELATIONSHIP"
+  | "MIND_BODY_SPIRIT"
+  | "SITUATION_OBSTACLE_ADVICE"
+  | "HORSESHOE"
+  | "CELTIC_CROSS"
   | "THREE_CARDS_TIMELINE" 
-  | "SINGLE_CARD_FOCUS" 
-  | "CELTIC_CROSS";
+  | "SINGLE_CARD_FOCUS";
 
 export type ZodiacSign = 
   | "ARIES" | "TAURUS" | "GEMINI" | "CANCER" 

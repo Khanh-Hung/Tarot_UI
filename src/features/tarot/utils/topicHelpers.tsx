@@ -60,17 +60,26 @@ export function getTopicMeta(topic?: string): {
 
 export function getSpreadLabel(spreadType?: string): string {
   switch (spreadType) {
+    case "DAILY_ORACLE":
+    case "SINGLE_CARD_FOCUS":
+      return "Thông Điệp Ngày Mới (1 Lá)";
     case "PAST_PRESENT_FUTURE":
     case "THREE_CARDS_TIMELINE":
-      return "Quá Khứ • Hiện Tại • Tương Lai";
-    case "SINGLE_CARD_FOCUS":
-      return "1 Lá Trọng Tâm";
+      return "Quá Khứ • Hiện Tại • Tương Lai (3 Lá)";
     case "TWO_PATHS_CHOICE":
-      return "Hai Ngã Rẽ";
+      return "Thực Tại & Hai Ngả Rẽ (3 Lá)";
+    case "LOVE_RELATIONSHIP":
+      return "Tình Duyên & Kết Nối (3 Lá)";
+    case "MIND_BODY_SPIRIT":
+      return "Thân • Tâm • Trí Chữa Lành (3 Lá)";
+    case "SITUATION_OBSTACLE_ADVICE":
+      return "Thực Trạng & Giải Pháp Sự Nghiệp (3 Lá)";
+    case "HORSESHOE":
+      return "Móng Ngựa May Mắn (5 Lá)";
     case "CELTIC_CROSS":
-      return "Celtic Cross";
+      return "Thập Tự Celtic Kinh Điển (10 Lá)";
     default:
-      return "Trải Bài 3 Lá";
+      return "Trải Bài Tarot";
   }
 }
 

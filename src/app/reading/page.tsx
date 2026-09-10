@@ -19,7 +19,7 @@ import { EnergyQuotaModal } from "@/features/ads/components/EnergyQuotaModal";
 import { ShareTarotStoryModal } from "@/features/tarot/components/ShareTarotStoryModal";
 import { ThreeTarotFan } from "@/features/tarot/components/ThreeTarotFan";
 import { ReadingFormSkeleton } from "@/components/ui/Skeleton";
-import { ReadingWizardStep } from "@/features/tarot/components/ReadingWizardStep";
+import { ReadingWizardStep, SPREAD_OPTIONS } from "@/features/tarot/components/ReadingWizardStep";
 import { ReadingResultStep } from "@/features/tarot/components/ReadingResultStep";
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { detectTopicFromQuestion } from "@/features/tarot/utils/topicDetector";
@@ -276,7 +276,7 @@ function ReadingContent() {
             deckCode={deckCode}
             userQuestion={question}
             spreadType={spreadType}
-            maxCards={spreadType === "DAILY_ORACLE" ? 1 : 3}
+            maxCards={SPREAD_OPTIONS.find((s) => s.type === spreadType)?.cards || 3}
             onConfirmSelection={handleConfirmSelectedCards}
             onCancel={() => setStage("FORM")}
             isLoading={isReadingLoading}
