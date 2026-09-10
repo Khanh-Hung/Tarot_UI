@@ -68,13 +68,13 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           title: "Ngả Rẽ / Phương Án A",
           shortTitle: "Hướng A",
           desc: "Tiềm năng, chuyển biến và kết quả theo hướng A",
-          icon: "🅰️",
+          icon: "A",
         },
         {
           title: "Ngả Rẽ / Phương Án B",
           shortTitle: "Hướng B",
           desc: "Tiềm năng, chuyển biến và kết quả theo hướng B",
-          icon: "🅱️",
+          icon: "B",
         },
       ];
     }
@@ -182,63 +182,63 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       return [
         {
           title: "Hiện Tại Cốt Lõi",
-          shortTitle: "1. Hiện Tại",
+          shortTitle: "Hiện Tại",
           desc: "Bối cảnh và trạng thái tinh thần cốt lõi của bạn",
-          icon: "1️⃣",
+          icon: "1",
         },
         {
           title: "Thách Thức / Trở Ngại",
-          shortTitle: "2. Trở Ngại",
+          shortTitle: "Trở Ngại",
           desc: "Lực cản hoặc yếu tố xung đột trực tiếp",
-          icon: "2️⃣",
+          icon: "2",
         },
         {
           title: "Tiềm Thức / Nền Tảng",
-          shortTitle: "3. Tiềm Thức",
+          shortTitle: "Tiềm Thức",
           desc: "Nguyên nhân sâu xa hoặc điều định hình vấn đề",
-          icon: "3️⃣",
+          icon: "3",
         },
         {
           title: "Quá Khứ Gần",
-          shortTitle: "4. Quá Khứ",
+          shortTitle: "Quá Khứ",
           desc: "Sự kiện vừa xảy ra đang dần lùi xa",
-          icon: "4️⃣",
+          icon: "4",
         },
         {
           title: "Mục Tiêu / Tiềm Năng",
-          shortTitle: "5. Mục Tiêu",
+          shortTitle: "Mục Tiêu",
           desc: "Kết quả tốt nhất có thể đạt được hoặc lý tưởng",
-          icon: "5️⃣",
+          icon: "5",
         },
         {
           title: "Tương Lai Gần",
-          shortTitle: "6. Tương Lai",
+          shortTitle: "Tương Lai",
           desc: "Xu hướng biến chuyển trong thời gian ngắn sắp tới",
-          icon: "6️⃣",
+          icon: "6",
         },
         {
           title: "Thái Độ Bản Thân",
-          shortTitle: "7. Bản Thân",
+          shortTitle: "Bản Thân",
           desc: "Tâm lý, niềm tin và vị thế của bạn",
-          icon: "7️⃣",
+          icon: "7",
         },
         {
           title: "Môi Trường Xung Quanh",
-          shortTitle: "8. Môi Trường",
+          shortTitle: "Môi Trường",
           desc: "Tác động từ người khác hoặc hoàn cảnh bên ngoài",
-          icon: "8️⃣",
+          icon: "8",
         },
         {
           title: "Hy Vọng & Nỗi Sợ",
-          shortTitle: "9. Hy Vọng",
+          shortTitle: "Hy Vọng",
           desc: "Mong muốn thầm kín hoặc sự bất an trong lòng",
-          icon: "9️⃣",
+          icon: "9",
         },
         {
           title: "Kết Quả Cuối Cùng",
-          shortTitle: "10. Kết Quả",
+          shortTitle: "Kết Quả",
           desc: "Lời giải đáp tổng kết và định hướng đường dài",
-          icon: "🔟",
+          icon: "10",
         },
       ];
     }
@@ -286,10 +286,10 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       ];
     }
     if (effectiveMaxCards === 10) {
-      // Celtic Cross: 2 tầng 5 lá cân xứng, tỉ lệ scale 0.72 vừa vặn
-      const xs = [-2.8, -1.4, 0, 1.4, 2.8];
-      const row1 = xs.map((x) => ({ x, y: 2.15, scale: 0.72 }));
-      const row2 = xs.map((x) => ({ x, y: 0.95, scale: 0.72 }));
+      // Celtic Cross: 2 tầng 5 lá nâng cao hơn, scale 0.68 thon gọn, tạo khoảng đệm thoáng đãng với bộ bài bên dưới
+      const xs = [-2.7, -1.35, 0, 1.35, 2.7];
+      const row1 = xs.map((x) => ({ x, y: 2.38, scale: 0.68 }));
+      const row2 = xs.map((x) => ({ x, y: 1.28, scale: 0.68 }));
       return [...row1, ...row2];
     }
     const scale = effectiveMaxCards > 5 ? 0.72 : 0.9;
@@ -307,7 +307,6 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
   const [isShuffling, setIsShuffling] = useState(false);
   const isShufflingRef = useRef(false);
   const [spreadMode, setSpreadMode] = useState<SpreadMode>("RIBBON");
-
 
   // References cho Three.js scene
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -668,8 +667,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
         ? effectiveMaxCards === 10 ? 9.2 : 8.4
         : effectiveMaxCards === 10 ? 9.8 : 9.2;
       const targetBoxHeight = isMobileView
-        ? effectiveMaxCards === 10 ? 6.6 : 5.6
-        : effectiveMaxCards === 10 ? 5.8 : 5.0;
+        ? effectiveMaxCards === 10 ? 7.2 : 5.6
+        : effectiveMaxCards === 10 ? 6.4 : 5.0;
 
       const fovRad = THREE.MathUtils.degToRad(camera.fov / 2);
       const tanFov = Math.tan(fovRad);
@@ -678,8 +677,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       const zForHeight = targetBoxHeight / (2 * tanFov);
 
       const idealZ = Math.max(8.8, Math.max(zForWidth, zForHeight));
-      const targetY = isMobileView ? (effectiveMaxCards === 10 ? 0.5 : 0.42) : (effectiveMaxCards === 10 ? 0.45 : 0.4);
-      const lookAtY = isMobileView ? (effectiveMaxCards === 10 ? 0.35 : 0.28) : (effectiveMaxCards === 10 ? 0.25 : 0.2);
+      const targetY = isMobileView ? (effectiveMaxCards === 10 ? 0.48 : 0.42) : (effectiveMaxCards === 10 ? 0.42 : 0.4);
+      const lookAtY = isMobileView ? (effectiveMaxCards === 10 ? 0.32 : 0.28) : (effectiveMaxCards === 10 ? 0.25 : 0.2);
 
       camera.position.set(0, targetY, idealZ);
       camera.lookAt(0, lookAtY, 0);
@@ -732,8 +731,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     rimLight.position.set(-7, 4, 6);
     scene.add(rimLight);
 
-    const pointLight = new THREE.PointLight(0xffecc2, 2.8, 12);
-    pointLight.position.set(0, 1.5, 4);
+    const pointLight = new THREE.PointLight(0xffecc2, 1.2, 20);
+    pointLight.position.set(0, 4.5, 7.5);
     scene.add(pointLight);
 
     // 5. MẶT THẢM BÀN TAROT (VELVET MAT)
@@ -789,8 +788,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
 
     const cardMatBack = new THREE.MeshStandardMaterial({
       map: cardBackTex,
-      roughness: 0.25,
-      metalness: 0.2,
+      roughness: 0.65,
+      metalness: 0.05,
     });
     const cardMatEdge = new THREE.MeshStandardMaterial({
       color: edgeColor,
@@ -804,8 +803,8 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
     // Shared default front material for face-down cards initially (0 network requests during shuffle!)
     const defaultFrontMat = new THREE.MeshStandardMaterial({
       map: cardBackTex,
-      roughness: 0.25,
-      metalness: 0.15,
+      roughness: 0.65,
+      metalness: 0.05,
     });
 
     deckCards.forEach((card, i) => {
@@ -1043,8 +1042,10 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           isMobile: isMobileRef.current,
         });
 
+        const fanYOffset = (effectiveMaxCards === 10 && isSpreadRef.current) ? -0.28 : 0;
+
         group.position.x = THREE.MathUtils.lerp(group.position.x, transform.targetX, dampPos);
-        group.position.y = THREE.MathUtils.lerp(group.position.y, transform.targetY, dampPos);
+        group.position.y = THREE.MathUtils.lerp(group.position.y, transform.targetY + fanYOffset, dampPos);
         group.position.z = THREE.MathUtils.lerp(group.position.z, transform.targetZ, dampPos);
         group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, transform.targetRotZ, dampRot);
         group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, transform.targetRotX, dampRot);
@@ -1055,7 +1056,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       // ✨ CẬP NHẬT BỤI SAO VÀNG KHI LẬT MỞ BÀI
       if (isRevealingRef.current) {
         particleHandle.material.opacity = Math.min(0.95, particleHandle.material.opacity + delta * 3);
-        pointLight.intensity = THREE.MathUtils.lerp(pointLight.intensity, 4.5, delta * 4);
+        pointLight.intensity = THREE.MathUtils.lerp(pointLight.intensity, 2.0, delta * 4);
         updateParticleAnimation(particleHandle, delta, slotPositions, slotYPos);
       }
 
@@ -1085,6 +1086,7 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
       renderer.domElement.removeEventListener("touchend", onTouchEnd);
       renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
       renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);
+      renderer.forceContextLoss();
       renderer.dispose();
     };
   }, [deckCards.length, effectiveMaxCards, deckCode, slotPositions]);
@@ -1283,47 +1285,37 @@ export const ThreeTarotFan: React.FC<ThreeTarotFanProps> = ({
           </div>
         </div>
 
-        {/* 🌟 HUD TIÊU ĐỀ Ô VỊ TRÍ ĐÓN BÀI NẰM NGAY TRÊN 3D SLOTS (ĐÃ RÚT GỌN 1 HÀNG) */}
-        <div
-          className={`grid ${
-            effectiveMaxCards === 1
-              ? "grid-cols-1 max-w-xs"
-              : effectiveMaxCards === 5
-              ? "grid-cols-5 max-w-3xl"
-              : effectiveMaxCards === 10
-              ? "grid-cols-5 max-w-3xl"
-              : "grid-cols-3 max-w-2xl"
-          } gap-1.5 sm:gap-2 mx-auto pt-0.5 pb-0.5 relative z-20 pointer-events-none`}
-        >
-          {slotNames.map((slot, idx) => {
-            const isPicked = selectedCards.length > idx;
-            return (
-              <div
-                key={idx}
-                className={`text-center py-1 sm:py-1.5 px-1.5 sm:px-3 rounded-xl transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-1 sm:gap-1.5 ${
-                  isPicked
-                    ? "bg-amber-400/15 border border-amber-300/30 text-amber-200"
-                    : currentSlotIndex === idx
-                    ? "bg-white/[0.08] border border-dashed border-amber-300/40 text-amber-100 ring-1 ring-amber-300/20"
-                    : "bg-white/[0.02] border border-white/5 opacity-50 text-slate-400"
-                }`}
-              >
-                <span className="text-[10px] sm:text-xs">{slot.icon}</span>
-                <span className="text-[9px] sm:text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-                  {effectiveMaxCards === 1 ? (
-                    slot.title
-                  ) : effectiveMaxCards >= 5 ? (
-                    slot.shortTitle
-                  ) : (
-                    <>
-                      <span className="sm:hidden">{`Lá ${idx + 1}: ${slot.shortTitle}`}</span>
-                      <span className="hidden sm:inline">{`Lá ${idx + 1}: ${slot.title}`}</span>
-                    </>
-                  )}
+        {/* 🌟 HUD TIÊU ĐỀ DUY NHẤT 1 Ô CHO LÁ BÀI ĐANG RÚT (TỰ ĐỘNG CHUYỂN LÁ CHO MỌI CHẾ ĐỘ) */}
+        <div className="w-full max-w-3xl mx-auto pt-0.5 pb-1 relative z-20 pointer-events-none flex justify-center px-2">
+          {currentSlotIndex < effectiveMaxCards ? (
+            <div
+              key={currentSlotIndex}
+              className="py-1 sm:py-1.5 px-3 sm:px-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500/15 via-[#0c1427]/90 to-purple-500/15 border border-amber-300/50 text-amber-100 shadow-[0_0_16px_rgba(245,185,65,0.2)] backdrop-blur-md flex items-center justify-center gap-2 sm:gap-2.5 transition-all duration-300 animate-fade-in"
+            >
+              {/* Huy hiệu số thứ tự */}
+              <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-300 text-slate-950 font-black text-[10px] sm:text-xs shadow-sm flex items-center gap-1 shrink-0">
+                <Sparkles className="w-3 h-3 text-slate-950 shrink-0" />
+                <span>Lá {currentSlotIndex + 1}/{effectiveMaxCards}</span>
+              </span>
+
+              {/* Tên vị trí lá bài */}
+              <span className="text-xs sm:text-sm font-bold text-white tracking-wide whitespace-nowrap shrink-0">
+                {slotNames[currentSlotIndex]?.title}
+              </span>
+
+              {/* Ý nghĩa vị trí - HIỂN THỊ ĐẦY ĐỦ 100%, KHÔNG CẮT BẰNG DẤU "..." */}
+              {slotNames[currentSlotIndex]?.desc && (
+                <span className="hidden sm:inline text-xs text-slate-300/90 border-l border-white/20 pl-2 whitespace-nowrap">
+                  {slotNames[currentSlotIndex]?.desc}
                 </span>
-              </div>
-            );
-          })}
+              )}
+            </div>
+          ) : (
+            <div className="py-1 sm:py-1.5 px-4 rounded-xl sm:rounded-2xl bg-[#0c1427]/90 border border-emerald-400/40 text-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.2)] backdrop-blur-md flex items-center justify-center gap-2 transition-all duration-300 animate-fade-in text-xs sm:text-sm font-semibold">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Đã chọn đủ {effectiveMaxCards}/{effectiveMaxCards} lá bài</span>
+            </div>
+          )}
         </div>
 
         {/* CONTAINER CHỨA CANVAS THREE.JS DUY NHẤT */}
