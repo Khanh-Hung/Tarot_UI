@@ -15,7 +15,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ReadingSummaryResponse } from "@/features/tarot/types/tarot.types";
 import { tarotService } from "@/features/tarot/services/tarotService";
 import { EnergyInsightsView } from "@/features/tarot/components/EnergyInsightsView";
-import { Skeleton, HistoryListSkeleton } from "@/components/ui/Skeleton";
+import { FullHistoryPageSkeleton, HistoryListSkeleton } from "@/components/ui/Skeleton";
 import { getTopicMeta, getSpreadLabel, getDeckName } from "@/features/tarot/utils/topicHelpers";
 import { CustomSelect, OptionItem } from "@/components/ui/CustomSelect";
 import { SearchInput } from "@/components/ui/SearchInput";
@@ -149,15 +149,7 @@ export default function HistoryPage() {
   ];
 
   if (isAuthLoading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-8">
-        <div className="space-y-3 pb-6 border-b border-white/[0.08]">
-          <Skeleton className="w-32 h-7 rounded-lg" />
-          <Skeleton className="w-64 h-4 rounded-md" />
-        </div>
-        <HistoryListSkeleton />
-      </div>
-    );
+    return <FullHistoryPageSkeleton />;
   }
 
   return (
