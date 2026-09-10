@@ -50,40 +50,6 @@ const ZODIAC_LIST: { code: ZodiacSign; name: string; symbol: string }[] = [
   { code: "PISCES", name: "Song Ngư", symbol: "♓" },
 ];
 
-function toRoman(num: number): string {
-  const lookup: Record<number, string> = {
-    0: "0", 1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X",
-    11: "XI", 12: "XII", 13: "XIII", 14: "XIV", 15: "XV", 16: "XVI", 17: "XVII", 18: "XVIII", 19: "XIX", 20: "XX", 21: "XXI"
-  };
-  return lookup[num] || String(num);
-}
-
-function formatGender(gender?: Gender | null): string {
-  if (!gender || gender === "UNKNOWN") return "Chưa thiết lập";
-  if (gender === "MALE") return "Nam ♂️";
-  if (gender === "FEMALE") return "Nữ ♀️";
-  return "Khác 🌈";
-}
-
-function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return "Chưa thiết lập";
-  try {
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-      const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
-    }
-    return dateStr;
-  } catch {
-    return dateStr;
-  }
-}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -368,7 +334,7 @@ export default function ProfilePage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100">Hồ Sơ Cá Nhân</h1>
           </div>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-normal">
-            Quản lý năng lượng hoàng đạo, lá bài bản mệnh và thông tin trải nghiệm
+            Quản lý thông tin cá nhân, năng lượng hoàng đạo và tùy chọn trải nghiệm
           </p>
         </div>
 
@@ -389,119 +355,6 @@ export default function ProfilePage() {
           </Link>
         </div>
       </div>
-
-      {/* 🔮 KHỐI LÁ BÀI BẢN MỆNH (TAROT BIRTH CARD) */}
-      {profile?.birthCard ? (
-        <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-[#1d1b24] via-[#17181c] to-[#121316] p-6 sm:p-8 shadow-2xl">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-[#2e2f38]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>Lá Bài Bản Mệnh Của Bạn</span>
-                    <span className="text-[10px] font-semibold text-amber-300 bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 rounded-full">
-                      Bản Mệnh
-                    </span>
-                  </h2>
-                  <p className="text-[11px] sm:text-xs text-zinc-400">
-                    Định vị theo Thần số học Pythagoras từ ngày sinh {formatDate(profile.dateOfBirth)}
-                  </p>
-                </div>
-              </div>
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/60 text-xs text-zinc-300 font-mono">
-                <span>Bộ Ẩn Chính</span>
-                <span className="text-amber-400 font-bold font-serif">
-                  {profile.birthCard.cardNumber === 0 ? "0" : toRoman(profile.birthCard.cardNumber)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-              {/* Card Image */}
-              <div className="md:col-span-4 flex justify-center">
-                <div className="group relative rounded-2xl p-1 bg-gradient-to-b from-amber-400/30 via-zinc-700/30 to-zinc-800/60 shadow-xl transition-all duration-300 hover:scale-105">
-                  <div className="relative w-40 sm:w-44 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-zinc-950">
-                    <img
-                      src={profile.birthCard.imageUrl}
-                      alt={profile.birthCard.cardNameVi}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute bottom-2 inset-x-2 text-center pointer-events-none">
-                      <span className="text-[10px] sm:text-[11px] font-bold text-amber-200 uppercase tracking-widest drop-shadow-md">
-                        {profile.birthCard.cardNameVi}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Details */}
-              <div className="md:col-span-8 space-y-3.5">
-                <div>
-                  <div className="text-xs uppercase tracking-wider font-semibold text-amber-400/90 flex items-center gap-1.5">
-                    <span>Lá Bài Linh Hồn:</span>
-                    <span className="text-zinc-200 font-normal">{profile.birthCard.soulCardNameVi}</span>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5">
-                    {profile.birthCard.cardNameVi}
-                  </h3>
-                </div>
-
-                {/* Keywords */}
-                <div>
-                  <span className="text-[11px] font-semibold text-zinc-400 block mb-1">
-                    Năng lượng cốt lõi:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {profile.birthCard.keywords.split(",").map((kw, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-0.5 rounded-lg text-xs font-medium bg-[#24252c] border border-amber-500/20 text-amber-200/90 shadow-sm"
-                      >
-                        {kw.trim()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Archetypal Description */}
-                <div className="p-3.5 rounded-2xl bg-[#1f2026]/90 border border-[#2f313a] shadow-inner">
-                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-normal">
-                    {profile.birthCard.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-3xl border border-[#2b2d35] bg-gradient-to-r from-[#1b1c22] to-[#16171b] p-5 sm:p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-amber-300" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                Khai Mở Lá Bài Bản Mệnh Của Bạn
-              </h3>
-              <p className="text-xs text-zinc-400 mt-0.5 max-w-lg leading-relaxed">
-                Khi tài khoản có ngày sinh, hệ thống sẽ tự động tính toán Thần số học Pythagoras để tiết lộ lá bài bảo hộ và năng lượng linh hồn của bạn.
-              </p>
-            </div>
-          </div>
-          <div className="shrink-0">
-            <span className="text-xs px-3 py-1.5 rounded-xl bg-[#25262e] border border-zinc-700 text-zinc-400 font-medium inline-flex items-center gap-1.5">
-              <span>Chưa có ngày sinh</span>
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* 🌟 PROFILE FORM */}
       <div className="rounded-3xl border border-[#2b2d35] bg-[#191a1e] p-6 sm:p-8 shadow-xl">
