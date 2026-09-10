@@ -242,35 +242,53 @@ export function FullDeckPageSkeleton() {
 // 🌟 SKELETON CHO TRANG HỒ SƠ (PROFILE)
 export function ProfileSkeleton() {
   return (
-    <div className="min-h-screen py-8 sm:py-12 pb-36 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="border-b border-[#2c2e35] pb-6 flex items-center justify-between">
+    <div className="min-h-screen py-8 sm:py-12 pb-36 sm:pb-44 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
+      {/* 🌟 Header */}
+      <div className="border-b border-[#2c2e35] pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-2">
-          <Skeleton className="w-40 h-7 rounded-lg" />
-          <Skeleton className="w-64 h-4 rounded-md" />
+          <div className="flex items-center gap-2.5">
+            <Skeleton className="w-5 h-5 sm:w-6 sm:h-6 rounded-md" />
+            <Skeleton className="w-40 sm:w-48 h-7 rounded-lg" />
+          </div>
+          <Skeleton className="w-64 sm:w-96 h-4 rounded-md" />
         </div>
-        <Skeleton className="w-24 h-9 rounded-xl" />
+
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="w-28 sm:w-32 h-9 rounded-xl" />
+          <Skeleton className="w-28 sm:w-32 h-9 rounded-xl" />
+        </div>
       </div>
 
-      {/* Thông tin tài khoản */}
-      <div className="rounded-2xl border border-[#31333a] bg-[#191a1e] p-6 space-y-4">
-        <Skeleton className="w-36 h-5 rounded-md" />
-        <div className="flex items-center gap-4">
-          <Skeleton className="w-16 h-16 rounded-full" />
-          <div className="space-y-2 flex-1">
-            <Skeleton className="w-48 h-5 rounded-md" />
-            <Skeleton className="w-32 h-4 rounded-md" />
+      {/* 🌟 Profile Form Card */}
+      <div className="rounded-3xl border border-[#2b2d35] bg-[#191a1e] p-6 sm:p-8 shadow-xl space-y-6">
+        {/* Avatar & Identifiers Section */}
+        <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6 pb-6 border-b border-[#2b2d35]">
+          <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 rounded-full shrink-0" />
+
+          <div className="flex-1 space-y-2 text-center sm:text-left min-w-0">
+            <Skeleton className="w-44 sm:w-56 h-7 rounded-lg mx-auto sm:mx-0" />
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+              <Skeleton className="w-44 sm:w-48 h-4 rounded-md" />
+              <Skeleton className="w-24 h-5 rounded-full" />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Cung hoàng đạo */}
-      <div className="rounded-2xl border border-[#31333a] bg-[#191a1e] p-6 space-y-4">
-        <Skeleton className="w-44 h-5 rounded-md" />
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 rounded-xl" />
+        {/* 6 Form Fields Grid (2 columns) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="w-28 sm:w-36 h-4 rounded-md" />
+              <Skeleton className="w-full h-10 rounded-xl" />
+              <Skeleton className="w-44 sm:w-56 h-3 rounded-md" />
+            </div>
           ))}
+        </div>
+
+        {/* Action Buttons Section */}
+        <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#2b2d35]">
+          <Skeleton className="w-20 h-9 rounded-xl" />
+          <Skeleton className="w-32 h-9 rounded-xl" />
         </div>
       </div>
     </div>
