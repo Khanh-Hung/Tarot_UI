@@ -258,9 +258,6 @@ export const EnergyInsightsView: React.FC<EnergyInsightsViewProps> = ({ userId }
                               Gần đây
                             </span>
                           )}
-                          <span className="text-[11px] font-bold text-white bg-white/[0.08] px-2 py-0.5 rounded-full">
-                            {card.count} lần ({card.percentage}%)
-                          </span>
                         </div>
                         <h4 className="text-sm font-bold text-zinc-100 group-hover:text-amber-300 transition line-clamp-1 mt-2">
                           {card.nameVi}
